@@ -1,0 +1,43 @@
+# Data model (Supabase / Postgres)
+
+All tables have `user_id uuid references auth.users not null` (except the shared exercise catalogue) and **RLS enabled**. Timestamps are `timestamptz`. Schema changes go in `supabase/migrations/` as numbered SQL files, never edited only in the dashboard.
+
+| Table             | Key columns                                                                                                                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`        | `id` (= auth user id), `display_name`, `default_unit` ('kg'/'lb'), `created_at`                                                                                                                                                                                                           |
+| `gyms`            | `id`, `user_id`, `name`, `default_bar_kg`, `is_default`, `created_at`                                                                                                                                                                                                                     |
+| `gym_bars`        | `id`, `user_id`, `gym_id`, `name` (for example "EZ bar"), `weight_kg`                                                                                                                                                                                                                     |
+| `exercises`       | `id`, `user_id` (NULL = global seeded exercise), `name`, `equipment_type`, `body_part` ('upper'/'lower'/'core'), `aliases text[]`                                                                                                                                                         |
+| `workouts`        | `id` (client UUID), `user_id`, `gym_id`, `started_at`, `ended_at`, `notes`, `deleted_at`                                                                                                                                                                                                  |
+| `sets`            | `id` (client UUID), `user_id`, `workout_id`, `exercise_id`, `total_kg`, `bar_kg`, `per_side_kg`, `input_mode` ('total'/'per_side'/'tap'), `reps`, `source` ('voice'/'tap'/'gemini'), `raw_transcript`, `logged_at` (device time), `created_at` (server time, default now()), `deleted_at` |
+| `api_rate_limits` | `user_id`, `window_start`, `count`; primary key `(user_id, window_start)`. Used by `/api/parse` for a per-user limit that survives across serverless instances (decided 2026-10-08). Final shape is fixed in the migration.                                                               |
+
+## RLS policies
+
+- `exercises`: everyone signed in can `select` rows where `user_id is null` (global) or `user_id = auth.uid()`; insert/update/delete only own rows.
+- All other tables: `select`, `insert`, `update`, `delete` only where `user_id = auth.uid()`; `insert` and `update` also check `user_id = auth.uid()` (`WITH CHECK`) so a row cannot be reassigned to another user.
+- Policies use `to authenticated` plus the ownership predicate, written as `(select auth.uid()) = user_id`.
+- No `SECURITY DEFINER` functions are used to work around permissions.
+- Write an automated test proving user A cannot read or write user B's rows. This is a key security demo point.
+
+## Integrity beyond RLS
+
+- **Composite foreign keys.** `gyms`, `workouts` have `unique (id, user_id)`, and child rows reference `(parent_id, user_id)`: `gym_bars` → `gyms`, `workouts.gym_id` → `gyms`, `sets.workout_id` → `workouts`. Foreign keys bypass RLS, so without this a user could attach their rows to another user's gym or workout.
+- **Exercise visibility trigger.** `sets_check_exercise_visible` (SECURITY INVOKER, so subject to the `exercises` policies) rejects a set that points at an exercise the user cannot see, for example another user's custom exercise.
+- **Rate limit function.** `public.consume_rate_limit(window_seconds)` is `SECURITY DEFINER` on purpose: clients must not be able to write the counter table directly (they could reset their own limit). It touches only the caller's own row, checks `auth.uid()`, pins `search_path`, validates its argument, is not executable by `anon`, and returns the caller's request count for the current window. `/api/parse` compares that to its limit. Trade-off: it lives in `public` (the exposed schema) so it can be called through the API; it is the only `SECURITY DEFINER` function.
+- **Seed id squatting.** Seed exercise ids are public and clients may choose their own exercise ids (offline creation), so a user could pre-create a row with a seed id. The seed therefore resets `user_id` to null on conflict, reclaiming the id as a global exercise. Covered by a regression check.
+- **Profiles** are created by the client on first sign-in (an upsert allowed by the `profiles` policies), not by a trigger on `auth.users`, which would need another `SECURITY DEFINER` function.
+
+## Constraints
+
+- `reps between 1 and 100`, `total_kg between 0 and 500`, sensible length limits on text columns.
+- `sets.id` and `workouts.id` are primary keys used for idempotent upserts.
+- Index on `(user_id, exercise_id, logged_at desc)` for history and charts; every foreign key is indexed.
+- `sets`: `total_kg = bar_kg + 2 × per_side_kg` whenever both are present, and `input_mode = 'per_side'` requires both. **Editing a set's weight must update `total_kg`, `bar_kg`, `per_side_kg` and `input_mode` together**, otherwise the database rejects it.
+- One default gym per user (partial unique index); exercise names unique per owner, case-insensitive.
+- Data API privileges: `anon` has none; `authenticated` gets table privileges and RLS decides rows; `api_rate_limits` has no direct privileges.
+
+## Notes
+
+- The weight convention is described in [weight rules](../domain/weight-rules.md); `total_kg` is the only value charts, PRs and suggestions use.
+- `raw_transcript` is synced (confirmed default); revisit for privacy before submission.
