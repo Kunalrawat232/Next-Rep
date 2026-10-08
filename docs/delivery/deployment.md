@@ -53,6 +53,16 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 
 Create **two dedicated test users** (for example `nextrep-test-a@example.invalid` and `nextrep-test-b@example.invalid`, invented addresses) with generated passwords. They go in `.env.local` as `E2E_USER_A_EMAIL`, `E2E_USER_A_PASSWORD`, `E2E_USER_B_EMAIL`, `E2E_USER_B_PASSWORD`. Never use a real person's account.
 
+### 1.6 Check the connection from your machine
+
+After section 4 (the local env file) is filled in, run:
+
+```bash
+npm run check:supabase
+```
+
+It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has 56 global exercises, that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
+
 ## 2. Gemini API key (free tier, no billing)
 
 1. Open Google AI Studio (aistudio.google.com) > **API keys** > **Create API key**.
@@ -113,22 +123,23 @@ cp .env.example .env.local
 
 - [ ] Supabase project created (free); URL and publishable key saved
 - [ ] `0001_init.sql` then `seed.sql` applied; 7 tables with RLS; 56 global exercises
-- [ ] Advisors reviewed
+- [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [ ] Confirm-email decision made; Site URL set; two test users created
 - [ ] Gemini key created with **no billing**; `GEMINI_MODEL` chosen
 - [ ] Repo pushed (after approval); Vercel project imported; env vars set; deployed
 - [ ] Production page loads; `POST /api/parse` returns 501 JSON
-- [ ] `.env.local` filled; `npm run dev` works
+- [ ] `.env.local` filled; `npm run dev` works; `npm run check:supabase` passes
 - [ ] A phone opens the preview URL over HTTPS
 
 ## Troubleshooting
 
-| Symptom                                  | Likely cause / fix                                                                              |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Sign-up emails never arrive              | Default mail limit (about 2 per hour); turn off Confirm email or create users in the dashboard  |
-| App shows empty data / 401 from Supabase | Wrong URL or key in env; `VITE_*` change not redeployed                                         |
-| `permission denied` on a table           | Migration not fully applied (the grants are at the end of `0001_init.sql`)                      |
-| Everything times out                     | Free Supabase project is paused; wake it in the dashboard                                       |
-| `/api/parse` returns HTML                | SPA rewrite capturing the route; check `vercel.json` and the function path `api/parse.ts`       |
-| Mic button does nothing on a phone       | Not HTTPS or `localhost`, microphone permission denied, or the browser lacks the Web Speech API |
-| Gemini returns 429                       | Free-tier rate limit; expected, the app falls back to manual confirmation                       |
+| Symptom                                                                 | Likely cause / fix                                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-up emails never arrive                                             | Default mail limit (about 2 per hour); turn off Confirm email or create users in the dashboard                                                                                                                                                                                                                                                                                                 |
+| App shows empty data / 401 from Supabase                                | Wrong URL or key in env; `VITE_*` change not redeployed                                                                                                                                                                                                                                                                                                                                        |
+| `permission denied` on a table                                          | Migration not fully applied (the grants are at the end of `0001_init.sql`)                                                                                                                                                                                                                                                                                                                     |
+| Everything times out                                                    | Free Supabase project is paused; wake it in the dashboard                                                                                                                                                                                                                                                                                                                                      |
+| `/api/parse` returns HTML                                               | SPA rewrite capturing the route; check `vercel.json` and the function path `api/parse.ts`                                                                                                                                                                                                                                                                                                      |
+| Mic button does nothing on a phone                                      | Not HTTPS or `localhost`, microphone permission denied, or the browser lacks the Web Speech API                                                                                                                                                                                                                                                                                                |
+| Gemini returns 429                                                      | Free-tier rate limit; expected, the app falls back to manual confirmation                                                                                                                                                                                                                                                                                                                      |
+| `check:supabase` fails with `fetch failed` or `UND_ERR_CONNECT_TIMEOUT` | No HTTP response at all: DNS, firewall, VPN or proxy, not the key. On 2026-10-08 the home router answered IPv6 lookups for `supabase.co` far too slowly (15 to 20 s). Test with `time getent ahosts <ref>.supabase.co`; if it is slow, point the connection at a public DNS such as 1.1.1.1 and 8.8.8.8 (`nmcli connection modify <name> ipv4.dns "1.1.1.1 8.8.8.8" ipv4.ignore-auto-dns yes`) |
