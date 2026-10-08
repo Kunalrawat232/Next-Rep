@@ -10,7 +10,7 @@ How the developer and the AI collaborate on Next Rep. `CLAUDE.md` carries the sh
 
 1. **Plan before coding.** For any non-trivial task, first show a short plan (files to create or change, approach, tests), then wait for the developer's "go".
 2. **Ask before** adding a new dependency, changing the data model, changing an architectural decision, or deviating from the documented design.
-3. **Small, focused changes.** One feature or fix per task. Commit after each working step.
+3. **Small, focused changes.** One feature or fix per task. Commit once per finished task, not per sub-step; ask before any other commit.
 4. **Tests come with the code**, not later. Domain logic (parser, weight maths, validators, sync) has unit tests in the same task.
 5. **Never touch secrets.** Do not read, print or commit `.env` files. Use `.env.example` with placeholder names only.
 6. **Be honest about uncertainty.** If unsure about an API, a library version or behaviour, say so and check the docs instead of guessing.

@@ -10,7 +10,7 @@ All tables have `user_id uuid references auth.users not null` (except the shared
 | `exercises`       | `id`, `user_id` (NULL = global seeded exercise), `name`, `equipment_type`, `body_part` ('upper'/'lower'/'core'), `aliases text[]`                                                                                                                                                         |
 | `workouts`        | `id` (client UUID), `user_id`, `gym_id`, `started_at`, `ended_at`, `notes`, `deleted_at`                                                                                                                                                                                                  |
 | `sets`            | `id` (client UUID), `user_id`, `workout_id`, `exercise_id`, `total_kg`, `bar_kg`, `per_side_kg`, `input_mode` ('total'/'per_side'/'tap'), `reps`, `source` ('voice'/'tap'/'gemini'), `raw_transcript`, `logged_at` (device time), `created_at` (server time, default now()), `deleted_at` |
-| `api_rate_limits` | `user_id`, `window_start`, `count`; primary key `(user_id, window_start)`. Used by `/api/parse` for a per-user limit that survives across serverless instances (decided 2026-10-08). Final shape is fixed in the migration.                                                               |
+| `api_rate_limits` | `user_id`, `window_start`, `request_count`; primary key `(user_id, window_start)`. Used by `/api/parse` for a per-user limit that survives across serverless instances (decided 2026-10-08). Final shape is fixed in the migration.                                                       |
 
 ## RLS policies
 

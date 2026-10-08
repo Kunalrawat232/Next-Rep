@@ -4,17 +4,18 @@ Keep this list lean: every plugin and MCP server adds to context.
 
 ## Local tools
 
-| Tool                         | Status / version (2026-10-08)                                                                                                   |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js LTS + npm            | v22.23.2 / npm 10.9.8 (project requires 22.12+)                                                                                 |
-| Git                          | 2.34.1                                                                                                                          |
-| Supabase CLI                 | 2.120.0, installed from the official release tarball (checksum verified) into `~/.local/bin`; npm global install is unsupported |
-| Vercel CLI                   | 63.0.0 via `npm i -g vercel`                                                                                                    |
-| Gitleaks                     | 8.30.1, official release tarball (checksum verified) into `~/.local/bin`                                                        |
-| Playwright browsers          | `npx playwright install chromium`                                                                                               |
-| GitHub CLI (`gh`)            | 2.4.0 is very old; upgrade from the official GitHub CLI apt repo if PR features are needed                                      |
-| `typescript-language-server` | `npm i -g typescript typescript-language-server` (for the `typescript-lsp` plugin)                                              |
-| OBS Studio                   | For the demo video                                                                                                              |
+| Tool                                                       | Status / version (2026-10-08)                                                                                                   |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js LTS + npm                                          | v22.23.2 / npm 10.9.8 (project requires 22.12+)                                                                                 |
+| Git                                                        | 2.34.1                                                                                                                          |
+| Supabase CLI                                               | 2.120.0, installed from the official release tarball (checksum verified) into `~/.local/bin`; npm global install is unsupported |
+| Vercel CLI                                                 | 63.0.0 via `npm i -g vercel`                                                                                                    |
+| Gitleaks                                                   | 8.30.1, official release tarball (checksum verified) into `~/.local/bin`                                                        |
+| Playwright browsers                                        | `npx playwright install chromium`                                                                                               |
+| GitHub CLI (`gh`)                                          | 2.4.0 is very old; upgrade from the official GitHub CLI apt repo if PR features are needed                                      |
+| `typescript-language-server`                               | `npm i -g typescript typescript-language-server` (for the `typescript-lsp` plugin)                                              |
+| VS Code (or another editor) with the Claude Code extension | VS Code 1.138 installed                                                                                                         |
+| OBS Studio                                                 | For the demo video                                                                                                              |
 
 Downloads are verified against the published SHA-256 checksums before installing.
 
@@ -41,7 +42,7 @@ Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin comman
 
 ## Accounts (all free)
 
-Supabase, Vercel, GitHub, Google AI Studio (Gemini key, **no billing**).
+Supabase, Vercel, GitHub (repository `Kunalrawat232/Next-Rep`), Google AI Studio (Gemini key, **no billing**).
 
 ## Mobile testing gotcha
 

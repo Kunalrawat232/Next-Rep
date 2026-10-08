@@ -7,7 +7,7 @@
 - No dead code, no commented-out code, no TODOs without an issue reference.
 - No `dangerouslySetInnerHTML`; React escaping only.
 - Validate all input with Zod at boundaries (parser output, API payloads, DB rows). Client validation is mirrored by DB constraints.
-- Dependencies are pinned to exact versions (`.npmrc` has `save-exact=true`) and the lockfile is committed. Adding one needs approval.
+- Dependencies are pinned to exact versions (`.npmrc` has `save-exact=true`) and the lockfile is committed. Adding one needs approval: check current stable versions and peer ranges from the registry or official docs (never from memory), list the planned dependencies, and wait for the developer's go.
 - Weights are stored in kg only; convert units at the edge.
 - Formatting by Prettier (`npm run format`), linting by ESLint (`npm run lint`). Both run in CI.
 

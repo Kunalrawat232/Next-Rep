@@ -6,21 +6,22 @@ Voice-first gym workout logger, delivered as an installable PWA. Say "bench 60 k
 
 ## Commands
 
-| Task        | Command             |
-| ----------- | ------------------- |
-| Dev server  | `npm run dev`       |
-| Unit tests  | `npm test`          |
-| Lint        | `npm run lint`      |
-| Typecheck   | `npm run typecheck` |
-| Build       | `npm run build`     |
-| E2E (smoke) | `npm run test:e2e`  |
-| Format      | `npm run format`    |
+| Task            | Command             |
+| --------------- | ------------------- |
+| Dev server      | `npm run dev`       |
+| Unit tests      | `npm test`          |
+| DB schema tests | `npm run test:db`   |
+| Lint            | `npm run lint`      |
+| Typecheck       | `npm run typecheck` |
+| Build           | `npm run build`     |
+| E2E (smoke)     | `npm run test:e2e`  |
+| Format          | `npm run format`    |
 
 ## Non-negotiable rules
 
 - **Plan before coding.** Show a short plan (files, approach, tests) and wait for "go" on any non-trivial task.
 - **Ask first** before adding a dependency, changing the data model, changing an architectural decision, or deviating from the docs.
-- Small, focused changes. One feature or fix per task. Conventional Commits, commit after each working step.
+- Small, focused changes. One feature or fix per task. Conventional Commits. **One commit per finished task**, not per sub-step; ask before any other commit; never push without approval.
 - **Tests ship with the code.** Domain logic (parser, weight maths, validators, sync) gets unit tests in the same task.
 - **Never touch secrets.** Do not read, print or commit `.env*` files. Only `.env.example` with placeholders is committed. Gitleaks guards commits and CI.
 - Logged weight is always the **total in kg including the bar** (ADR-002). Dumbbells are per dumbbell.
