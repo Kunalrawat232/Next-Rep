@@ -33,8 +33,20 @@ describe('app routes', () => {
 
   it('shows the home page to a signed-in user, with who they are signed in as', async () => {
     renderAt('/', createFakeAuthService({ id: 'u1', email: 'ada@example.com' }));
-    expect(await screen.findByRole('heading', { name: 'Next Rep', level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Ready to lift?', level: 1 }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/signed in as ada@example\.com/i)).toBeInTheDocument();
+  });
+
+  it('wraps the home page in the app shell', async () => {
+    renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    expect(await screen.findByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+  });
+
+  it('offers Start workout, disabled until the workout feature exists', async () => {
+    renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    expect(await screen.findByRole('button', { name: /start workout/i })).toBeDisabled();
   });
 
   it('sends unknown paths to the home page', async () => {
