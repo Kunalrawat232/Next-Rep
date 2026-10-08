@@ -17,7 +17,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -b --noEmit",
-    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
+    "seed:generate": "node scripts/generate-seed-sql.mjs",
+    "seed:check": "node scripts/generate-seed-sql.mjs --check"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
