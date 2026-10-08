@@ -45,7 +45,7 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 ### 1.4 Auth settings
 
 - **Email provider** is enabled by default. The app uses email + password.
-- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. Recommended for this hackathon project: turn **Confirm email off** (Auth providers page), and accept that sign-ups are not verified. If you keep it on, create test users from the dashboard (Auth > Users > Add user, auto-confirm).
+- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **At code freeze turn it back on** (see the [roadmap](../plans/roadmap.md)): the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
 - Set a sensible minimum password length in the Auth settings.
 - **Site URL / redirect URLs:** set the Site URL to your Vercel production URL once you have it; add `http://localhost:5173` for local dev.
 
@@ -62,6 +62,8 @@ npm run check:supabase
 ```
 
 It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has 56 global exercises, that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
+
+The same credentials let you run `npm run test:integration` (profile access rules on the hosted project, as the two test users) and `npm run test:e2e` (sign-in in a real browser). Both skip themselves when the values are missing, and both are run by you, not by CI.
 
 ## 2. Gemini API key (free tier, no billing)
 

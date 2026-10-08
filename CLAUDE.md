@@ -6,16 +6,17 @@ Voice-first gym workout logger, delivered as an installable PWA. Say "bench 60 k
 
 ## Commands
 
-| Task            | Command             |
-| --------------- | ------------------- |
-| Dev server      | `npm run dev`       |
-| Unit tests      | `npm test`          |
-| DB schema tests | `npm run test:db`   |
-| Lint            | `npm run lint`      |
-| Typecheck       | `npm run typecheck` |
-| Build           | `npm run build`     |
-| E2E (smoke)     | `npm run test:e2e`  |
-| Format          | `npm run format`    |
+| Task                 | Command                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| Dev server           | `npm run dev`                                                         |
+| Unit tests           | `npm test`                                                            |
+| DB schema tests      | `npm run test:db`                                                     |
+| Hosted-project tests | `npm run test:integration` (needs `.env.local`, run by the developer) |
+| Lint                 | `npm run lint`                                                        |
+| Typecheck            | `npm run typecheck`                                                   |
+| Build                | `npm run build`                                                       |
+| E2E (smoke)          | `npm run test:e2e`                                                    |
+| Format               | `npm run format`                                                      |
 
 ## Non-negotiable rules
 

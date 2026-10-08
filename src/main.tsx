@@ -1,13 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './app/App';
+import { bootstrap } from './app/bootstrap';
 import './index.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element #root not found');
 
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+createRoot(root).render(<StrictMode>{bootstrap(import.meta.env)}</StrictMode>);

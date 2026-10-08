@@ -10,6 +10,15 @@ const users = {
   B: { email: env.E2E_USER_B_EMAIL ?? '', password: env.E2E_USER_B_PASSWORD ?? '' },
 };
 
+/** The role claim of a JWT-shaped key, or null. */
+function jwtRole(key) {
+  try {
+    return JSON.parse(Buffer.from(key.split('.')[1] ?? '', 'base64url').toString()).role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 let failures = 0;
 const report = (ok, name, detail = '') => {
   if (!ok) failures += 1;
@@ -98,11 +107,11 @@ async function main() {
   )
     return;
   report(
-    anonKey.startsWith('sb_publishable_') || anonKey.startsWith('eyJ'),
-    'key is a publishable (sb_publishable_...) or legacy anon (eyJ...) key',
+    anonKey.startsWith('sb_publishable_') || jwtRole(anonKey) === 'anon',
+    'key is a publishable (sb_publishable_...) or legacy anon JWT key',
   );
   report(
-    !anonKey.startsWith('sb_secret_'),
+    !anonKey.startsWith('sb_secret_') && jwtRole(anonKey) !== 'service_role',
     'key is not a secret key',
     'a secret or service_role key must never be used here',
   );

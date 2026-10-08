@@ -45,14 +45,15 @@ cp .env.example .env.local   # fill in your own values; never commit it
 npm run dev
 ```
 
-| Task            | Command             |
-| --------------- | ------------------- |
-| Unit tests      | `npm test`          |
-| DB schema tests | `npm run test:db`   |
-| Lint            | `npm run lint`      |
-| Typecheck       | `npm run typecheck` |
-| Build           | `npm run build`     |
-| E2E (smoke)     | `npm run test:e2e`  |
+| Task                 | Command                                         |
+| -------------------- | ----------------------------------------------- |
+| Unit tests           | `npm test`                                      |
+| DB schema tests      | `npm run test:db`                               |
+| Hosted-project tests | `npm run test:integration` (needs `.env.local`) |
+| Lint                 | `npm run lint`                                  |
+| Typecheck            | `npm run typecheck`                             |
+| Build                | `npm run build`                                 |
+| E2E (smoke)          | `npm run test:e2e`                              |
 
 Setup of Supabase, Vercel and Gemini: [deployment guide](docs/delivery/deployment.md). Local tooling: [tooling setup](docs/delivery/tooling-setup.md).
 
@@ -69,6 +70,8 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 - Offline, only creating sets is supported. Editing or deleting needs a connection.
 - Browsers (especially iOS Safari) can evict local data, so sets sync as soon as possible.
 - Gemini free tier has low rate limits and is a fallback only.
+- Sign-in works offline for a user who is already signed in: the app reads the stored session instead of waiting for the network.
+- "Confirm email" is off during development and is switched on at code freeze, so judges should use the demo accounts in the submission.
 - Weight suggestions are conservative rules, not coaching or medical advice.
 
 ## AI use
