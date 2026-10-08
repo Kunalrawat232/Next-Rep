@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.tsbuildinfo
+coverage/
+
+# Environment files (only the template is committed)
+.env
+.env.*
+!.env.example
+
+# Vercel / Supabase local state
+.vercel/
+supabase/.temp/
+supabase/.branches/
+
+# Playwright artifacts
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code local-only settings
+.claude/settings.local.json
