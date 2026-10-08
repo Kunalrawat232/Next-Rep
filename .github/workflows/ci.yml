@@ -25,6 +25,12 @@ jobs:
       - run: npm test
       - run: npm run test:db
       - run: npm run build
+      - name: Fail if a secret key reached the bundle
+        run: |
+          if grep -rEq 'sb_secret_[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}' dist; then
+            echo "A secret-looking key is in dist/. Remove it and rotate it."
+            exit 1
+          fi
 
   gitleaks:
     runs-on: ubuntu-latest

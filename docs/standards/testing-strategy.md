@@ -12,6 +12,7 @@
 
 - Unit tests live next to the code as `*.test.ts(x)` under `src/`. E2E tests live in `tests/e2e/`. Fixtures live in `tests/fixtures/`.
 - The parser is tested through `tests/fixtures/voice-phrases.json`, aiming for 150+ phrases including Hinglish, noisy and adversarial cases.
+- `npm run test:integration` runs `tests/integration/` against the hosted project as the two test users (profile access rules). It and the sign-in E2E need `.env.local`, skip themselves without it and are run by the developer, not by Claude Code or CI.
 - `npm run test:db` is the fast local check of the schema. It does not replace the RLS integration suite below, because PGlite only imitates Supabase.
 - The RLS integration suite runs against the hosted free Supabase project with two dedicated test users (credentials from env, never committed). It is skipped in CI unless the secrets are set.
 - E2E uses email + password sign-in with a dedicated test account.

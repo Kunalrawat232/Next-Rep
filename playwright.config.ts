@@ -1,5 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Test-account credentials live in .env.local. Tests that need them skip themselves when it is missing.
+try {
+  process.loadEnvFile('.env.local');
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; // a missing file is fine, a broken one is not
+}
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
