@@ -15,6 +15,8 @@
 
 Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`. Small, frequent, meaningful.
 
+One short subject line per commit, no body: the detail belongs in the docs and `docs/learning/ai-log.md`.
+
 ## Accessibility
 
 Semantic HTML, labelled buttons (especially icon-only ones), visible focus states, colour is never the only signal, respects reduced motion. Tap targets at least 48px.

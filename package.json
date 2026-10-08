@@ -20,7 +20,8 @@
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "seed:generate": "node scripts/generate-seed-sql.mjs",
     "seed:check": "node scripts/generate-seed-sql.mjs --check",
-    "test:db": "vitest run --config vitest.db.config.ts"
+    "test:db": "vitest run --config vitest.db.config.ts",
+    "check:supabase": "node --env-file=.env.local scripts/check-supabase.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",

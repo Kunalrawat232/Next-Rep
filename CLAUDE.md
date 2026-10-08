@@ -21,7 +21,7 @@ Voice-first gym workout logger, delivered as an installable PWA. Say "bench 60 k
 
 - **Plan before coding.** Show a short plan (files, approach, tests) and wait for "go" on any non-trivial task.
 - **Ask first** before adding a dependency, changing the data model, changing an architectural decision, or deviating from the docs.
-- Small, focused changes. One feature or fix per task. Conventional Commits. **One commit per finished task**, not per sub-step; ask before any other commit; never push without approval.
+- Small, focused changes. One feature or fix per task. Conventional Commits. **One commit per finished task**, not per sub-step; commit messages are one short Conventional Commit line, no body; ask before any other commit; never push without approval.
 - **Tests ship with the code.** Domain logic (parser, weight maths, validators, sync) gets unit tests in the same task.
 - **Never touch secrets.** Do not read, print or commit `.env*` files. Only `.env.example` with placeholders is committed. Gitleaks guards commits and CI.
 - Logged weight is always the **total in kg including the bar** (ADR-002). Dumbbells are per dumbbell.
