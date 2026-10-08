@@ -1,0 +1,34 @@
+# Supabase from the browser, and how errors are classified
+
+Everything in `src/data/remote/`. Screens never import Supabase: they use service interfaces (`GymService`, `ExerciseService`, `AuthService`, `RemoteLog`, `ProfileService`, `ParseService`, `CoachService`) so fakes and offline work.
+
+| File                   | Function                                                        | What it does                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client.ts`            | `createSupabase(env)`                                           | Browser client; session kept under the storage key `next-rep-auth` (`AUTH_STORAGE_KEY`); `detectSessionInUrl: false`.                                                                                                                                                                                                      |
+| `env.ts`               | `parseSupabaseEnv`, `unsafePublicEnvProblems`, `anonKeyProblem` | Validates `VITE_SUPABASE_URL` (https) and the key (only `sb_publishable_...` or a legacy anon JWT; secret and service_role keys are refused).                                                                                                                                                                              |
+| `supabaseAuth.ts`      | `createSupabaseAuthService`                                     | `signIn`, `signUp`, `signOut` (scope `local`, works offline), `onChange`; maps errors to `AuthFailure`.                                                                                                                                                                                                                    |
+| `storedSession.ts`     | `readStoredUser`                                                | Reads the user from the stored session with no network call, so an offline start does not wait for a refresh.                                                                                                                                                                                                              |
+| `profiles.ts`          | `ensureProfile`                                                 | Upserts the profile row, ignoring duplicates (runs on sign-in).                                                                                                                                                                                                                                                            |
+| `gyms.ts`              | `createSupabaseGymService`                                      | `get` (the one gym or null), `save` (create or update, retry-safe with client ids).                                                                                                                                                                                                                                        |
+| `exercises.ts`         | `createSupabaseExerciseService`                                 | `listCustom`, `create` (retry-safe).                                                                                                                                                                                                                                                                                       |
+| `log.ts`               | `createSupabaseLogRemote`                                       | `upsertWorkouts`, `upsertSets` (on conflict id, never sends `deleted_at`), `softDeleteSet`, `fetchWorkouts`, `fetchSets` (pull: keyset paging `id > after` ordered by id; filters `user_id` and `deleted_at is null`; finished workouts only; plain-decimal strings coerced to numbers; `raw_transcript` is not selected). |
+| `parse.ts`, `coach.ts` | `createFetchParseService`, `createFetchCoachService`            | Calls to the two Vercel functions with the user's token; they never throw.                                                                                                                                                                                                                                                 |
+| `failure.ts`           | `failure(error)`                                                | Classifies an error (below).                                                                                                                                                                                                                                                                                               |
+
+## Errors are values
+
+Every service returns `Result<T>` = `{status:'ok', value}` or `{status:'error', reason}` (`src/lib/result.ts`), where `reason` is a `Failure`: `'offline' | 'conflict' | 'rejected' | 'unknown'`. Screens show a friendly message, never a raw error (`src/features/auth/authErrors.ts` maps sign-in errors).
+
+Classification in `failure.ts`:
+
+- no error code and a message matching `fetch|network|load failed|internet connection` (or the browser being offline) is `offline`;
+- Postgres `23505` is `conflict`;
+- other `22xxx` and `23xxx` codes are `rejected`;
+- `42501` with a "row-level security" message is `rejected` (the row itself is refused, so it can show as failed);
+- anything else is `unknown`, including a plain permission denied and an expired session (`PGRST301`): these are tried again later while the session layer signs the user out if it cannot renew.
+
+Server rows are untrusted: the pull checks them with `WorkoutSchema` and `SetSchema`, and reads of cached gym data are checked too.
+
+## Auth and scoping
+
+Email and password through Supabase Auth ([ADR-007](../../docs/architecture/decisions/007-supabase-session-handling.md)); `ProtectedRoute` sends signed-out visitors to `/sign-in` and back. Every row has `user_id` and RLS lets a user read and write only their own; see [schema-and-rls.md](../database/schema-and-rls.md). Sign-out is `scope: 'local'` (the refresh token stays valid on the server, a known trade-off) and purges synced rows from the device, see [sync-worker-and-pull.md](../local-data/sync-worker-and-pull.md). "Confirm email" is still off in Supabase: switch it on, with CAPTCHA, before the 25 Oct freeze.
