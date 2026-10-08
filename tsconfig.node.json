@@ -11,5 +11,11 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "vitest.db.config.ts", "playwright.config.ts", "tests"]
+  "include": [
+    "vite.config.ts",
+    "vitest.db.config.ts",
+    "vitest.integration.config.ts",
+    "playwright.config.ts",
+    "tests"
+  ]
 }
