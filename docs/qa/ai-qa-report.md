@@ -13,9 +13,10 @@ How AI contributed to QA and how its output was validated. The counts below are 
 
 ## Numbers
 
-| Task                  | Generated | Kept | Rejected | Real bugs found | Notes |
-| --------------------- | --------- | ---- | -------- | --------------- | ----- |
-| _(none yet: Phase 0)_ | 0         | 0    | 0        | 0               |       |
+| Task                                                     | Generated   | Kept                         | Rejected                | Real bugs found | Notes                                                                                                                                                                                                                        |
+| -------------------------------------------------------- | ----------- | ---------------------------- | ----------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 1.1 validators and weight helpers (`qa-tester`)    | 123         | _(developer to review)_      | _(developer to review)_ | 4               | 6 of the 123 failed on purpose and exposed: no "Did you mean 60?" in the below-bar question, plate warning skipped for odd totals, unrounded bar weight, warnings lost on questions                                          |
+| Phase 1.1 code review (`code-reviewer`, no shell access) | 14 findings | 5 verified real, 3 low-value | 6                       | 1               | The one unique real bug: `SetSchema.safeParse` threw a `RangeError` on negative bar or per-side weight (verified by a probe). Its claims were unverified because it could not run code, so each was reproduced before fixing |
 
 ## Where AI was wrong
 

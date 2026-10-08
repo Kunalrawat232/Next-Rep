@@ -81,3 +81,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decision: removed completely (package, hooks, skill, `CLAUDE.md` section, output, cache), and `CLAUDE.md` restored byte-for-byte to its pre-install state. Revisit at the start of Phase 3 (16 Oct 2026), when `parser`, `sync` and `api` give the graph real cross-module relationships.
 - How validated: _(developer to fill)_ Evidence: the benchmark measured about 8.5x fewer tokens per query but on a corpus of only about 28k tokens; after removal a search finds no mention of the tool in the working tree and `.claude/settings.json` has no diff against the committed version.
 - Lesson: vet a tool and run it on a small trial before letting it edit shared instruction files and hooks; see `docs/learning/lessons.md`.
+
+## 2026-10-08: Phase 1 task 1, weight helpers and plausibility validators
+
+- Tool: Claude Code with the `new-feature` flow, `code-reviewer` and `qa-tester` subagents
+- Asked: implement the pure weight helpers and the `validateSet` plausibility rules from the weight rules, tests first.
+- AI produced: `toKg`, `perSideFromTotal`, `weightBreakdown` and the validator with a config file; 121 tests including a 3,000-candidate property test that every resolved weight is storable; then 123 more edge-case tests from `qa-tester`.
+- Problems found: (1) the first implementation passed all its own tests but was missing four behaviours that `qa-tester` found by reading the spec: the below-bar question skipped the "Did you mean 60?" option, the plate warning was skipped for totals whose breakdown is not exact, an unrounded bar weight could break the database check, and a warning was lost when a result became a question; (2) `code-reviewer` found a bug in earlier AI-written code: `SetSchema.safeParse` threw a `RangeError` for a negative bar weight because a refine called a helper that throws; (3) the reviewer had no shell, so its claims were unverified and each was reproduced with a probe before any fix; (4) a regex-based mutation check silently failed to match after Prettier re-wrapped a line, the same class of mistake as before; (5) `validateSet` grew to about 170 lines and was split into small helpers.
+- How validated: _(developer to fill)_ Evidence: 255 tests pass; 9 deliberate breakages each make tests fail; the 6 deliberately failing QA tests all pass after the fixes.
+- Lesson: a passing first run is not evidence; a reviewer that cannot run code needs its claims reproduced; a schema refine must never call a function that throws.
