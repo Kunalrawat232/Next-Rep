@@ -24,10 +24,15 @@ async function signedIn(who: 'a' | 'b') {
     email: users[who].email!,
     password: users[who].password!,
   });
-  if (error || !data.user)
+  if (error || !data.user) {
+    const why = error
+      ? `${error.name}, status ${error.status ?? 'none'}, code ${error.code ?? 'none'}`
+      : 'no user returned';
     throw new Error(
-      `Test user ${who.toUpperCase()} could not sign in (${error?.code ?? 'no user'})`,
+      `Test user ${who.toUpperCase()} could not sign in (${why}). ` +
+        'A status of 0 or AuthRetryableFetchError means a network or DNS problem, not a wrong password.',
     );
+  }
   return { client, id: data.user.id };
 }
 
