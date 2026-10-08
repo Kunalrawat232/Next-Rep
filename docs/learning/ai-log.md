@@ -99,3 +99,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: (1) the `!` commands the developer typed arrived as plain text and did not run, twice; (2) the AI offered to run the script itself and the developer rejected it, because it loads `.env.local`, so the developer ran it and pasted the output; (3) the first run failed with only `fetch failed`, so the script now reports the underlying cause code; (4) the AI traced the failure with non-secret tests (raw TCP connected, `--resolve` skipped DNS and got HTTP 401, IPv4 lookups took 0.08 s, IPv6 lookups timed out at 5 s on the home router) to a slow router DNS, not a Supabase or key problem, and gave the developer reversible `nmcli` commands rather than changing network settings itself; (5) earlier, the `0` seed count came from the seed not being run, caught by asking for two simple checks instead of guessing.
 - How validated: _(developer to fill)_ Evidence: after switching to public DNS all 16 checks passed, including 56 seed rows, sign-in for both test users and the rate-limit function. The Supabase Advisors page reported no issues.
 - Lesson: when a call fails with no HTTP status, separate DNS, TCP and the application layer before blaming keys; design secret-loading scripts so their output is safe to paste and let the developer run them.
+
+## 2026-10-08: Over-engineering review with the ponytail skill
+
+- Tool: Claude Code with the third-party `ponytail-review` skill, followed once from its plugin cache (not enabled for the project)
+- Asked: review the weight and validator code only for things that can be deleted or shortened.
+- AI produced: 8 numbered findings in the skill's format, with a "net -55 lines" estimate and its own verdict on which to accept.
+- Problems found: the lens only measures size. It suggested deleting unused helpers that the next UI work needs, and trimming the 495-line edge-case test file, which is judged QA evidence. The developer chose findings 1 to 4 (pure shrinks) and declined the rest.
+- How validated: _(developer to fill)_ Evidence: the 255 unit tests and 38 database tests are unchanged and pass; the four cuts removed 13 lines, fewer than the 20 estimated.
+- Lesson: a complexity-only review is a useful second opinion for finding fat, not a decision-maker; read a third-party skill's instructions before following them.
