@@ -1,0 +1,40 @@
+# Threat model: voice → Gemini → database
+
+Scope: the data path from the microphone to Postgres, plus auth and dependencies. Drafted with AI assistance and reviewed by the developer; update as the system is built.
+
+## Assets
+
+User workout data (their own, low sensitivity but personal), Supabase session tokens, the Gemini API key, the free-tier quotas, and the integrity of stored numbers.
+
+## Trust boundaries
+
+1. **Microphone → recogniser.** Chrome's Web Speech API sends audio to Google's servers for recognition; Safari uses Apple's. Audio leaves the device. We cannot control this; we document it.
+2. **Transcript → parser.** Transcripts are untrusted text.
+3. **Client → `/api/parse`.** Anyone can call a public URL.
+4. **`/api/parse` → Gemini.** An external LLM; its output is untrusted.
+5. **Client → Supabase.** Public anon key; RLS is the only gate.
+
+## Threats and mitigations
+
+| #   | Threat                                                   | Mitigation                                                                                                                                                 |
+| --- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1  | Misheard numbers (60 heard as 16) corrupt the log        | Deterministic validators, confusable pairs check against history, confirmation card with breakdown, tap-to-confirm for every voice set                     |
+| T2  | Hallucinated or malformed Gemini output                  | JSON-only prompt, strip fences, Zod validation, same validators as the parser, invalid output treated as `unknown`; Gemini never writes data               |
+| T3  | Prompt injection via transcript ("ignore instructions…") | Only a transcript and minimal context are sent; output constrained to the `ParseResult` schema; nothing in the output is executed; user confirms           |
+| T4  | Anonymous abuse of `/api/parse` drains the free quota    | Requires a valid Supabase JWT (JWKS verification), per-user rate limit in Postgres, transcript length limit, timeout, `unavailable` on 429                 |
+| T5  | One user reads or writes another user's data             | RLS on every table with `to authenticated` + ownership predicate, `WITH CHECK` on writes, automated two-user isolation test                                |
+| T6  | Secrets committed to Git (history is submitted)          | `.gitignore`, gitleaks pre-commit and CI, `.env*` read-deny for the AI assistant, only placeholders in `.env.example`                                      |
+| T7  | Gemini key exposed to the client                         | Key only in server env (`GEMINI_API_KEY`, never `VITE_`-prefixed)                                                                                          |
+| T8  | Privacy: transcripts sent to a free-tier LLM             | Only the transcript is sent, no email/name/user id; documented that free-tier prompts may be used by Google; server logs omit transcripts with identifiers |
+| T9  | Stale or evicted local data (iOS Safari)                 | Sync as soon as possible; `navigator.storage.persist()`; visible sync badge                                                                                |
+| T10 | Vulnerable or malicious dependency                       | Minimal, exact-pinned dependencies, committed lockfile, `npm audit` before submission, removal of risky dev-only packages (for example `@vercel/node`)     |
+| T11 | XSS from rendered user text (exercise names, notes)      | React escaping only, no `dangerouslySetInnerHTML`, DB length limits                                                                                        |
+| T12 | AI-assistant mistakes (wrong code, leaked secrets)       | Human review of every diff, read-only reviewer agents, security-guidance plugin, `.env` read-deny, hooks; see [guardrails](../ai/guardrails.md)            |
+
+## Residual risks
+
+Audio goes to the browser vendor's recogniser; Supabase free projects may pause; Gemini free-tier terms may change. All are listed in the README limitations.
+
+## Validation
+
+Mitigations T1 to T5 each map to an automated test (parser/validator unit tests, `/api/parse` mocked-Gemini tests, RLS isolation suite). Results are recorded in the [QA report](../qa/ai-qa-report.md).
