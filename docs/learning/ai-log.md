@@ -118,3 +118,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: fix every finding; accept that duplicate sign-ups reveal an existing account while "Confirm email" is off, and switch it on at code freeze instead.
 - How validated: _(developer to fill)_ Evidence: 578 unit tests pass; 8 deliberate breakages each turn tests red; the env-free build and Playwright smoke test pass (the CI path); a build with a planted secret variable or padded secret key is refused without printing the value. `npm run test:integration` passed 6 of 6 against the hosted project (run by the developer, after fixing a slow-DNS problem on their router that had shown up as a misleading "no user" error). Not yet run: `npm run test:e2e`.
 - Lesson: see the two new rows in `docs/learning/lessons.md` (measure offline behaviour; allowlist what reaches the browser).
+
+## 2026-10-08: Applying the Claude Design handoff
+
+- Tool: Claude Design (screens and tokens, made by the developer), then Claude Code to apply them
+- Asked: use the designs for the real app: tokens, font, logo, icons, responsive shell, sign-in and home.
+- AI produced: CSS tokens, `Logo`, `Button`, `TextField`, `AppShell`, restyled sign-in and home, PWA icons and manifest, a contrast and token test, docs and ADR-008.
+- Problems found: (1) the design's sign-in is magic-link only, so the password field and a create-account toggle were added in the design's style; (2) the design loads Google Fonts, replaced by a self-hosted font so it works offline; (3) the design shows an ambiguity prompt for 45 kg after 60 kg, which the validator would not raise, noted for Phase 3; (4) my first screenshot attempt showed the wrong font because of my own test setup (a blocked font file), caught by reading the screenshot and the network response instead of assuming; (5) the token test first failed because it needed Node file access in a browser-typed folder, so it moved to `tests/design`.
+- How validated: _(developer to fill)_ Evidence: the handed-off colours pass the 4.5:1 contrast rule in both themes; 6 deliberate breakages (low contrast, a submit-by-default button, a missing `aria-invalid`, a missing disabled state, a missing maskable icon) each turn tests red; screenshots at 390 and 1440 px are saved beside the handoff.
+- Lesson: check an AI-made design with tests (contrast, token parity) before building on it.

@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 import type { Plugin } from 'vite';
 import { unsafePublicEnvProblems } from './src/data/remote/env';
+import { manifest } from './pwa.config';
 
 /** Stops the dev server and the build when a secret would be published through a VITE_ variable. */
 function guardPublicEnv(): Plugin {
@@ -26,14 +27,11 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: {
-        name: 'Next Rep',
-        short_name: 'Next Rep',
-        description: 'Voice-first gym workout logger',
-        theme_color: '#0b0b0f',
-        background_color: '#0b0b0f',
-        display: 'standalone',
-        start_url: '/',
+      manifest,
+      workbox: {
+        navigateFallbackDenylist: [/^\/api\//],
+        // The app shell, icons and the Latin font cut, so a cold start offline looks right.
+        globPatterns: ['**/*.{js,css,html,svg,png}', '**/geist-latin-wght-normal*.woff2'],
       },
     }),
   ],
@@ -41,6 +39,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ['src/**/*.test.{ts,tsx}', 'tests/design/**/*.test.ts'],
   },
 });
