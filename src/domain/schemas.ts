@@ -1,7 +1,7 @@
 // Shared domain types and Zod schemas for sets and workouts.
 // They mirror the database constraints in supabase/migrations/0001_init.sql.
 import { z } from 'zod';
-import { roundKg, totalFromPerSide } from './weight';
+import { roundKg } from './weight';
 
 export const EQUIPMENT_TYPES = [
   'barbell',
@@ -22,6 +22,21 @@ export const BodyPartSchema = z.enum(BODY_PARTS);
 export const UnitSchema = z.enum(UNITS);
 export const InputModeSchema = z.enum(INPUT_MODES);
 export const SetSourceSchema = z.enum(SET_SOURCES);
+
+export type EquipmentType = z.infer<typeof EquipmentTypeSchema>;
+export type Unit = z.infer<typeof UnitSchema>;
+export type InputMode = z.infer<typeof InputModeSchema>;
+
+/** Equipment whose logged weight includes a bar that comes from the gym profile (ADR-002). */
+export const BAR_EQUIPMENT = [
+  'barbell',
+  'ez_bar',
+  'smith',
+] as const satisfies readonly EquipmentType[];
+
+export function usesBar(equipment: EquipmentType): boolean {
+  return (BAR_EQUIPMENT as readonly EquipmentType[]).includes(equipment);
+}
 
 export const REPS_RANGE = { min: 1, max: 100 } as const;
 export const TOTAL_KG_RANGE = { min: 0, max: 500 } as const;
@@ -49,10 +64,12 @@ export const SetSchema = z
     path: ['perSideKg'],
   })
   .refine(
+    // Plain arithmetic, not totalFromPerSide: it throws on negative input, and a schema must
+    // report bad data as a failed parse instead of throwing.
     (s) =>
       s.barKg === null ||
       s.perSideKg === null ||
-      roundKg(s.totalKg) === totalFromPerSide(s.barKg, s.perSideKg),
+      roundKg(s.totalKg) === roundKg(s.barKg + 2 * s.perSideKg),
     { message: 'totalKg must equal barKg + 2 × perSideKg', path: ['totalKg'] },
   );
 export type LoggedSet = z.infer<typeof SetSchema>;

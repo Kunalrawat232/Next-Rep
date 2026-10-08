@@ -46,3 +46,28 @@ See [ADR-005](../architecture/decisions/005-progression-rules.md). Simple, conse
 - Missed reps in two consecutive sessions: suggest about 10% less.
 - Always show the reason ("You hit 3 × 8 at 60 kg last time").
 - Always labelled a **suggestion**, never coaching or medical advice. The user decides.
+
+## Validator behaviour (`src/domain/validation`)
+
+`validateSet(candidate, context)` runs before the confirmation card and returns one of four results. Thresholds live in `validation/config.ts`; the code and its tests are the reference.
+
+| Result   | Meaning                                                                                               |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| `ok`     | Safe to show on the confirmation card. Carries `resolved`: total, bar, per side and input mode in kg. |
+| `warn`   | Safe, with a soft warning (for example plates). Carries `resolved` and the issues.                    |
+| `ask`    | Ambiguous. Carries `options`, each with a label and its own `resolved` weight, and the issues.        |
+| `reject` | Impossible input (out of range, invalid number, missing bar). Carries a message; nothing is offered.  |
+
+Behaviours worth knowing:
+
+- **Every resolved weight is storable**: it satisfies the `sets` database constraints (ranges, `total = bar + 2 × per side` whenever both are stored). The per-side breakdown is left empty when it cannot be stored exactly at 2 decimals, for example 61.23 kg (135 lb) on a 20 kg bar. This is checked by a property test over thousands of generated candidates.
+- **The jump band is inclusive**: a total exactly ±40% from the last session passes; anything further asks.
+- **History is the last session's total** for the same exercise (`lastTotalKg`). Without history (missing, zero, negative or non-finite) there is no jump or confusable rule.
+- **Confusables** (13/30 … 19/90, both directions) are offered only when the spoken number does not fit history and the alternative does, either on a large jump or in the "total below the bar" question ("sixteen" on a 20 kg bar with last time 60 offers "Did you mean 60?"). They keep the spoken mode, and only whole numbers count.
+- **Per-side alternative**: offered when the mode was not stated and the per-side reading fits history. If the user said "total", it is not offered.
+- **Total below the bar** asks "total or per side?" with the per-side reading and a "total without the bar" option. A total of exactly the bar weight is valid (empty bar). A 0 kg total on a barbell therefore also asks.
+- **`as_said`** (what the user literally said) is always the last option on a large jump, so the user can confirm an intentional jump.
+- **Equipment without a bar** (dumbbell, machine, cable, bodyweight) skips bar and plate rules. A per-side phrase is reinterpreted as the per-implement weight, with a `PER_SIDE_IGNORED` warning that is kept when the result becomes a question.
+- **Bar weight** must be 0 to 100 kg and is rounded to 2 decimals; a missing bar with "per side" on bar equipment is rejected.
+- **Plates** are checked on the exact per-side weight, not on the stored breakdown. Pound input is converted to kg first, so standard pound plates will often show the soft warning. That is accepted until lb display ships (storage is kg only).
+- Sub-cent noise is rounded away (500.004 kg is accepted as 500).

@@ -53,7 +53,25 @@ describe('SetSchema', () => {
     { name: 'non-uuid id', patch: { id: 'not-a-uuid' } },
     { name: 'bad timestamp', patch: { loggedAt: 'yesterday' } },
     { name: 'transcript over 500 chars', patch: { rawTranscript: 'x'.repeat(501) } },
+    { name: 'negative bar weight', patch: { barKg: -1 } },
+    { name: 'negative per-side weight', patch: { perSideKg: -5 } },
+    { name: 'bar weight above 100 kg', patch: { barKg: 101 } },
+    { name: 'infinite per-side weight', patch: { perSideKg: Number.POSITIVE_INFINITY } },
+    { name: 'NaN bar weight', patch: { barKg: Number.NaN } },
   ])('rejects $name', ({ patch }) => {
+    expect(SetSchema.safeParse({ ...validSet, ...patch }).success).toBe(false);
+  });
+});
+
+describe('SetSchema never throws on bad input', () => {
+  it.each([
+    { barKg: -1, perSideKg: 5 },
+    { barKg: 20, perSideKg: -5 },
+    { barKg: -1, perSideKg: -1 },
+    { barKg: Number.NaN, perSideKg: 5 },
+    { barKg: 20, perSideKg: Number.POSITIVE_INFINITY },
+  ])('returns a failed parse for bar $barKg and per side $perSideKg', (patch) => {
+    expect(() => SetSchema.safeParse({ ...validSet, ...patch })).not.toThrow();
     expect(SetSchema.safeParse({ ...validSet, ...patch }).success).toBe(false);
   });
 });
