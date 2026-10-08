@@ -13,3 +13,5 @@ Milestones are guidance. If behind, cut from "Could" first, then "Should", **nev
 | **25 Oct**   | **Feature freeze**    | No new features after this                                                                                                                                                                      |
 | 26 to 29 Oct | Phase 6: Ship         | Docs, AI write-up, QA report, demo video + backup take                                                                                                                                          |
 | 30 Oct       | Submit                | Final checks; submit by afternoon                                                                                                                                                               |
+
+**To revisit at the start of Phase 3 (16 Oct):** re-evaluate the graphify knowledge-graph tool once `parser`, `sync` and `api` exist; it was removed in Phase 0 because the project was too small to benefit (see the AI log, 2026-10-08).

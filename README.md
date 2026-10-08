@@ -45,13 +45,14 @@ cp .env.example .env.local   # fill in your own values; never commit it
 npm run dev
 ```
 
-| Task        | Command             |
-| ----------- | ------------------- |
-| Unit tests  | `npm test`          |
-| Lint        | `npm run lint`      |
-| Typecheck   | `npm run typecheck` |
-| Build       | `npm run build`     |
-| E2E (smoke) | `npm run test:e2e`  |
+| Task            | Command             |
+| --------------- | ------------------- |
+| Unit tests      | `npm test`          |
+| DB schema tests | `npm run test:db`   |
+| Lint            | `npm run lint`      |
+| Typecheck       | `npm run typecheck` |
+| Build           | `npm run build`     |
+| E2E (smoke)     | `npm run test:e2e`  |
 
 Setup of Supabase, Vercel and Gemini: [deployment guide](docs/delivery/deployment.md). Local tooling: [tooling setup](docs/delivery/tooling-setup.md).
 

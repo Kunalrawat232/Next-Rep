@@ -18,6 +18,7 @@ All dependency versions are **pinned exactly** (`.npmrc` `save-exact=true`) and 
 | Voice           | Web Speech API                               | n/a                     | `en-IN` by default                                                                               |
 | Charts          | Recharts                                     | 3.10.1                  |                                                                                                  |
 | Unit tests      | Vitest + Testing Library + jsdom             | 5.0.3                   |                                                                                                  |
+| DB schema tests | PGlite (Postgres in WASM)                    | 0.5.8                   | `npm run test:db`; runs the migration and seed locally, no Docker                                |
 | E2E             | Playwright                                   | 1.64.0                  | A handful of critical flows only                                                                 |
 | Lint / format   | ESLint 10.12.0 (flat config), Prettier 3.9.9 |                         | CI and pre-commit                                                                                |
 | Secret scanning | Gitleaks                                     | 8.30.1                  | Pre-commit hook + CI                                                                             |
