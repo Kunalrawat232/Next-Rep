@@ -60,7 +60,6 @@ type Prepared = {
   valueKg: number;
   barKg: number | null;
   mode: WeightMode;
-  kind: 'total' | 'per_side';
   literal: ResolvedWeight;
   warnings: Issue[];
 };
@@ -70,7 +69,6 @@ type InBand = (totalKg: number) => boolean;
 const { ranges, jumpFraction, plateStepKg, confusablePairs } = VALIDATION_CONFIG;
 const EPSILON = 1e-9;
 const fmt = (kg: number) => String(roundKg(kg));
-const isNonNegativeNumber = (n: number) => Number.isFinite(n) && n >= 0;
 
 /** The number speech recognition may have confused with this one, or null (13 <-> 30 ... 19 <-> 90). */
 function confusableOf(value: number): number | null {
@@ -112,7 +110,7 @@ function sanityIssues({ weight, reps }: SetCandidate, barKg: number | null): Iss
       message: `Reps must be between ${ranges.reps.min} and ${ranges.reps.max}.`,
     });
   }
-  if (!isNonNegativeNumber(weight.value)) {
+  if (!(Number.isFinite(weight.value) && weight.value >= 0)) {
     issues.push({ code: 'INVALID_NUMBER', message: 'Weight must be a number, zero or more.' });
   }
   if (barKg !== null && !(barKg >= ranges.barKg.min && barKg <= ranges.barKg.max)) {
@@ -125,20 +123,14 @@ function sanityIssues({ weight, reps }: SetCandidate, barKg: number | null): Iss
 }
 
 function outOfRangeIssue(kind: 'total' | 'per_side', valueKg: number): Issue {
-  if (kind === 'total') {
-    return {
-      code: 'WEIGHT_OUT_OF_RANGE',
-      message: `Weight must be between ${ranges.totalKg.min} and ${ranges.totalKg.max} kg.`,
-    };
-  }
-  return valueKg > ranges.perSideKg.max
+  return kind === 'per_side' && valueKg > ranges.perSideKg.max
     ? {
         code: 'PER_SIDE_OUT_OF_RANGE',
-        message: `Weight per side must be between ${ranges.perSideKg.min} and ${ranges.perSideKg.max} kg.`,
+        message: `Weight per side must be at most ${ranges.perSideKg.max} kg.`,
       }
     : {
         code: 'WEIGHT_OUT_OF_RANGE',
-        message: `That adds up to more than ${ranges.totalKg.max} kg in total.`,
+        message: `Total weight must be at most ${ranges.totalKg.max} kg.`,
       };
 }
 
@@ -181,7 +173,7 @@ function prepare(candidate: SetCandidate): Prepared | ValidationResult {
   const literal = readAs(kind, valueKg, barKg);
   if (literal === null) return { status: 'reject', issues: [outOfRangeIssue(kind, valueKg)] };
 
-  return { spoken: weight.value, unit: weight.unit, valueKg, barKg, mode, kind, literal, warnings };
+  return { spoken: weight.value, unit: weight.unit, valueKg, barKg, mode, literal, warnings };
 }
 
 function perSideOption(
@@ -206,8 +198,8 @@ function confusableOption(p: Prepared, inBand: InBand): { option: Option; issue:
   const alternative = Number.isInteger(p.spoken) ? confusableOf(p.spoken) : null;
   if (alternative === null) return null;
   const altKg = toKg(alternative, p.unit);
-  const reading = readAs(p.kind, altKg, p.barKg);
-  const belowBar = p.barKg !== null && p.kind === 'total' && altKg < p.barKg;
+  const reading = readAs(p.mode === 'per_side' ? 'per_side' : 'total', altKg, p.barKg);
+  const belowBar = p.barKg !== null && p.mode !== 'per_side' && altKg < p.barKg;
   if (!reading || belowBar || !inBand(reading.totalKg)) return null;
   return {
     option: {
@@ -230,7 +222,7 @@ const asSaidOption = (p: Prepared): Option => ({
 
 /** A total below the bar is impossible: ask "total or per side?". */
 function askBelowBar(p: Prepared, inBand: InBand | null): ValidationResult | null {
-  if (p.barKg === null || p.kind !== 'total' || p.valueKg >= p.barKg) return null;
+  if (p.barKg === null || p.mode === 'per_side' || p.valueKg >= p.barKg) return null;
 
   const options: Option[] = [];
   const confusable = inBand ? confusableOption(p, inBand) : null;
@@ -283,7 +275,7 @@ function finish(p: Prepared): ValidationResult {
   const warnings = [...p.warnings];
   // Measured on the exact per-side weight, not the stored breakdown, which is dropped when inexact.
   const perSideKg =
-    p.barKg === null ? null : p.kind === 'per_side' ? p.valueKg : (p.valueKg - p.barKg) / 2;
+    p.barKg === null ? null : p.mode === 'per_side' ? p.valueKg : (p.valueKg - p.barKg) / 2;
   if (perSideKg !== null && !isMultipleOf(perSideKg, plateStepKg)) {
     warnings.push({
       code: 'PLATE_INCREMENT',

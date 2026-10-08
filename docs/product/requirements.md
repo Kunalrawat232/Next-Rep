@@ -37,6 +37,7 @@
 - Native mobile apps
 - Photo/OCR import of paper logs
 - Any medical, injury or nutrition advice
+- \"Forgot password\" and magic-link sign-in (reliable email delivery is not available on the free tier)
 
 ## Constraints
 

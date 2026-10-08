@@ -1,8 +1,17 @@
-export function App() {
+import type { ComponentProps } from 'react';
+import { RouterProvider } from 'react-router';
+import { AuthProvider, type AuthService } from '../features/auth';
+
+type Props = {
+  service: AuthService;
+  router: ComponentProps<typeof RouterProvider>['router'];
+  ensureProfile?: (userId: string) => Promise<void>;
+};
+
+export function App({ service, router, ensureProfile }: Props) {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-2 p-4">
-      <h1 className="text-3xl font-semibold">Next Rep</h1>
-      <p className="text-ink-muted">Say it between sets. It's logged.</p>
-    </main>
+    <AuthProvider service={service} ensureProfile={ensureProfile}>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
