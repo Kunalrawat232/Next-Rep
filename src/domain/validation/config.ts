@@ -22,9 +22,4 @@ export const VALIDATION_CONFIG = {
     [18, 80],
     [19, 90],
   ],
-} as const satisfies {
-  ranges: Record<string, { min: number; max: number }>;
-  jumpFraction: number;
-  plateStepKg: number;
-  confusablePairs: readonly (readonly [number, number])[];
-};
+} as const;
