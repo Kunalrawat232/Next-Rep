@@ -119,7 +119,10 @@ export function pickDefaultGym(gyms: readonly Gym[]): Gym | undefined {
 }
 
 /** The bar an exercise uses in this gym, or undefined when the gym has none for it (ask the user). */
-export function barFor(gym: Gym, equipment: EquipmentType): number | undefined {
+export function barFor(
+  gym: Pick<Gym, 'barbellKg' | 'bars'>,
+  equipment: EquipmentType,
+): number | undefined {
   if (equipment === 'barbell') return gym.barbellKg;
   if (equipment === 'ez_bar' || equipment === 'smith')
     return gym.bars.find((bar) => bar.kind === equipment)?.weightKg;
