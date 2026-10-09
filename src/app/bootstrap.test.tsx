@@ -4,6 +4,7 @@ import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
 import { createFakeExerciseService } from '../test/fakeExercises';
+import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { createFakeGymService } from '../test/fakeGyms';
 import { bootstrap, type BootstrapDeps } from './bootstrap';
 import { appRoutes } from './routes';
@@ -20,6 +21,7 @@ function deps() {
     createAuthService: vi.fn(() => fake.service),
     createGymService: vi.fn(() => createFakeGymService().service),
     createExerciseService: vi.fn(() => createFakeExerciseService().service),
+    createLogRemote: vi.fn(() => createFakeRemoteLog().remote),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
     ensureProfile: vi.fn(async () => undefined),
   };
@@ -43,6 +45,7 @@ describe('bootstrap', () => {
     expect(d.spies.createAuthService).toHaveBeenCalledTimes(1);
     expect(d.spies.createGymService).toHaveBeenCalledTimes(1);
     expect(d.spies.createExerciseService).toHaveBeenCalledTimes(1);
+    expect(d.spies.createLogRemote).toHaveBeenCalledTimes(1);
     expect(d.spies.createRouter).toHaveBeenCalledTimes(1);
   });
 });

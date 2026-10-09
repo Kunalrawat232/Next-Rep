@@ -19,3 +19,14 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 ## Components
 
 `src/data/local/` (Dexie DB and repositories) · `src/data/remote/` (Supabase client and repositories) · `src/data/sync/` (queue + worker). Queue logic is unit-tested with `fake-indexeddb`; the offline-then-sync journey is covered by a Playwright test using offline mode.
+
+## As built (2026-10-10)
+
+Details and reasons: [ADR-011](decisions/011-local-log-and-sync-worker.md).
+
+- `src/data/local/`: the Dexie database (one per user), the log store and the outbox.
+- `src/data/sync/`: the push worker, the scheduler (start, `online`, visibility, after a write, and a 15 s timer while rows wait) and the persistent-storage request.
+- `src/data/remote/log.ts`: the Supabase upserts and the soft delete.
+- `src/features/sync/`: `SyncProvider` and the `useLogStore`, `useSyncControls` and `useSyncStatus` hooks the screens use.
+- Failures are told apart by cause: being offline or trouble on the server never counts against a row, only a refusal of the row itself does ([ADR-011](decisions/011-local-log-and-sync-worker.md)).
+- Tests: the store and worker against a fake IndexedDB and a fake server; a randomised test that mixes logging, removing, ending, going offline and failing, and checks that no set is ever lost, duplicated or orphaned; PGlite tests of the upsert statements; and an integration test for the hosted project.

@@ -134,14 +134,14 @@ describe('error classification', () => {
     expect(await createSupabaseGymService(client).list()).toEqual({ status: 'error', reason });
   });
 
-  it('says offline for any failed step when the browser reports offline, even with a database message', async () => {
+  it('reports a server refusal as it is even when the browser says it is offline (a real answer proves the network works)', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const svc = createSupabaseGymService(
       fakeClient({ 'gyms:upsert': fail('boom', '23505') }).client,
     );
     expect(await svc.create('u1', 'gym-1', input, true)).toEqual({
       status: 'error',
-      reason: 'offline',
+      reason: 'conflict',
     });
   });
 
