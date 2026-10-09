@@ -4,11 +4,13 @@ import { dayLabel, groupByExercise } from '../../domain/history';
 import { currentRecords } from '../../domain/records';
 import { formatKg } from '../../domain/gyms';
 import { useExerciseService, useExercises } from '../exercises';
+import { useSyncStatus } from '../sync';
 import { useExerciseSets } from './useExerciseSets';
 
 /** The exercises logged on this device, most recently done first, each with its heaviest set. */
 export function ProgressPage() {
   const { state, retry } = useExerciseSets();
+  const { pulling } = useSyncStatus();
   const { state: exercises } = useExercises(useExerciseService());
 
   if (state.status === 'error')
@@ -43,7 +45,11 @@ export function ProgressPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">Progress</h1>
-      {rows.length === 0 ? (
+      {rows.length === 0 && pulling ? (
+        <p role="status" className="text-ink-muted">
+          Loading your history…
+        </p>
+      ) : rows.length === 0 ? (
         <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
           <h2 className="text-headline font-semibold">Nothing to chart yet</h2>
           <p className="text-callout text-ink-muted">

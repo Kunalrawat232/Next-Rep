@@ -1,14 +1,14 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, HOME_GYM, renderApp } from '../../test/appHarness';
+import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
 
 async function openWith(path: string, totals: number[] = [], snapshot: unknown = HOME) {
   const userId = `fix-${Math.random()}`;
-  const first = renderApp('/workout', { userId });
+  const first = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await first.store.startWorkout({
     ...aWorkout(),
     startedAt: '2026-10-01T10:00:00.000Z',

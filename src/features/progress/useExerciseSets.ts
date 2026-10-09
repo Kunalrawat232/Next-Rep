@@ -11,7 +11,7 @@ export function useExerciseSets(exerciseId?: string | null): {
   retry: () => void;
 } {
   const store = useLogStore();
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const [attempt, setAttempt] = useState(0);
   // Tagged with what it is for, so another exercise in the address never shows the previous one's sets.
   const [loaded, setLoaded] = useState<{ for: string | null | undefined; state: SetsState } | null>(
@@ -35,7 +35,7 @@ export function useExerciseSets(exerciseId?: string | null): {
     return () => {
       current = false;
     };
-  }, [store, exerciseId, attempt, pending, failed, syncing]);
+  }, [store, exerciseId, attempt, pending, failed, syncing, pulledVersion]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   const state: SetsState =

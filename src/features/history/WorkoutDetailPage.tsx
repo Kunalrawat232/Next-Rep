@@ -21,7 +21,7 @@ type Loaded =
 export function WorkoutDetailPage() {
   const id = IdSchema.safeParse(useParams().workoutId);
   const store = useLogStore();
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const { state: exercises } = useExercises(useExerciseService());
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -49,7 +49,7 @@ export function WorkoutDetailPage() {
     return () => {
       current = false;
     };
-  }, [store, workoutId, attempt, pending, failed, syncing]);
+  }, [store, workoutId, attempt, pending, failed, syncing, pulledVersion]);
 
   const here = loaded?.workoutId === workoutId ? loaded : null;
   const shownSets = here?.status === 'ready' ? here.sets : [];

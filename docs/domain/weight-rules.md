@@ -46,7 +46,7 @@ A set is a personal record (PR) when it beats the sets **before it** of the same
 - A set is at most one kind. Equal weight and reps is not a record. Bodyweight exercises (0 kg added) can only have rep PRs.
 - Dumbbell weights are per dumbbell (ADR-002) and are only compared with the same exercise, so records need no doubling.
 - The chart plots the top set of each workout: the heaviest, and on a tie the one with more reps. The badge in the sessions table is the kind of that top set.
-- **Known limit:** records look only at the sets stored on this device. After a sign-out clears synced sets, a lighter set can show as a PR until history is pulled back from the server (a planned task), and the first set after that is never a PR.
+- **Known limit:** records look only at the sets stored on this device. After a sign-out clears synced sets, or on a new device, a lighter set can show as a PR until the history pull ([ADR-012](../architecture/decisions/012-pull-history-from-server.md)) has finished, which happens in the background at app start when online.
 
 ## Progression rule ("what should I lift today?")
 

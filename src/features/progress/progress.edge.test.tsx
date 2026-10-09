@@ -1,7 +1,14 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, DUMBBELL_CURL, HOME_GYM, PUSH_UP, renderApp } from '../../test/appHarness';
+import {
+  BENCH,
+  DUMBBELL_CURL,
+  HOME_GYM,
+  PUSH_UP,
+  renderApp,
+  offlineServer,
+} from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout, freshLocal, uuid } from '../../test/localDb';
 
@@ -24,7 +31,7 @@ function offline() {
 /** Workouts already on the device (oldest first in time), then the app at a path, offline. */
 async function openWith(seeds: WorkoutSeed[], path: string, beforeRender?: () => void) {
   const userId = `edge-${Math.random()}`;
-  const first = renderApp('/', { userId });
+  const first = renderApp('/', { userId, server: offlineServer() });
   const ids: { workout: string; sets: string[] }[] = [];
   for (const seed of seeds) {
     const start = at(seed.daysAgo);

@@ -285,3 +285,59 @@ describe("more ways to reach another user's data", () => {
     ).toBe(0);
   });
 });
+
+describe('what the history pull reads', () => {
+  const PW = (n: number) => `cccccccc-0000-4000-8000-00000000000${n}`;
+  const PS = (n: number) => `dddddddd-0000-4000-8000-00000000000${n}`;
+  // The statements PostgREST runs for fetchWorkouts and fetchSets, with the same filters and order.
+  const pullWorkouts = (user: string, from: number, size: number) =>
+    q(
+      `select id, started_at, ended_at from public.workouts
+       where user_id = $1 and deleted_at is null and ended_at is not null and id::text like 'cccccccc%'
+       order by started_at, id offset $2 limit $3`,
+      [user, from, size],
+    );
+  const pullSets = (user: string, from: number, size: number) =>
+    q(
+      `select id from public.sets
+       where user_id = $1 and deleted_at is null and id::text like 'dddddddd%'
+       order by created_at, id offset $2 limit $3`,
+      [user, from, size],
+    );
+
+  it("lists a user's finished, not deleted workouts oldest first, and pages without gaps", async () => {
+    await upsertWorkout(A, PW(1), '2026-10-10T11:00:00Z');
+    await upsertWorkout(A, PW(2), '2026-10-10T11:00:00Z');
+    await upsertWorkout(A, PW(3)); // still open
+    await upsertWorkout(A, PW(4), '2026-10-10T11:00:00Z');
+    await q(`update public.workouts set deleted_at = now() where id = $1`, [PW(4)]);
+    const all = (await as(A, () => pullWorkouts(A, 0, 10))).rows as { id: string }[];
+    expect(all.map((r) => r.id)).toEqual([PW(1), PW(2)]);
+    const first = (await as(A, () => pullWorkouts(A, 0, 1))).rows as { id: string }[];
+    const second = (await as(A, () => pullWorkouts(A, 1, 1))).rows as { id: string }[];
+    expect([...first, ...second].map((r) => r.id)).toEqual([PW(1), PW(2)]);
+  });
+
+  it('lists sets that are not deleted, in the order the server received them', async () => {
+    await upsertSet(A, PS(1), PW(1));
+    await upsertSet(A, PS(2), PW(1));
+    await upsertSet(A, PS(3), PW(2));
+    await q(`update public.sets set deleted_at = now() where id = $1`, [PS(2)]);
+    const rows = (await as(A, () => pullSets(A, 0, 10))).rows as { id: string }[];
+    expect(rows.map((r) => r.id)).toEqual([PS(1), PS(3)]);
+  });
+
+  it("does not show another user's rows, even when asked for them by id", async () => {
+    expect((await as(B, () => pullWorkouts(A, 0, 10))).rows).toHaveLength(0);
+    expect((await as(B, () => pullSets(A, 0, 10))).rows).toHaveLength(0);
+  });
+
+  it('shows nothing to the anon role', async () => {
+    await db.exec(`set role anon`);
+    try {
+      await expect(pullWorkouts(A, 0, 10)).rejects.toThrow(/permission denied/i);
+    } finally {
+      await db.exec('reset role');
+    }
+  });
+});

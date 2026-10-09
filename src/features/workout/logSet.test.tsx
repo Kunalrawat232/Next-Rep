@@ -1,7 +1,15 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, DUMBBELL_CURL, EZ_CURL, HOME_GYM, PUSH_UP, renderApp } from '../../test/appHarness';
+import {
+  BENCH,
+  DUMBBELL_CURL,
+  EZ_CURL,
+  HOME_GYM,
+  PUSH_UP,
+  renderApp,
+  offlineServer,
+} from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
@@ -10,7 +18,7 @@ const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
 /** An open workout already on the device, then the log screen for an exercise. */
 async function openLog(exerciseId: string, snapshot: GymSnapshot = HOME, withSets: number[] = []) {
   const userId = `log-${Math.random()}`;
-  const seed = renderApp('/workout', { userId });
+  const seed = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await seed.store.startWorkout({
     ...aWorkout(),
     gymId: HOME_GYM.id,
