@@ -4,19 +4,48 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AuthProvider } from '../features/auth/AuthProvider';
 import { createFakeAuthService } from '../test/fakeAuth';
+import { createFakeGymService, sampleGym } from '../test/fakeGyms';
+import { GymServiceProvider } from '../features/gyms';
 import { appRoutes } from './routes';
 
-function renderAt(path: string, fake = createFakeAuthService()) {
+function renderAt(
+  path: string,
+  fake = createFakeAuthService(),
+  gyms = createFakeGymService([sampleGym()]),
+) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   render(
     <AuthProvider service={fake.service}>
-      <RouterProvider router={router} />
+      <GymServiceProvider service={gyms.service}>
+        <RouterProvider router={router} />
+      </GymServiceProvider>
     </AuthProvider>,
   );
   return { fake, router, user: userEvent.setup() };
 }
 
 describe('app routes', () => {
+  it('shows the gyms list inside the shell to a signed-in user', async () => {
+    renderAt('/gyms', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    expect(await screen.findByRole('link', { name: /home gym/i })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+  });
+
+  it.each(['/gyms', '/gyms/new', '/gyms/g1'])(
+    'sends a signed-out visitor from %s to sign-in',
+    async (path) => {
+      const { router } = renderAt(path);
+      expect(await screen.findByRole('heading', { name: 'Sign in', level: 2 })).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe('/sign-in');
+    },
+  );
+
+  it('links Home to the gyms list', async () => {
+    const { router, user } = renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    await user.click(await screen.findByRole('link', { name: /manage gyms/i }));
+    expect(router.state.location.pathname).toBe('/gyms');
+  });
+
   it('sends a signed-out visitor from / to the sign-in page', async () => {
     const { router } = renderAt('/');
     expect(await screen.findByRole('heading', { name: 'Sign in', level: 2 })).toBeInTheDocument();

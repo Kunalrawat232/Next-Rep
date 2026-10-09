@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../components';
+import { Link } from 'react-router';
+import { Button, buttonClasses } from '../components';
 import { useAuth } from '../features/auth';
 
 export function HomePage() {
@@ -27,6 +28,12 @@ export function HomePage() {
         <p id="workout-note" className="text-caption text-ink-muted">
           Workout logging is coming soon.
         </p>
+      </section>
+
+      <section aria-label="Gyms">
+        <Link to="/gyms" className={buttonClasses('secondary', 'w-full')}>
+          Manage gyms
+        </Link>
       </section>
 
       <section
