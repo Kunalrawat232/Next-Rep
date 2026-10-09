@@ -1,5 +1,6 @@
 import { SetSchema, WorkoutSchema, type LoggedSet } from '../../domain/schemas';
 import type { LocalDb } from './db';
+import { readGymList, readGymSnapshot } from './gymShape';
 import type {
   LogStore,
   NewWorkout,
@@ -37,6 +38,7 @@ const META_KEYS: readonly string[] = [
   'lastError',
   'lastAttemptAt',
   'everSynced',
+  'gymSnapshot',
 ];
 
 /** The row as the shared schemas know it, without the bookkeeping. */
@@ -205,7 +207,12 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       return db.transaction('rw', db.workouts, async () => {
         const existing = await db.workouts.get(parsed.id);
         if (existing) return existing; // a retried start must not reopen or reset a workout
-        const row: StoredWorkout = { ...parsed, ...fresh(), everSynced: false };
+        const row: StoredWorkout = {
+          ...parsed,
+          ...fresh(),
+          everSynced: false,
+          gymSnapshot: input.gymSnapshot ?? null,
+        };
         await db.workouts.put(row);
         return row;
       });
@@ -223,6 +230,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
           ...fresh(),
           rev: row.rev + 1,
           everSynced: row.everSynced,
+          gymSnapshot: row.gymSnapshot ?? null,
         };
         await db.workouts.put(next);
         return next;
@@ -231,7 +239,8 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
 
     async activeWorkout() {
       const open = await db.workouts.filter((w) => w.endedAt === null).toArray();
-      return open.sort((a, b) => compareText(b.startedAt, a.startedAt))[0];
+      const newest = open.sort((a, b) => compareText(b.startedAt, a.startedAt))[0];
+      return newest && { ...newest, gymSnapshot: readGymSnapshot(newest.gymSnapshot) };
     },
 
     async logSet(input: LoggedSet) {
@@ -278,6 +287,27 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       });
     },
 
+    async removeSyncedSet(id) {
+      return db.transaction('rw', db.sets, async () => {
+        const row = await db.sets.get(id);
+        if (!row || row.syncStatus !== 'synced') return false;
+        await db.sets.delete(id);
+        return true;
+      });
+    },
+
+    async refreshGymSnapshot(workoutId, snapshot) {
+      await db.workouts.update(workoutId, { gymSnapshot: snapshot });
+    },
+
+    async saveGyms(gyms) {
+      await db.gymCache.put({ id: 'list', gyms, savedAt: clock() });
+    },
+
+    async cachedGyms() {
+      return readGymList((await db.gymCache.get('list'))?.gyms);
+    },
+
     async counts() {
       const [pendingSets, failedSets, pendingWorkouts, failedWorkouts, deletions] =
         await Promise.all([
@@ -312,7 +342,8 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async purgeSynced() {
-      return db.transaction('rw', db.workouts, db.sets, db.deletions, async () => {
+      return db.transaction('rw', db.workouts, db.sets, db.deletions, db.gymCache, async () => {
+        await db.gymCache.clear(); // gym names are the user's data too; they are fetched again at the next sign-in
         await db.sets.where('syncStatus').equals('synced').delete();
         const remainingSets = await db.sets.toArray();
         const keep = new Set(remainingSets.map((s) => s.workoutId));

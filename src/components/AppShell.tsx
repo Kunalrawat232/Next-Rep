@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet } from 'react-router';
 import { Logo } from './Logo';
 
 type Item = { label: string; to: string | null; icon: ReactNode; desktopOnly?: boolean };
@@ -36,7 +36,7 @@ const ITEMS: Item[] = [
   },
   {
     label: 'Workout',
-    to: null,
+    to: '/workout',
     desktopOnly: true,
     icon: (
       <Icon>
@@ -100,7 +100,7 @@ export function AppShell() {
                 {item.to ? (
                   <NavLink
                     to={item.to}
-                    end
+                    end={item.to === '/'}
                     className={({ isActive }) =>
                       `${itemBase} ${isActive ? 'text-accent lg:bg-surface-200' : 'text-ink-muted'}`
                     }
@@ -125,12 +125,11 @@ export function AppShell() {
           </ul>
         </nav>
       </div>
-      {/* The phone's Workout entry: the sidebar item is desktop-only. Enabled once the workout page exists. */}
-      <button
-        type="button"
-        disabled
-        aria-label="Start workout (coming soon)"
-        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent disabled:cursor-not-allowed disabled:opacity-60 lg:hidden"
+      {/* The phone's Workout entry: the sidebar item is desktop-only. */}
+      <Link
+        to="/workout"
+        aria-label="Workout"
+        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent lg:hidden"
       >
         <svg
           width="28"
@@ -147,7 +146,7 @@ export function AppShell() {
           <path d="M19 11a7 7 0 0 1-14 0" />
           <path d="M12 18v3" />
         </svg>
-      </button>
+      </Link>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-28 lg:px-8 lg:pb-8">
         <Outlet />
       </main>

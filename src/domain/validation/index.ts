@@ -14,6 +14,11 @@ export type SetCandidate = {
   reps: number;
   /** Bar weight for this exercise (gym default or override); ignored for equipment without a bar. */
   barKg: number | null;
+  /**
+   * Where the number came from. Speech can mishear, so a voice number may get "did you mean ...?"
+   * questions. A number the user tapped was chosen on purpose and never does. Voice when missing.
+   */
+  source?: 'tap' | 'voice';
 };
 
 export type ValidationContext = {
@@ -62,6 +67,7 @@ type Prepared = {
   mode: WeightMode;
   literal: ResolvedWeight;
   warnings: Issue[];
+  source: 'tap' | 'voice';
 };
 
 type InBand = (totalKg: number) => boolean;
@@ -173,7 +179,16 @@ function prepare(candidate: SetCandidate): Prepared | ValidationResult {
   const literal = readAs(kind, valueKg, barKg);
   if (literal === null) return { status: 'reject', issues: [outOfRangeIssue(kind, valueKg)] };
 
-  return { spoken: weight.value, unit: weight.unit, valueKg, barKg, mode, literal, warnings };
+  return {
+    spoken: weight.value,
+    unit: weight.unit,
+    valueKg,
+    barKg,
+    mode,
+    literal,
+    warnings,
+    source: candidate.source ?? 'voice',
+  };
 }
 
 function perSideOption(
@@ -195,6 +210,7 @@ function perSideOption(
 
 /** "Did you mean 60?" for a misheard 16: only when the alternative fits history and the spoken one does not. */
 function confusableOption(p: Prepared, inBand: InBand): { option: Option; issue: Issue } | null {
+  if (p.source === 'tap') return null; // a tapped number was chosen on purpose
   const alternative = Number.isInteger(p.spoken) ? confusableOf(p.spoken) : null;
   if (alternative === null) return null;
   const altKg = toKg(alternative, p.unit);
@@ -266,22 +282,33 @@ function askLargeJump(p: Prepared, last: number, inBand: InBand): ValidationResu
     options.push(confusable.option);
     issues.push(confusable.issue);
   }
+  // Nothing to choose between: a tapped number is only flagged, while a spoken one is still confirmed.
+  if (options.length === 0 && p.source === 'tap')
+    return {
+      status: 'warn',
+      resolved: p.literal,
+      issues: [...issues, ...p.warnings, ...[plateWarning(p)].filter((issue) => issue !== null)],
+    };
   options.push(asSaidOption(p));
   return { status: 'ask', options, issues: [...issues, ...p.warnings] };
 }
 
-/** Everything is plausible. Soft-warn about weights that standard plates cannot make. */
-function finish(p: Prepared): ValidationResult {
-  const warnings = [...p.warnings];
+/** Standard plates cannot make this weight: a soft warning, never a block. */
+function plateWarning(p: Prepared): Issue | null {
   // Measured on the exact per-side weight, not the stored breakdown, which is dropped when inexact.
   const perSideKg =
     p.barKg === null ? null : p.mode === 'per_side' ? p.valueKg : (p.valueKg - p.barKg) / 2;
-  if (perSideKg !== null && !isMultipleOf(perSideKg, plateStepKg)) {
-    warnings.push({
-      code: 'PLATE_INCREMENT',
-      message: `${fmt(perSideKg)} kg per side is not a multiple of ${plateStepKg} kg. Check the plates.`,
-    });
-  }
+  if (perSideKg === null || isMultipleOf(perSideKg, plateStepKg)) return null;
+  return {
+    code: 'PLATE_INCREMENT',
+    message: `${fmt(perSideKg)} kg per side is not a multiple of ${plateStepKg} kg. Check the plates.`,
+  };
+}
+
+/** Everything is plausible. Soft-warn about weights that standard plates cannot make. */
+function finish(p: Prepared): ValidationResult {
+  const plates = plateWarning(p);
+  const warnings = plates ? [...p.warnings, plates] : [...p.warnings];
   return warnings.length > 0
     ? { status: 'warn', resolved: p.literal, issues: warnings }
     : { status: 'ok', resolved: p.literal, issues: [] };

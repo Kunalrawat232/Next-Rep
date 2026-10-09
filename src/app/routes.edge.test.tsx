@@ -1,8 +1,11 @@
 import { act, render, screen } from '@testing-library/react';
+import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../features/auth/AuthProvider';
+import { SyncProvider } from '../features/sync';
 import { createFakeAuthService } from '../test/fakeAuth';
+import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { appRoutes } from './routes';
 
 const ada = { id: 'u1', email: 'ada@example.com' };
@@ -11,7 +14,9 @@ function renderAt(path: string, fake = createFakeAuthService()) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   render(
     <AuthProvider service={fake.service}>
-      <RouterProvider router={router} />
+      <SyncProvider remote={createFakeRemoteLog().remote} dexieDeps={{ indexedDB, IDBKeyRange }}>
+        <RouterProvider router={router} />
+      </SyncProvider>
     </AuthProvider>,
   );
   return { fake, router };

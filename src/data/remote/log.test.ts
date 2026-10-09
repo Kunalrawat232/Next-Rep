@@ -40,6 +40,7 @@ const meta = {
 };
 const workout: StoredWorkout = {
   everSynced: false,
+  gymSnapshot: null,
   id: 'w1',
   gymId: 'g1',
   startedAt: '2026-10-10T10:00:00.000Z',

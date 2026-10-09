@@ -28,23 +28,26 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each(['Workout', 'History', 'Progress', 'Settings'])(
-    '%s is not a link yet, and says why',
-    (name) => {
-      renderShell();
-      expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
-      const nav = screen.getByRole('navigation', { name: 'Main' });
-      const item = within(nav).getByText(name).closest('[aria-disabled="true"]');
-      expect(item).not.toBeNull();
-      expect(item).toHaveTextContent('coming soon');
-    },
-  );
-
-  it('offers a floating mic button as the phone entry to Workout, disabled until it exists', () => {
+  it.each(['History', 'Progress', 'Settings'])('%s is not a link yet, and says why', (name) => {
     renderShell();
-    const mic = screen.getByRole('button', { name: /start workout/i });
-    expect(mic).toBeDisabled();
-    expect(mic).toHaveAccessibleName(/coming soon/i);
-    expect(mic.className).toContain('lg:hidden');
+    expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    const item = within(nav).getByText(name).closest('[aria-disabled="true"]');
+    expect(item).not.toBeNull();
+    expect(item).toHaveTextContent('coming soon');
+  });
+
+  it('links Workout in the sidebar to the workout page', () => {
+    renderShell();
+    const nav = screen.getByRole('navigation', { name: 'Main' });
+    expect(within(nav).getByRole('link', { name: 'Workout' })).toHaveAttribute('href', '/workout');
+  });
+
+  it('offers a floating mic button as the phone entry to Workout', () => {
+    renderShell();
+    const mic = screen
+      .getAllByRole('link', { name: 'Workout' })
+      .find((link) => link.className.includes('lg:hidden'));
+    expect(mic).toHaveAttribute('href', '/workout');
   });
 });

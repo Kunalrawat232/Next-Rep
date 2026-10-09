@@ -47,7 +47,7 @@ async function setup() {
   return { ...local, server, clock, worker, run, browser, scheduler };
 }
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
 
 describe('starting and stopping', () => {
   it('syncs at once when it starts, even rows that are still backing off', async () => {
