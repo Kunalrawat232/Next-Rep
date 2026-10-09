@@ -17,6 +17,7 @@ import {
 import {
   createSyncScheduler,
   createSyncWorker,
+  pullHistory,
   type SchedulerEnv,
   requestPersistentStorage,
   type RemoteLog,
@@ -77,22 +78,35 @@ function SyncSession({ userId, remote, children, dexieDeps }: Props & { userId: 
     const db: LocalDb = openLocalDb(userId, dexieDeps);
     const store = createLogStore(db);
     const worker = createSyncWorker({ store, remote, userId });
-    const scheduler = createSyncScheduler({ worker, store, env: browserEnv() });
+    const scheduler = createSyncScheduler({
+      worker,
+      store,
+      env: browserEnv(),
+      pull: (isActive) => pullHistory({ store, remote, userId, isActive }),
+    });
     let persistAsked = false;
     const controls: Controls = {
       notify: scheduler.notify,
       refresh: scheduler.refresh,
       retryFailed: scheduler.retryFailed,
-      deleteSyncedSet: async (id) => {
-        const result = await remote.softDeleteSet(id, new Date().toISOString()).catch(() => null);
-        if (result?.status === 'ok') {
-          await store.removeSyncedSet(id);
-          await scheduler.refresh();
-          return 'deleted';
-        }
-        return result?.status === 'error' && result.reason === 'offline' ? 'offline' : 'failed';
-      },
-      purgeSynced: () => store.purgeSynced(),
+      // Inside the scheduler's lock, so a pull that read the set earlier cannot bring it back.
+      deleteSyncedSet: (id) =>
+        scheduler
+          .exclusive(async () => {
+            const result = await remote
+              .softDeleteSet(id, new Date().toISOString())
+              .catch(() => null);
+            if (result?.status === 'ok') {
+              await store.removeSyncedSet(id);
+              return 'deleted';
+            }
+            return result?.status === 'error' && result.reason === 'offline' ? 'offline' : 'failed';
+          })
+          .then(async (outcome) => {
+            if (outcome === 'deleted') await scheduler.refresh();
+            return outcome;
+          }),
+      purgeSynced: () => scheduler.purgeSynced(),
       // Asked for once, after the first set is logged: a prompt on every start would be noise.
       ensurePersistence: () => {
         if (persistAsked) return;

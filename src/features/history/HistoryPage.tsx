@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { Button, buttonClasses } from '../../components';
 import type { StoredSet, StoredWorkout } from '../../data/local';
 import { dayLabel, durationMinutes, formatDuration } from '../../domain/history';
+import { useSyncStatus } from '../sync';
 import { useWorkout } from '../workout';
 import { countLabel, syncNote } from './rows';
 import { useHistory } from './useHistory';
@@ -10,6 +11,7 @@ import { useHistory } from './useHistory';
 export function HistoryPage() {
   const { state, showMore, retry } = useHistory();
   const open = useWorkout().state;
+  const { pulling } = useSyncStatus();
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,7 +47,13 @@ export function HistoryPage() {
         </div>
       )}
 
-      {state.status === 'ready' && state.workouts.length === 0 && (
+      {state.status === 'ready' && state.workouts.length === 0 && pulling && (
+        <p role="status" className="text-ink-muted">
+          Loading your history…
+        </p>
+      )}
+
+      {state.status === 'ready' && state.workouts.length === 0 && !pulling && (
         <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
           <h2 className="text-headline font-semibold">No finished workouts yet</h2>
           <p className="text-callout text-ink-muted">

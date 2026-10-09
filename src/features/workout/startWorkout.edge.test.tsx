@@ -1,7 +1,7 @@
 // Edge and negative cases for starting a workout and the saved gym list. A failing test here is a suspected bug.
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { BENCH, HOME_GYM, renderApp } from '../../test/appHarness';
+import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { sampleGym } from '../../test/fakeGyms';
 import { aWorkout } from '../../test/localDb';
 
@@ -61,7 +61,7 @@ describe('the saved gym list', () => {
 describe('the workout page for an exercise it does not know', () => {
   it('shows the open workout with a generic name instead of failing', async () => {
     const userId = `unknown-${Math.random()}`;
-    const seed = renderApp('/workout', { userId });
+    const seed = renderApp('/workout', { userId, server: offlineServer() });
     await seed.store.startWorkout({
       ...aWorkout(),
       gymId: HOME_GYM.id,
@@ -75,7 +75,7 @@ describe('the workout page for an exercise it does not know', () => {
 
   it('does not offer to log before an exercise is chosen', async () => {
     const userId = `unknown-${Math.random()}`;
-    const seed = renderApp('/workout', { userId });
+    const seed = renderApp('/workout', { userId, server: offlineServer() });
     await seed.store.startWorkout({ ...aWorkout(), gymId: HOME_GYM.id });
     seed.unmount();
     renderApp('/workout', { userId });

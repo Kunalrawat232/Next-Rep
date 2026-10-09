@@ -184,7 +184,14 @@ describe('status', () => {
     expect(scheduler.status().pending).toBe(2);
     release();
     await settle();
-    expect(scheduler.status()).toEqual({ syncing: false, pending: 0, failed: 0, offline: false });
+    expect(scheduler.status()).toEqual({
+      syncing: false,
+      pending: 0,
+      failed: 0,
+      offline: false,
+      pulling: false,
+      pulledVersion: 0,
+    });
     expect(seen.some((s) => s.syncing)).toBe(true);
     scheduler.stop();
   });

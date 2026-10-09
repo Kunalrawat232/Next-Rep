@@ -3,6 +3,7 @@ import type { LocalDb } from './db';
 import { readGymList, readGymSnapshot } from './gymShape';
 import type {
   LogStore,
+  MergeOutcome,
   NewWorkout,
   Outbox,
   PendingDeletion,
@@ -254,6 +255,20 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       return rows.map((row) => ({ ...row, gymSnapshot: readGymSnapshot(row.gymSnapshot) }));
     },
 
+    async setsForExercises(exerciseIds) {
+      const parts = await Promise.all(
+        [...new Set(exerciseIds)].map((id) =>
+          db.sets.where('[exerciseId+loggedAt]').between([id, ''], [id, '\uffff']).toArray(),
+        ),
+      );
+      return parts.flat().sort((a, b) => compareText(a.loggedAt, b.loggedAt));
+    },
+
+    async allSets() {
+      const rows = await db.sets.toArray();
+      return rows.sort((a, b) => compareText(a.loggedAt, b.loggedAt));
+    },
+
     async listSetsFor(workoutIds) {
       const rows = await db.sets.where('workoutId').anyOf(workoutIds).toArray();
       return rows.sort((a, b) => compareText(a.loggedAt, b.loggedAt));
@@ -315,6 +330,110 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
         if (!row || row.syncStatus !== 'synced') return false;
         await db.sets.delete(id);
         return true;
+      });
+    },
+
+    async mergePulled(pulled) {
+      const gyms = new Map((pulled.gyms ?? []).map((g) => [g.id, g]));
+      return db.transaction('rw', db.workouts, db.sets, db.deletions, async () => {
+        const outcome: MergeOutcome = {
+          addedWorkouts: 0,
+          updatedWorkouts: 0,
+          addedSets: 0,
+          removedWorkouts: 0,
+          removedSets: 0,
+          skippedSets: 0,
+          removalsSkipped: false,
+        };
+        const snapshotOf = (gymId: string | null) => {
+          const gym = gymId === null ? undefined : gyms.get(gymId);
+          return gym ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars } : null;
+        };
+        const confirmed = (): SyncMeta & { everSynced: boolean } => ({
+          ...fresh(),
+          syncStatus: 'synced',
+          everSynced: true,
+        });
+
+        for (const incoming of pulled.workouts) {
+          // Stored in the same canonical form as local rows, so times sort as plain strings.
+          const checked = WorkoutSchema.parse(incoming);
+          const parsed = {
+            ...checked,
+            startedAt: canonical(checked.startedAt),
+            endedAt: checked.endedAt === null ? null : canonical(checked.endedAt),
+          };
+          const local = await db.workouts.get(parsed.id);
+          if (!local) {
+            const gym = parsed.gymId === null ? undefined : gyms.get(parsed.gymId);
+            await db.workouts.put({
+              ...parsed,
+              ...confirmed(),
+              gymSnapshot: gym
+                ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars }
+                : null,
+            });
+            outcome.addedWorkouts += 1;
+          } else if (
+            local.syncStatus === 'synced' &&
+            (local.gymId !== parsed.gymId ||
+              local.startedAt !== parsed.startedAt ||
+              local.endedAt !== parsed.endedAt ||
+              local.notes !== parsed.notes)
+          ) {
+            // The gym name on screen must follow the gym the workout now belongs to.
+            const gymSnapshot =
+              local.gymId === parsed.gymId ? local.gymSnapshot : snapshotOf(parsed.gymId);
+            await db.workouts.put({ ...local, ...parsed, gymSnapshot });
+            outcome.updatedWorkouts += 1;
+          }
+        }
+
+        for (const incoming of pulled.sets) {
+          const checked = SetSchema.parse(incoming);
+          if (await db.sets.get(checked.id)) continue;
+          // A set removed on this device whose delete has not reached the server yet stays removed.
+          if (await db.deletions.get(checked.id)) continue;
+          if (!(await db.workouts.get(checked.workoutId))) {
+            outcome.skippedSets += 1;
+            continue;
+          }
+          await db.sets.put({ ...checked, loggedAt: canonical(checked.loggedAt), ...confirmed() });
+          outcome.addedSets += 1;
+        }
+
+        // The server answered in full, so a synced row it no longer has was deleted elsewhere. Unless
+        // it is missing everything, or most of it: that looks like a bad answer, not a real change.
+        const synced = await db.sets.where('syncStatus').equals('synced').toArray();
+        const missing = synced.filter((set) => !pulled.serverSetIds.has(set.id));
+        const looksWrong =
+          missing.length > 0 &&
+          (pulled.serverSetIds.size === 0 ||
+            (missing.length >= 10 && missing.length * 2 > synced.length));
+        if (looksWrong) {
+          outcome.removalsSkipped = true;
+          return outcome;
+        }
+        for (const set of missing) {
+          await db.sets.delete(set.id);
+          outcome.removedSets += 1;
+        }
+        const stillUsed = new Set((await db.sets.toArray()).map((s) => s.workoutId));
+        // Only finished workouts were asked for, so an open one is never taken for deleted.
+        const gone = await db.workouts
+          .filter(
+            (w) =>
+              w.syncStatus === 'synced' &&
+              w.endedAt !== null &&
+              !pulled.serverWorkoutIds.has(w.id) &&
+              !stillUsed.has(w.id),
+          )
+          .toArray();
+        for (const workout of gone) {
+          await db.workouts.delete(workout.id);
+          outcome.removedWorkouts += 1;
+        }
+        return outcome;
       });
     },
 

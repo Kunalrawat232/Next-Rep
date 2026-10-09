@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, HOME_GYM, renderApp } from '../../test/appHarness';
+import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 
@@ -18,7 +18,7 @@ async function openWith(
   server = createFakeRemoteLog(),
 ) {
   const userId = `act-${Math.random()}`;
-  const first = renderApp('/workout', { userId });
+  const first = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await first.store.startWorkout({
     ...aWorkout(),
     startedAt: '2026-10-01T10:00:00.000Z',
@@ -186,6 +186,25 @@ describe('signing out from Home', () => {
     await user.click(within(group).getByRole('button', { name: 'Stay signed in' }));
     expect(screen.queryByRole('group', { name: 'Sets waiting' })).not.toBeInTheDocument();
     expect(await db.sets.count()).toBe(1);
+  });
+
+  it('signs out only once when Sign out is tapped twice quickly', async () => {
+    // Everything is already on the server, so there is nothing to warn about.
+    const { user, auth, db, workout } = await openWith([{ status: 'synced' }], '/', offline());
+    await db.workouts.update(workout.id, { syncStatus: 'synced' });
+    await user.dblClick(await screen.findByRole('button', { name: /sign out/i }));
+    await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(auth.service.signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('signs out only once when Sign out anyway is tapped twice quickly', async () => {
+    const { user, auth } = await openWith([{ status: 'pending' }], '/', offline());
+    await user.click(await screen.findByRole('button', { name: /sign out/i }));
+    await user.dblClick(await screen.findByRole('button', { name: 'Sign out anyway' }));
+    await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(auth.service.signOut).toHaveBeenCalledTimes(1);
   });
 
   it('signs out anyway on request, and keeps the waiting sets on the device', async () => {

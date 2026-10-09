@@ -6,6 +6,7 @@ import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/loc
 import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '../../domain/history';
 import { useExerciseService, useExercises } from '../exercises';
 import { useLogStore, useSyncStatus } from '../sync';
+import { useRecordMarks } from '../progress';
 import { SetList } from '../workout';
 import { countLabel, syncNote } from './rows';
 
@@ -20,7 +21,7 @@ type Loaded =
 export function WorkoutDetailPage() {
   const id = IdSchema.safeParse(useParams().workoutId);
   const store = useLogStore();
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const { state: exercises } = useExercises(useExerciseService());
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -48,9 +49,11 @@ export function WorkoutDetailPage() {
     return () => {
       current = false;
     };
-  }, [store, workoutId, attempt, pending, failed, syncing]);
+  }, [store, workoutId, attempt, pending, failed, syncing, pulledVersion]);
 
   const here = loaded?.workoutId === workoutId ? loaded : null;
+  const shownSets = here?.status === 'ready' ? here.sets : [];
+  const marks = useRecordMarks(shownSets.map((s) => s.exerciseId));
   if (here?.status === 'error')
     return (
       <div role="alert" className="flex flex-col items-start gap-3">
@@ -108,7 +111,12 @@ export function WorkoutDetailPage() {
       )}
       {sets.length === 0 && <p className="text-callout text-ink-muted">No sets in this workout.</p>}
       {groupByExercise(sets).map((group) => (
-        <SetList key={group.exerciseId} title={nameOf(group.exerciseId)} sets={group.sets} />
+        <SetList
+          key={group.exerciseId}
+          title={nameOf(group.exerciseId)}
+          sets={group.sets}
+          marks={marks}
+        />
       ))}
     </div>
   );

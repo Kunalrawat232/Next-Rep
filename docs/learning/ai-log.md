@@ -159,7 +159,7 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - How validated: _(developer to fill)_ Evidence: 1298 unit tests and 72 database tests pass; 7 of 8 deliberate breakages turned tests red (the eighth is a shadowed guard); the seed check confirms 892 exercises (56 curated, 836 imported); screenshots at 390 and 1440 px checked. Not yet run: the exercise integration test, and migration 0003 plus the re-seed on the hosted project.
 - Lesson: read a dataset's licence file, not its summary, and separate its data from its media before importing.
 
-## 2026-10-10: Local-first logging and the sync worker
+## 2026-10-09: Local-first logging and the sync worker
 
 - Tool: Claude Code with the advisor tool, a randomised invariant test, mutation checks, `code-reviewer`, `security-auditor` and `qa-tester`
 - Asked: build the on-device log (IndexedDB) and a sync worker that pushes workouts and sets to Supabase, working offline, before any workout screen exists.
@@ -169,7 +169,7 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - How validated: _(developer to fill)_ Evidence: 1760 unit tests and 93 database tests pass; 8 of 8 deliberate breakages of the sync logic turn tests red; the randomised test converges on 150 seeds without any manual retry. Not yet run: the hosted integration test (`npm run test:integration`).
 - Lesson: a randomised test with a model of "what should be on the server" finds races that example tests do not; and a test that only checks the initial state cannot catch a broken session.
 
-## 2026-10-10: Workout screens (tap logging)
+## 2026-10-09: Workout screens (tap logging)
 
 - Tool: Claude Code with the advisor tool, whole-app tests on a fake server and fake IndexedDB, mutation checks, `code-reviewer`, `security-auditor` and `qa-tester`
 - Asked: build start workout, choose exercise, log a set by tapping with the bar and per-side breakdown, undo, end workout, an offline banner and a sync badge, on top of the local-first log.
@@ -180,7 +180,7 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - How validated: _(developer to fill)_ Evidence: 2064 unit tests and 93 database tests pass; 7 of 7 deliberate breakages turn tests red. Not yet run: the Playwright offline-then-sync journey and the hosted integration tests (the developer runs these).
 - Lesson: when a rule exists because of speech, give the validator the source of the input instead of special-casing the screen.
 
-## 2026-10-10: History
+## 2026-10-09: History
 
 - Tool: Claude Code with the advisor tool, whole-app tests on a fake server and fake IndexedDB, mutation checks, `code-reviewer` and `qa-tester`
 - Asked: a History list of past workouts and a workout detail screen, working offline.
@@ -190,3 +190,25 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: History next; no questions answered, so my defaults apply: finished workouts only with the open one pinned, and no sync-down of older workouts yet.
 - How validated: _(developer to fill)_ Evidence: 2192 unit tests and 93 database tests pass; 7 of 8 deliberate breakages turn tests red. Not yet run: the Playwright journeys and hosted integration tests (the developer runs these).
 - Lesson: when the plan and an ADR disagree, drop the feature from the task rather than choosing quietly.
+
+## 2026-10-09: Progress charts and personal records
+
+- Tool: Claude Code with the advisor tool, a randomised model test, mutation checks, and `code-reviewer` and `qa-tester`
+- Asked: a Progress tab with a chart per exercise, personal records, and PR badges on sets.
+- AI produced: a pure records module (PR rules, top set per session, current bests), per-exercise log-store reads, a themed chart with a table that carries the same numbers, the list and exercise screens (loaded on demand), PR badges and a "New personal record" note, and tests from the rules up to whole screens.
+- Problems found: (1) the advisor made me write down the PR rules before coding (a rep PR needs an earlier set at that weight, one kind per set, 0 kg never a weight PR, compare in hundredths, ties by id) and to work them out in one pass instead of re-checking every set, the same quadratic mistake History's QA had just caught; (2) I checked that the chart library renders in the test environment without errors before building on it, and made the table, not the drawing, what the tests assert on; (3) "Sign out anyway" bypassed the double-tap guard added the same day; (4) several doc entries carried a date a day ahead of the clock and were corrected; (5) one mutation survived, the guard that drops stale PR marks; the review then showed it hid a real flicker, so the guard was replaced by keeping the last marks; (6) the QA agent overwrote an existing test file from the sync task (about 450 lines) while saying all its files were new, which I caught from the diff size and restored.
+- Review results: `code-reviewer` and `qa-tester` (50 new tests) found that PR badges blinked off on every log or undo, that a bodyweight exercise showed "Heaviest 0 kg" and a weight PR, that the table could lose a badge when two top sets tied, that a failed read of the marks was an unhandled error, that an invalid address still read every set, that two sessions on one day shared a chart label, and that one test asserted nothing. All fixed. A known limit (records only see sets on this device) is written into the weight rules.
+- Decisions by the developer: charts and PRs first, pulling history from the server afterwards (so charts are empty on a freshly signed-in device until then).
+- How validated: _(developer to fill)_ Evidence: 2285 unit tests and 93 database tests pass, with a randomised test comparing the PR rules against a plain check of every earlier set on 150 histories; 7 of 8 deliberate breakages turn tests red. Not yet run: a production build (it loads `.env.local`, so the developer runs it) to confirm the chart library is in its own download.
+- Lesson: write the rule's edge cases down before the code, and test them against a deliberately slow, obvious version.
+
+## 2026-10-09: Pulling history from the server
+
+- Tool: Claude Code with the advisor tool, a two-device convergence test, mutation checks, `code-reviewer` and `security-auditor`
+- Asked: bring a user's workouts and sets back from Supabase to a fresh or signed-out device, so History, Progress and records are not empty.
+- AI produced: a read-only pull (`src/data/sync/pull.ts`), paged server reads with the same failure handling as the pushes, one transactional merge into the device log, scheduler integration with a `pulling` status, loading notes on History and Progress, ADR-012, and tests from the merge rules up to a random two-device scenario.
+- Problems found: (1) the advisor warned that the server writes times as `+00:00` while the device uses `Z`, and that comparing them as strings would reorder sets and break records, so the merge goes through the same canonical form as local writes and a test mixes both; (2) a pull must not run next to a push, or a set pushed meanwhile looks deleted, so it runs inside the scheduler's lock; (3) rows that fail validation must still count as on the server, or a damaged server row would delete the local copy; (4) only finished workouts are pulled, or another device's open workout could replace the one in progress; (5) my own tests marked rows as synced that the server never had, and the first pull then deleted them, so setup phases in whole-app tests now use an unreachable server.
+- Review results: `code-reviewer` and `security-auditor` found that sign-out's purge could be undone by a pull still in flight (history written back to a signed-out device), that offset paging let a delete on another device make a valid row look deleted, that a capped or empty answer could empty the device, that an online delete could be undone by a pull that read the set earlier, that one unreadable time would stall every pull, that offline users saw a loading note flicker every 15 seconds, that a changed gym kept the old name, and that spoken transcripts were pulled needlessly. All fixed: paging by id ending on an empty page, a mass-removal guard, purge and online delete inside the scheduler's lock, no transcript.
+- Decisions by the developer: pull on every app start, with all history and no date window; the QA agent is on hold until the whole UI is built, so no `qa-tester` run for this task.
+- How validated: _(developer to fill)_ Evidence: unit tests and 97 database tests pass; 90 random two-device scenarios converge (same sets and the same personal records); 17 of 19 deliberate breakages of the pull turn tests red (the two survivors are an `isActive` check and an `exclusive` call that overlap with each other). Not yet run: the hosted integration test (`npm run test:integration`), which checks that the real server's value types pass the shared schemas.
+- Lesson: when two devices share a server, test them against each other, and write the rule for what "deleted elsewhere" means before writing the code that deletes.

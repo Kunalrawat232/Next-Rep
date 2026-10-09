@@ -15,6 +15,13 @@ import { createFakeExerciseService } from './fakeExercises';
 import { createFakeGymService, sampleGym } from './fakeGyms';
 import { createFakeRemoteLog } from './fakeRemoteLog';
 
+/** A server that cannot be reached: for the setup phase of a test, so the app does not sync or pull while rows are being put in place. */
+export function offlineServer() {
+  const server = createFakeRemoteLog();
+  server.setOffline(true);
+  return server;
+}
+
 export const HOME_GYM: Gym = sampleGym({
   id: '11111111-1111-4111-8111-111111111111',
   name: 'Home gym',

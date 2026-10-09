@@ -95,6 +95,10 @@ export interface LogStore {
   getWorkout(id: string): Promise<StoredWorkout | undefined>;
   /** Ended workouts, newest start first, at most `limit`. */
   endedWorkouts(limit: number): Promise<StoredWorkout[]>;
+  /** Every set of these exercises in any workout, oldest first. */
+  setsForExercises(exerciseIds: string[]): Promise<StoredSet[]>;
+  /** Every set on this device, oldest first. */
+  allSets(): Promise<StoredSet[]>;
   /** The sets of several workouts at once, oldest first. */
   listSetsFor(workoutIds: string[]): Promise<StoredSet[]>;
   /** The newest set of this exercise, in any workout. */
@@ -109,6 +113,11 @@ export interface LogStore {
   retryFailed(): Promise<number>;
   /** Forgets a set the server has deleted. Only for synced sets; unsynced ones go through removeUnsyncedSet. */
   removeSyncedSet(id: string): Promise<boolean>;
+  /**
+   * Takes in what a complete pull found on the server, in one transaction. New rows come in as
+   * synced; rows waiting to sync are never touched; a synced row the server no longer has goes.
+   */
+  mergePulled(pulled: PulledHistory): Promise<MergeOutcome>;
   /** Updates the gym kept on a workout (local only, nothing to sync) after the gym was edited online. */
   refreshGymSnapshot(workoutId: string, snapshot: GymSnapshot): Promise<void>;
   /** Keeps the gym list for offline use. */
@@ -119,3 +128,26 @@ export interface LogStore {
   purgeSynced(): Promise<{ remaining: number }>;
   outbox: Outbox;
 }
+
+/** A complete read of the user's history on the server. Rows are already checked against the shared schemas. */
+export type PulledHistory = {
+  workouts: Workout[];
+  sets: LoggedSet[];
+  /** Every id the server returned, including rows that were refused as invalid, so none of them is taken for deleted. */
+  serverWorkoutIds: ReadonlySet<string>;
+  serverSetIds: ReadonlySet<string>;
+  /** The gym list, when known, to name the gym of each pulled workout. */
+  gyms: Gym[] | null;
+};
+
+export type MergeOutcome = {
+  addedWorkouts: number;
+  updatedWorkouts: number;
+  addedSets: number;
+  removedWorkouts: number;
+  removedSets: number;
+  /** Sets whose workout is not on this device, left for a later pull. */
+  skippedSets: number;
+  /** The server's answer would have emptied the device (all or most synced sets missing), which is more likely a bad answer than a real change, so nothing was removed. */
+  removalsSkipped: boolean;
+};

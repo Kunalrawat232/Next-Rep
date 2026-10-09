@@ -25,19 +25,24 @@ export function HomePage() {
     }
   }
 
-  // The user is told about waiting sets before anything is cleared, so "Stay signed in" changes nothing.
-  async function signOut() {
+  async function once(work: () => Promise<void>) {
     if (busy.current) return;
     busy.current = true;
     try {
-      const counts = await store.counts().catch(() => ({ pending: 0, failed: 0 }));
-      const remaining = counts.pending + counts.failed;
-      if (remaining > 0) setWaiting(remaining);
-      else await finishSignOut();
+      await work();
     } finally {
       busy.current = false;
     }
   }
+
+  // The user is told about waiting sets before anything is cleared, so "Stay signed in" changes nothing.
+  const signOut = () =>
+    once(async () => {
+      const counts = await store.counts().catch(() => ({ pending: 0, failed: 0 }));
+      const remaining = counts.pending + counts.failed;
+      if (remaining > 0) setWaiting(remaining);
+      else await finishSignOut();
+    });
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,7 +81,7 @@ export function HomePage() {
               on this device until you are online again, and a new sign-in will send them.
             </p>
             <div className="flex gap-2">
-              <Button variant="danger" onClick={() => void finishSignOut()}>
+              <Button variant="danger" onClick={() => void once(finishSignOut)}>
                 Sign out anyway
               </Button>
               <Button variant="secondary" onClick={() => setWaiting(null)}>
