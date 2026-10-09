@@ -6,7 +6,8 @@ All dependency versions are **pinned exactly** (`.npmrc` `save-exact=true`) and 
 | --------------- | -------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
 | Language        | TypeScript (strict)                          | 6.0.3                   | Held below 7: `typescript-eslint` 8.71.1 declares `typescript <6.1.0`. Move to 7 once supported. |
 | Frontend        | React + Vite                                 | 19.3.0 / vite 8.3.3     | SPA, mobile-first; `@vitejs/plugin-react` 6.1.2                                                  |
-| Styling         | Tailwind CSS (Vite plugin)                   | 4.3.3                   | Design tokens in `src/index.css`; real tokens come from Claude Design                            |
+| Styling         | Tailwind CSS (Vite plugin)                   | 4.3.3                   | Design tokens in `src/index.css` from the Claude Design handoff (ADR-008)                        |
+| Font            | `@fontsource-variable/geist` (OFL-1.1)       | 5.3.0                   | Self-hosted Geist, no third-party requests (ADR-008)                                             |
 | Routing         | React Router                                 | 8.4.0                   |                                                                                                  |
 | PWA             | vite-plugin-pwa (Workbox)                    | 2.0.0 (+ workbox 7.4.1) | App shell cached for offline use                                                                 |
 | Local data      | Dexie.js (IndexedDB)                         | 4.4.6                   | Local-first sets + sync queue; `fake-indexeddb` 6.2.5 for tests                                  |

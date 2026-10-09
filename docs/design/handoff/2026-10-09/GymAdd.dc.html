@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Rep add gym</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#000000;color:#F5F5F7;font-family:'Geist', -apple-system, system-ui, 'Helvetica Neue', sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;padding-top:56px">
+<div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 8px"><div style="display:flex;align-items:center"><a href="GymsList.dc.html" aria-label="Close" style="width:48px;height:48px;background:transparent;border:0;color:#F5F5F7;display:flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></a><div style="font-size:20px;line-height:26px;font-weight:600">New gym</div></div><a href="GymsList.dc.html" style="height:48px;padding:0 8px;background:transparent;border:0;color:{{accent}};font-family:inherit;font-size:17px;font-weight:600;cursor:pointer;box-sizing:border-box;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Create</a></div><div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:0 16px;overflow:hidden"><div style="display:flex;flex-direction:column;gap:8px;width:100%"><label for="f4" style="font-size:13px;line-height:18px;font-weight:500;color:#A1A1A6">Gym name</label><div style="position:relative"><input id="f4" type="text" placeholder="For example, Home gym" style="height:56px;width:100%;box-sizing:border-box;background:#2C2C2E;border:2px solid {{accent}};border-radius:8px;padding:0 16px 0 16px;color:#F5F5F7;font-family:inherit;font-size:17px"></div></div><div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:13px;line-height:18px;font-weight:500;color:#A1A1A6">Barbell weight</div><div style="display:flex;flex-wrap:wrap;gap:8px"><button style="height:48px;padding:0 18px;border-radius:999px;background:{{accent}};color:#000000;border:1px solid {{accent}};font-family:inherit;font-size:15px;line-height:20px;font-weight:500;cursor:pointer;white-space:nowrap">20 kg</button><button style="height:48px;padding:0 18px;border-radius:999px;background:#1C1C1E;color:#F5F5F7;border:1px solid #38383A;font-family:inherit;font-size:15px;line-height:20px;font-weight:500;cursor:pointer;white-space:nowrap">15 kg</button><button style="height:48px;padding:0 18px;border-radius:999px;background:#1C1C1E;color:#F5F5F7;border:1px solid #38383A;font-family:inherit;font-size:15px;line-height:20px;font-weight:500;cursor:pointer;white-space:nowrap">Other</button></div><div style="font-size:13px;line-height:18px;color:#A1A1A6">Not sure? Most gyms use a 20 kg barbell.</div></div><h2 style="margin:0;font-size:20px;line-height:26px;font-weight:600">Other bars</h2><div style="font-size:15px;line-height:20px;color:#A1A1A6;margin-top:-8px">Optional. You can add more later.</div><div style="background:#1C1C1E;border:1px solid #38383A;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:15px;font-weight:600">EZ bar</span><button style="flex-shrink:0;height:48px;width:100%;border-radius:14px;background:transparent;color:#F5F5F7;border:1px solid #38383A;font-family:inherit;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:96px">Add</button></div><div style="height:1px;background:#38383A"></div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:15px;font-weight:600">Smith machine bar</span><button style="flex-shrink:0;height:48px;width:100%;border-radius:14px;background:transparent;color:#F5F5F7;border:1px solid #38383A;font-family:inherit;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:96px">Add</button></div></div><div style="flex:1"></div><div style="padding-bottom:32px"><a href="GymsList.dc.html" style="flex-shrink:0;height:56px;width:100%;border-radius:14px;background:{{accent}};color:#000000;border:0;font-family:inherit;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;text-decoration:none;">Create gym</a></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent": {"editor": "color", "default": "#5B8CFF", "options": ["#5B8CFF", "#2563EB", "#34C759"]}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#5B8CFF' };
+}
+}
+</script>
+</body>
+</html>

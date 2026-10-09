@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
+import { Button, Logo, TextField } from '../../components';
 import { useAuth } from './AuthProvider';
 import { messageFor } from './authErrors';
 import {
@@ -23,9 +24,6 @@ function destination(state: unknown): string {
     ? path
     : '/';
 }
-
-const inputClass =
-  'min-h-12 w-full rounded-lg border border-ink-muted/40 bg-surface-raised px-3 text-ink disabled:opacity-60';
 
 export function SignInPage() {
   const { state, service } = useAuth();
@@ -81,17 +79,22 @@ export function SignInPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-4">
-      <div className="text-center">
-        <h1 className="text-3xl font-semibold">Next Rep</h1>
-        <h2 className="mt-1 text-lg text-ink-muted">{signingUp ? 'Create account' : 'Sign in'}</h2>
-      </div>
+    <div className="min-h-dvh lg:grid lg:grid-cols-2">
+      <header className="flex flex-col items-center gap-4 px-4 pt-14 text-center lg:items-start lg:justify-center lg:border-r lg:border-line lg:bg-surface-200 lg:px-16 lg:pt-0 lg:text-left">
+        <h1>
+          <Logo width={230} />
+        </h1>
+        <p className="max-w-md text-body text-ink-muted">
+          Say the set. See the progress. Voice-first workout logging.
+        </p>
+      </header>
 
-      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
+      <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-6 px-4 py-8 lg:max-w-sm lg:py-16">
+        <h2 className="text-title font-semibold">{signingUp ? 'Create account' : 'Sign in'}</h2>
+
+        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+          <TextField
+            label="Email"
             ref={emailRef}
             type="email"
             inputMode="email"
@@ -101,78 +104,48 @@ export function SignInPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={pending}
-            aria-invalid={fieldErrors.email ? true : undefined}
-            aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-            className={inputClass}
+            error={fieldErrors.email}
           />
-          {fieldErrors.email && (
-            <p id="email-error" className="text-sm text-red-400">
-              {fieldErrors.email}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
+          <TextField
+            label="Password"
             ref={passwordRef}
             type="password"
             autoComplete={signingUp ? 'new-password' : 'current-password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={pending}
-            aria-invalid={fieldErrors.password ? true : undefined}
-            aria-describedby={
-              fieldErrors.password ? 'password-error' : signingUp ? 'password-hint' : undefined
-            }
-            className={inputClass}
+            hint={signingUp ? `Use at least ${PASSWORD_MIN} characters.` : undefined}
+            error={fieldErrors.password}
           />
-          {signingUp && !fieldErrors.password && (
-            <p id="password-hint" className="text-sm text-ink-muted">
-              Use at least {PASSWORD_MIN} characters.
-            </p>
-          )}
-          {fieldErrors.password && (
-            <p id="password-error" className="text-sm text-red-400">
-              {fieldErrors.password}
-            </p>
-          )}
-        </div>
 
-        {failure && (
-          <p role="alert" className="rounded-lg bg-red-950 p-3 text-red-200">
-            {messageFor(failure)}
+          {failure && (
+            <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
+              {messageFor(failure)}
+            </p>
+          )}
+          {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
+          <p
+            role="status"
+            className={checkEmail ? 'rounded-md border border-line bg-surface-200 p-4' : undefined}
+          >
+            {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
           </p>
-        )}
-        {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
-        <p role="status" className={checkEmail ? 'rounded-lg bg-surface-raised p-3' : undefined}>
-          {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
-        </p>
 
-        <button
-          type="submit"
-          disabled={pending}
-          className="min-h-12 rounded-lg bg-accent px-4 font-semibold text-surface disabled:opacity-60"
-        >
-          {pending
-            ? signingUp
-              ? 'Creating account…'
-              : 'Signing in…'
-            : signingUp
-              ? 'Create account'
-              : 'Sign in'}
-        </button>
-      </form>
+          <Button type="submit" disabled={pending}>
+            {pending
+              ? signingUp
+                ? 'Creating account…'
+                : 'Signing in…'
+              : signingUp
+                ? 'Create account'
+                : 'Sign in'}
+          </Button>
+        </form>
 
-      <button
-        type="button"
-        onClick={switchMode}
-        disabled={pending}
-        className="min-h-12 text-ink-muted underline"
-      >
-        {signingUp ? 'I already have an account' : 'Create an account'}
-      </button>
-    </main>
+        <Button variant="secondary" onClick={switchMode} disabled={pending}>
+          {signingUp ? 'I already have an account' : 'Create an account'}
+        </Button>
+      </main>
+    </div>
   );
 }
