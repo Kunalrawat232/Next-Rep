@@ -1,2 +1,2 @@
-// Past workouts list.
-export {};
+export { HistoryPage } from './HistoryPage';
+export { WorkoutDetailPage } from './WorkoutDetailPage';

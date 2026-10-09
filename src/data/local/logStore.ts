@@ -237,6 +237,28 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       });
     },
 
+    async getWorkout(id) {
+      const row = await db.workouts.get(id);
+      return row && { ...row, gymSnapshot: readGymSnapshot(row.gymSnapshot) };
+    },
+
+    async endedWorkouts(limit) {
+      const count = Math.floor(limit);
+      if (!Number.isFinite(count) || count <= 0) return [];
+      const rows = await db.workouts
+        .orderBy('startedAt')
+        .reverse()
+        .filter((w) => w.endedAt !== null)
+        .limit(count)
+        .toArray();
+      return rows.map((row) => ({ ...row, gymSnapshot: readGymSnapshot(row.gymSnapshot) }));
+    },
+
+    async listSetsFor(workoutIds) {
+      const rows = await db.sets.where('workoutId').anyOf(workoutIds).toArray();
+      return rows.sort((a, b) => compareText(a.loggedAt, b.loggedAt));
+    },
+
     async activeWorkout() {
       const open = await db.workouts.filter((w) => w.endedAt === null).toArray();
       const newest = open.sort((a, b) => compareText(b.startedAt, a.startedAt))[0];

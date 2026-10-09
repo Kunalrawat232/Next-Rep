@@ -179,3 +179,14 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: store the real input mode with source `tap`; "Did you mean" for voice only; missing bar blocks logging with a link to set it; undo of a saved set needs internet; steppers 2.5 kg total, 1.25 kg per side, 1 rep; voice, rest timer and workout names out of v1.
 - How validated: _(developer to fill)_ Evidence: 2064 unit tests and 93 database tests pass; 7 of 7 deliberate breakages turn tests red. Not yet run: the Playwright offline-then-sync journey and the hosted integration tests (the developer runs these).
 - Lesson: when a rule exists because of speech, give the validator the source of the input instead of special-casing the screen.
+
+## 2026-10-10: History
+
+- Tool: Claude Code with the advisor tool, whole-app tests on a fake server and fake IndexedDB, mutation checks, `code-reviewer` and `qa-tester`
+- Asked: a History list of past workouts and a workout detail screen, working offline.
+- AI produced: pure day-label, duration and grouping helpers, three new log-store reads, the list and detail screens with an in-progress card and a waiting-to-sync mark, routes and navigation, and tests from the helpers up to whole screens.
+- Problems found: (1) my plan said volume would be kg × reps with no doubling for dumbbells, but ADR-002 says a volume rule must treat dumbbells explicitly and needs ×2, so volume was left out instead of deviating from the docs; (2) the detail screen briefly named a built-in exercise "Custom exercise" while names were loading, found by a test that watches the page text; (3) one mutation (the loading guard) survives because loading finishes first in tests; (4) seeded rows in whole-app tests need an unreachable server, or the sync worker changes their status mid-test.
+- Review results: `code-reviewer` and `qa-tester` (the latter stopped early on a usage limit, so I triaged its partial tests) found that a page of workouts with no sets hid older history and the Show more button, that a read error left the screen loading forever, that built-in exercises could be named "Custom exercise" when the list failed to load, that failed syncs were reported as waiting, that the detail page could show the previous workout after the address changed, and that grouping sets copied arrays quadratically. All fixed.
+- Decisions by the developer: History next; no questions answered, so my defaults apply: finished workouts only with the open one pinned, and no sync-down of older workouts yet.
+- How validated: _(developer to fill)_ Evidence: 2192 unit tests and 93 database tests pass; 7 of 8 deliberate breakages turn tests red. Not yet run: the Playwright journeys and hosted integration tests (the developer runs these).
+- Lesson: when the plan and an ADR disagree, drop the feature from the task rather than choosing quietly.
