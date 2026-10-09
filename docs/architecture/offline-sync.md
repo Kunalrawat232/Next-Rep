@@ -20,7 +20,7 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 
 `src/data/local/` (Dexie DB and repositories) · `src/data/remote/` (Supabase client and repositories) · `src/data/sync/` (queue + worker). Queue logic is unit-tested with `fake-indexeddb`; the offline-then-sync journey is covered by a Playwright test using offline mode.
 
-## As built (2026-10-10)
+## As built (2026-10-09)
 
 Details and reasons: [ADR-011](decisions/011-local-log-and-sync-worker.md).
 

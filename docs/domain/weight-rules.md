@@ -37,6 +37,17 @@ Run on every candidate set before the confirmation card:
 
 All thresholds live in **one config file** so they can be tuned and tested.
 
+## Personal records (`src/domain/records`)
+
+A set is a personal record (PR) when it beats the sets **before it** of the same exercise, in order of logged time (then id). Records are worked out from the sets each time, never stored, so undoing a set fixes the badges. Weights are compared in hundredths of a kg.
+
+- **PR (heaviest weight):** heavier than every earlier set, whatever the reps. Never the first set of an exercise, and never at 0 kg.
+- **Rep PR:** more reps than any earlier set at exactly that weight. It needs an earlier set at that weight, so the first set at a new weight is not a rep PR.
+- A set is at most one kind. Equal weight and reps is not a record. Bodyweight exercises (0 kg added) can only have rep PRs.
+- Dumbbell weights are per dumbbell (ADR-002) and are only compared with the same exercise, so records need no doubling.
+- The chart plots the top set of each workout: the heaviest, and on a tie the one with more reps. The badge in the sessions table is the kind of that top set.
+- **Known limit:** records look only at the sets stored on this device. After a sign-out clears synced sets, a lighter set can show as a PR until history is pulled back from the server (a planned task), and the first set after that is never a PR.
+
 ## Progression rule ("what should I lift today?")
 
 See [ADR-005](../architecture/decisions/005-progression-rules.md). Simple, conservative, explainable:

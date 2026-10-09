@@ -23,6 +23,19 @@ export const appRoutes: RouteObject[] = [
           { path: '/exercises/new', element: <CustomExercisePage /> },
           { path: '/history', element: <HistoryPage /> },
           { path: '/history/:workoutId', element: <WorkoutDetailPage /> },
+          {
+            path: '/progress',
+            lazy: async () => ({
+              Component: (await import('../features/progress/ProgressPage')).ProgressPage,
+            }),
+          },
+          {
+            path: '/progress/:exerciseId',
+            lazy: async () => ({
+              Component: (await import('../features/progress/ExerciseProgressPage'))
+                .ExerciseProgressPage,
+            }),
+          },
           { path: '/workout', element: <WorkoutPage /> },
           { path: '/workout/exercise', element: <ChooseExercisePage /> },
           { path: '/workout/log', element: <LogSetPage /> },
