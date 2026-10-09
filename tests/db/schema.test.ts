@@ -7,7 +7,14 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-const seed = JSON.parse(read('src/domain/exercises.seed.json')) as { id: string; name: string }[];
+const curated = JSON.parse(read('src/domain/exercises.seed.json')) as {
+  id: string;
+  name: string;
+}[];
+const seed = [
+  ...curated,
+  ...(JSON.parse(read('src/domain/exercises.extended.json')) as { id: string; name: string }[]),
+];
 
 const A = '11111111-1111-1111-1111-111111111111';
 const B = '22222222-2222-2222-2222-222222222222';
@@ -16,8 +23,8 @@ const W_A = 'aaaaaaaa-0000-0000-0000-000000000001';
 const W_B = 'aaaaaaaa-0000-0000-0000-000000000002';
 const S1 = 'bbbbbbbb-0000-0000-0000-000000000001';
 const CUSTOM = 'dddddddd-0000-0000-0000-000000000001';
-const BENCH = seed.find((e) => e.name === 'Barbell Bench Press')!.id;
-const SQUATTED = seed[0]!;
+const BENCH = curated.find((e) => e.name === 'Barbell Bench Press')!.id;
+const SQUATTED = curated[0]!;
 
 let db: PGlite;
 
@@ -56,6 +63,8 @@ beforeAll(async () => {
     insert into auth.users values ('${A}'), ('${B}');
   `);
   await db.exec(read('supabase/migrations/0001_init.sql'));
+  await db.exec(read('supabase/migrations/0002_gym_bar_kind.sql'));
+  await db.exec(read('supabase/migrations/0003_exercise_muscle.sql'));
 
   // A user squats a public seed id before the seed runs; the seed must reclaim it.
   await as('authenticated', A, () =>

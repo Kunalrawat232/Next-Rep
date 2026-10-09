@@ -30,9 +30,12 @@ export function HomePage() {
         </p>
       </section>
 
-      <section aria-label="Gyms">
+      <section aria-label="Setup" className="flex flex-col gap-2">
         <Link to="/gyms" className={buttonClasses('secondary', 'w-full')}>
           Manage gyms
+        </Link>
+        <Link to="/exercises" className={buttonClasses('secondary', 'w-full')}>
+          Exercises
         </Link>
       </section>
 

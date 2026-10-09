@@ -1,4 +1,5 @@
 import { BAR_KG_RANGE, type EquipmentType } from '../schemas';
+import { cleanName, nameKey } from '../text';
 import { roundKg } from '../weight';
 
 export const GYM_NAME_MAX = 80;
@@ -56,10 +57,6 @@ function readKg(text: string): number | string {
     return `Use a weight between ${BAR_KG_RANGE.min} and ${BAR_KG_RANGE.max} kg.`;
   return kg;
 }
-
-/** Trimmed, inner spaces collapsed, and one Unicode form, so look-alike names are the same name. */
-const cleanName = (name: string) => name.trim().replace(/\s+/g, ' ').normalize('NFC');
-const nameKey = (name: string) => cleanName(name).toLowerCase();
 
 export function validateGymForm(form: GymForm): GymFormResult {
   const errors: GymFormErrors = { bars: {} };

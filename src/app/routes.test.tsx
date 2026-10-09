@@ -4,7 +4,9 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AuthProvider } from '../features/auth/AuthProvider';
 import { createFakeAuthService } from '../test/fakeAuth';
+import { createFakeExerciseService } from '../test/fakeExercises';
 import { createFakeGymService, sampleGym } from '../test/fakeGyms';
+import { ExerciseServiceProvider } from '../features/exercises';
 import { GymServiceProvider } from '../features/gyms';
 import { appRoutes } from './routes';
 
@@ -17,7 +19,9 @@ function renderAt(
   render(
     <AuthProvider service={fake.service}>
       <GymServiceProvider service={gyms.service}>
-        <RouterProvider router={router} />
+        <ExerciseServiceProvider service={createFakeExerciseService().service}>
+          <RouterProvider router={router} />
+        </ExerciseServiceProvider>
       </GymServiceProvider>
     </AuthProvider>,
   );
@@ -31,7 +35,7 @@ describe('app routes', () => {
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
   });
 
-  it.each(['/gyms', '/gyms/new', '/gyms/g1'])(
+  it.each(['/gyms', '/gyms/new', '/gyms/g1', '/exercises', '/exercises/new'])(
     'sends a signed-out visitor from %s to sign-in',
     async (path) => {
       const { router } = renderAt(path);
@@ -39,6 +43,18 @@ describe('app routes', () => {
       expect(router.state.location.pathname).toBe('/sign-in');
     },
   );
+
+  it('shows the exercise library inside the shell to a signed-in user', async () => {
+    renderAt('/exercises', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    expect(await screen.findByRole('searchbox', { name: 'Search exercises' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
+  });
+
+  it('links Home to the exercise library', async () => {
+    const { router, user } = renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    await user.click(await screen.findByRole('link', { name: 'Exercises' }));
+    expect(router.state.location.pathname).toBe('/exercises');
+  });
 
   it('links Home to the gyms list', async () => {
     const { router, user } = renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));

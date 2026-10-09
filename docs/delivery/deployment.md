@@ -19,7 +19,7 @@ Free projects pause after inactivity: check the project is awake before demos an
 
 ### 1.2 Apply the schema and seed
 
-**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`. Run them in that order; the seed is safe to run again, and each migration is run once.
+**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
 
 **Option B: Supabase CLI** (installed, v2.120.0).
 
@@ -37,7 +37,7 @@ Use the dry run first. The migration file is named `0001_init.sql`; later migrat
 ### 1.3 Verify
 
 - **Table Editor:** `profiles`, `gyms`, `gym_bars`, `exercises`, `workouts`, `sets`, `api_rate_limits` exist, each shown with RLS enabled.
-- SQL editor: `select count(*) from public.exercises where user_id is null;` returns **56**.
+- SQL editor: `select count(*) from public.exercises where user_id is null;` returns **892** (56 curated plus about 835 imported; it was 56 before migration 0003 and the larger seed).
 - Advisors: `supabase db advisors --linked` (or the dashboard **Advisors** page) and note anything reported. Expected to discuss: `consume_rate_limit` is a `SECURITY DEFINER` function in `public` by design (see [data model](../architecture/data-model.md)).
 
 If the SQL fails, stop and send the exact error; do not edit tables by hand in the dashboard (schema changes must go through migration files).
@@ -61,7 +61,7 @@ After section 4 (the local env file) is filled in, run:
 npm run check:supabase
 ```
 
-It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has 56 global exercises, that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
+It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has all 892 global exercises, that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
 
 The same credentials let you run `npm run test:integration` (profile access rules on the hosted project, as the two test users) and `npm run test:e2e` (sign-in in a real browser). Both skip themselves when the values are missing, and both are run by you, not by CI.
 
@@ -124,7 +124,7 @@ cp .env.example .env.local
 ## 6. Checklist
 
 - [ ] Supabase project created (free); URL and publishable key saved
-- [ ] `0001_init.sql`, `seed.sql` and `0002_gym_bar_kind.sql` applied (`gym_bars` has a `kind` column); 7 tables with RLS; 56 global exercises
+- [ ] `0001_init.sql`, `seed.sql` and `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied (`exercises` has a `muscle` column), then `seed.sql` re-run (about 892 global exercises); 7 tables with RLS; 892 global exercises
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [ ] Confirm-email decision made; Site URL set; two test users created
 - [ ] Gemini key created with **no billing**; `GEMINI_MODEL` chosen
