@@ -11,56 +11,64 @@
       "flat bench press",
       "bb bench",
       "barbell bench"
-    ]
+    ],
+    "muscle": "chest"
   },
   {
     "id": "94831dec-ce3c-5f65-9f25-0af535daf062",
     "name": "Incline Barbell Bench Press",
     "equipmentType": "barbell",
     "bodyPart": "upper",
-    "aliases": ["incline bench", "incline bench press", "incline barbell press"]
+    "aliases": ["incline bench", "incline bench press", "incline barbell press"],
+    "muscle": "chest"
   },
   {
     "id": "79f67615-f5bf-5211-9349-e56c0a77834b",
     "name": "Close-Grip Bench Press",
     "equipmentType": "barbell",
     "bodyPart": "upper",
-    "aliases": ["close grip bench", "close grip press"]
+    "aliases": ["close grip bench", "close grip press"],
+    "muscle": "triceps"
   },
   {
     "id": "38080a0f-a088-5f32-952f-d8dc3b6d5664",
     "name": "Barbell Back Squat",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["squat", "squats", "back squat", "barbell squat"]
+    "aliases": ["squat", "squats", "back squat", "barbell squat"],
+    "muscle": "quads"
   },
   {
     "id": "6b35e0f7-7104-5d30-9e74-33e8c5db9b11",
     "name": "Barbell Front Squat",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["front squat", "front squats"]
+    "aliases": ["front squat", "front squats"],
+    "muscle": "quads"
   },
   {
     "id": "3e523148-dd7a-5dde-ab09-3a2c4a367fcc",
     "name": "Conventional Deadlift",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["deadlift", "deadlifts", "dead lift"]
+    "aliases": ["deadlift", "deadlifts", "dead lift"],
+    "muscle": "glutes"
   },
   {
     "id": "72973a1e-fc27-5451-8b0a-247a68074487",
     "name": "Sumo Deadlift",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["sumo"]
+    "aliases": ["sumo"],
+    "muscle": "glutes"
   },
   {
     "id": "e78855bb-8588-5848-9153-b5f2236cef8c",
     "name": "Romanian Deadlift",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["rdl", "romanian", "stiff leg deadlift"]
+    "aliases": ["rdl", "romanian", "stiff leg deadlift"],
+    "muscle": "hamstrings"
   },
   {
     "id": "2692671f-60a1-5c50-814c-bba590c80d8b",
@@ -73,335 +81,383 @@
       "military press",
       "barbell shoulder press",
       "standing press"
-    ]
+    ],
+    "muscle": "shoulders"
   },
   {
     "id": "1dd3c947-2d69-5b92-833c-7e8f0a22cbd0",
     "name": "Barbell Row",
     "equipmentType": "barbell",
     "bodyPart": "upper",
-    "aliases": ["bent over row", "bb row", "barbell rows", "row", "rows"]
+    "aliases": ["bent over row", "bb row", "barbell rows", "row", "rows"],
+    "muscle": "upper_back"
   },
   {
     "id": "ed92fbaf-01bd-5ddd-ada3-77a34f510baa",
     "name": "Barbell Hip Thrust",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["hip thrust", "hip thrusts", "glute bridge"]
+    "aliases": ["hip thrust", "hip thrusts", "glute bridge"],
+    "muscle": "glutes"
   },
   {
     "id": "1348bf8d-516a-5a18-ab3c-ab2490966b6c",
     "name": "Barbell Shrug",
     "equipmentType": "barbell",
     "bodyPart": "upper",
-    "aliases": ["barbell shrugs", "bb shrug"]
+    "aliases": ["barbell shrugs", "bb shrug"],
+    "muscle": "traps"
   },
   {
     "id": "bb88351b-7b00-5e70-bdd9-3ae2955200bb",
     "name": "Barbell Curl",
     "equipmentType": "barbell",
     "bodyPart": "upper",
-    "aliases": ["bicep curl", "biceps curl", "barbell bicep curl", "bb curl"]
+    "aliases": ["bicep curl", "biceps curl", "barbell bicep curl", "bb curl"],
+    "muscle": "biceps"
   },
   {
     "id": "0aa26bb9-abed-5124-abc4-8684125d95f1",
     "name": "Barbell Lunge",
     "equipmentType": "barbell",
     "bodyPart": "lower",
-    "aliases": ["barbell lunges"]
+    "aliases": ["barbell lunges"],
+    "muscle": "quads"
   },
   {
     "id": "b233fd5c-857b-53a9-84cd-020aea82dbe8",
     "name": "EZ Bar Curl",
     "equipmentType": "ez_bar",
     "bodyPart": "upper",
-    "aliases": ["ez curl", "curl bar", "ez bar bicep curl"]
+    "aliases": ["ez curl", "curl bar", "ez bar bicep curl"],
+    "muscle": "biceps"
   },
   {
     "id": "8765b9f5-73c8-5dd8-b53f-f61059647c0b",
     "name": "EZ Bar Skull Crusher",
     "equipmentType": "ez_bar",
     "bodyPart": "upper",
-    "aliases": ["skull crusher", "skullcrusher", "skull crushers", "lying tricep extension"]
+    "aliases": ["skull crusher", "skullcrusher", "skull crushers", "lying tricep extension"],
+    "muscle": "triceps"
   },
   {
     "id": "5ba6ba41-0814-587b-9806-1c47ab57eaf6",
     "name": "Smith Machine Squat",
     "equipmentType": "smith",
     "bodyPart": "lower",
-    "aliases": ["smith squat", "smith machine squats"]
+    "aliases": ["smith squat", "smith machine squats"],
+    "muscle": "quads"
   },
   {
     "id": "9b8e225a-f5af-5459-abf2-e491919ae6dd",
     "name": "Smith Machine Bench Press",
     "equipmentType": "smith",
     "bodyPart": "upper",
-    "aliases": ["smith bench", "smith bench press"]
+    "aliases": ["smith bench", "smith bench press"],
+    "muscle": "chest"
   },
   {
     "id": "c44fc45f-1efd-5a09-9886-c8e884466753",
     "name": "Smith Machine Shoulder Press",
     "equipmentType": "smith",
     "bodyPart": "upper",
-    "aliases": ["smith shoulder press", "smith overhead press"]
+    "aliases": ["smith shoulder press", "smith overhead press"],
+    "muscle": "shoulders"
   },
   {
     "id": "11e31db3-157e-54ac-b4ee-b5a63e239402",
     "name": "Dumbbell Bench Press",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["db bench", "db bench press", "dumbbell press", "dumbbell chest press"]
+    "aliases": ["db bench", "db bench press", "dumbbell press", "dumbbell chest press"],
+    "muscle": "chest"
   },
   {
     "id": "37b4eb36-4ec1-545c-9807-8733a098422a",
     "name": "Incline Dumbbell Press",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["incline db press", "incline dumbbell bench", "incline dumbbell bench press"]
+    "aliases": ["incline db press", "incline dumbbell bench", "incline dumbbell bench press"],
+    "muscle": "chest"
   },
   {
     "id": "98b0c17c-9cd6-55e0-9d2c-c1ed5a2d23d1",
     "name": "Dumbbell Shoulder Press",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["db shoulder press", "dumbbell overhead press", "seated dumbbell press"]
+    "aliases": ["db shoulder press", "dumbbell overhead press", "seated dumbbell press"],
+    "muscle": "shoulders"
   },
   {
     "id": "485fe965-3290-5f0e-a1a5-846be77ded10",
     "name": "Dumbbell Row",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["one arm row", "single arm row", "db row", "dumbbell rows"]
+    "aliases": ["one arm row", "single arm row", "db row", "dumbbell rows"],
+    "muscle": "lats"
   },
   {
     "id": "814bdc82-53bf-53c1-b20e-ff5e43b46e1a",
     "name": "Dumbbell Curl",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["dumbbell bicep curl", "db curl", "dumbbell curls", "biceps curl dumbbell"]
+    "aliases": ["dumbbell bicep curl", "db curl", "dumbbell curls", "biceps curl dumbbell"],
+    "muscle": "biceps"
   },
   {
     "id": "98e864b7-4940-58b8-934f-8b3b79c09b61",
     "name": "Hammer Curl",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["hammer curls", "db hammer curl"]
+    "aliases": ["hammer curls", "db hammer curl"],
+    "muscle": "biceps"
   },
   {
     "id": "12c2c07d-4305-5ebf-b9dd-6340cc1e6259",
     "name": "Lateral Raise",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["side raise", "side raises", "lateral raises", "side lateral raise"]
+    "aliases": ["side raise", "side raises", "lateral raises", "side lateral raise"],
+    "muscle": "shoulders"
   },
   {
     "id": "e4f18311-3697-59e4-983e-d480fac47b17",
     "name": "Dumbbell Fly",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["dumbbell flye", "chest fly dumbbell", "db fly", "flys"]
+    "aliases": ["dumbbell flye", "chest fly dumbbell", "db fly", "flys"],
+    "muscle": "chest"
   },
   {
     "id": "45e938fd-d2b2-5bcd-83f0-07df82061689",
     "name": "Rear Delt Fly",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["reverse fly", "rear delt raise", "rear delt flye"]
+    "aliases": ["reverse fly", "rear delt raise", "rear delt flye"],
+    "muscle": "shoulders"
   },
   {
     "id": "643b2221-1fa3-549f-943f-5411996fd643",
     "name": "Goblet Squat",
     "equipmentType": "dumbbell",
     "bodyPart": "lower",
-    "aliases": ["goblet squats"]
+    "aliases": ["goblet squats"],
+    "muscle": "quads"
   },
   {
     "id": "a7086930-3090-53a5-bc45-2c3f1b0d35a1",
     "name": "Dumbbell Lunge",
     "equipmentType": "dumbbell",
     "bodyPart": "lower",
-    "aliases": ["lunges", "lunge", "walking lunge", "walking lunges", "db lunge"]
+    "aliases": ["lunges", "lunge", "walking lunge", "walking lunges", "db lunge"],
+    "muscle": "quads"
   },
   {
     "id": "78490059-e840-5291-b9c2-60cce75aea9e",
     "name": "Dumbbell Romanian Deadlift",
     "equipmentType": "dumbbell",
     "bodyPart": "lower",
-    "aliases": ["db rdl", "dumbbell rdl"]
+    "aliases": ["db rdl", "dumbbell rdl"],
+    "muscle": "hamstrings"
   },
   {
     "id": "2a7f597f-310d-500e-b0d7-1c293bdceefb",
     "name": "Dumbbell Shrug",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["dumbbell shrugs", "db shrug", "shrugs"]
+    "aliases": ["dumbbell shrugs", "db shrug", "shrugs"],
+    "muscle": "traps"
   },
   {
     "id": "17a8eda0-bf4f-59b3-bb68-4348eca10249",
     "name": "Overhead Tricep Extension",
     "equipmentType": "dumbbell",
     "bodyPart": "upper",
-    "aliases": ["tricep extension", "overhead tricep", "dumbbell tricep extension"]
+    "aliases": ["tricep extension", "overhead tricep", "dumbbell tricep extension"],
+    "muscle": "triceps"
   },
   {
     "id": "63774c59-11af-534a-94ca-5c07a95e74ec",
     "name": "Lat Pulldown",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["pulldown", "lat pull down", "lat pulldowns", "pull down"]
+    "aliases": ["pulldown", "lat pull down", "lat pulldowns", "pull down"],
+    "muscle": "lats"
   },
   {
     "id": "4427304d-75aa-5a4e-934a-ab450449fbc0",
     "name": "Seated Cable Row",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["cable row", "seated row", "low row"]
+    "aliases": ["cable row", "seated row", "low row"],
+    "muscle": "upper_back"
   },
   {
     "id": "17d5f7d0-4126-5fc7-80b3-a3229a9f99b5",
     "name": "Cable Tricep Pushdown",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["tricep pushdown", "pushdown", "rope pushdown", "triceps pushdown"]
+    "aliases": ["tricep pushdown", "pushdown", "rope pushdown", "triceps pushdown"],
+    "muscle": "triceps"
   },
   {
     "id": "e52acbd9-ea42-5f8f-beb2-69a0d1b8a2d4",
     "name": "Cable Fly",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["cable flye", "cable crossover", "cable chest fly"]
+    "aliases": ["cable flye", "cable crossover", "cable chest fly"],
+    "muscle": "chest"
   },
   {
     "id": "103564be-08fc-5889-9297-8d6e6fb679ba",
     "name": "Face Pull",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["face pulls", "rope face pull"]
+    "aliases": ["face pulls", "rope face pull"],
+    "muscle": "shoulders"
   },
   {
     "id": "023caae4-c207-5069-8e15-c7b3b17bcc5e",
     "name": "Cable Curl",
     "equipmentType": "cable",
     "bodyPart": "upper",
-    "aliases": ["cable bicep curl", "cable curls"]
+    "aliases": ["cable bicep curl", "cable curls"],
+    "muscle": "biceps"
   },
   {
     "id": "24dd8080-5bea-5cf9-940f-427d5c529444",
     "name": "Cable Crunch",
     "equipmentType": "cable",
     "bodyPart": "core",
-    "aliases": ["kneeling cable crunch", "rope crunch"]
+    "aliases": ["kneeling cable crunch", "rope crunch"],
+    "muscle": "abs"
   },
   {
     "id": "ccfbf655-01b0-5967-9be8-73f4093040be",
     "name": "Chest Press Machine",
     "equipmentType": "machine",
     "bodyPart": "upper",
-    "aliases": ["chest press", "machine chest press", "machine press"]
+    "aliases": ["chest press", "machine chest press", "machine press"],
+    "muscle": "chest"
   },
   {
     "id": "e9ce953a-f874-5d0d-b461-061c5d1c27a9",
     "name": "Pec Deck",
     "equipmentType": "machine",
     "bodyPart": "upper",
-    "aliases": ["pec fly", "machine fly", "pec dec", "butterfly"]
+    "aliases": ["pec fly", "machine fly", "pec dec", "butterfly"],
+    "muscle": "chest"
   },
   {
     "id": "f7051a95-265d-5cb8-8f2f-d68b932e6afa",
     "name": "Shoulder Press Machine",
     "equipmentType": "machine",
     "bodyPart": "upper",
-    "aliases": ["machine shoulder press"]
+    "aliases": ["machine shoulder press"],
+    "muscle": "shoulders"
   },
   {
     "id": "de7e8856-9eed-5e31-871a-a7e02b02e616",
     "name": "Leg Press",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["leg press machine", "leg presses"]
+    "aliases": ["leg press machine", "leg presses"],
+    "muscle": "quads"
   },
   {
     "id": "3336453b-42f1-5956-b8aa-0755f985ced0",
     "name": "Hack Squat",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["hack squats", "machine hack squat"]
+    "aliases": ["hack squats", "machine hack squat"],
+    "muscle": "quads"
   },
   {
     "id": "321e0ee7-d6de-54f8-a45b-76670270c4bf",
     "name": "Leg Extension",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["leg extensions", "quad extension"]
+    "aliases": ["leg extensions", "quad extension"],
+    "muscle": "quads"
   },
   {
     "id": "588daad8-a919-5257-bd4c-205bd5f8ace2",
     "name": "Leg Curl",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["hamstring curl", "leg curls", "lying leg curl", "seated leg curl"]
+    "aliases": ["hamstring curl", "leg curls", "lying leg curl", "seated leg curl"],
+    "muscle": "hamstrings"
   },
   {
     "id": "ee07b8c2-33a8-5f1f-bd67-068e144e8271",
     "name": "Standing Calf Raise",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["calf raise", "calf raises", "standing calf raises"]
+    "aliases": ["calf raise", "calf raises", "standing calf raises"],
+    "muscle": "calves"
   },
   {
     "id": "9533ac7d-2710-573b-897d-14e2e4b08ff9",
     "name": "Seated Calf Raise",
     "equipmentType": "machine",
     "bodyPart": "lower",
-    "aliases": ["seated calf raises"]
+    "aliases": ["seated calf raises"],
+    "muscle": "calves"
   },
   {
     "id": "c07d5d43-b39d-5ed0-8ecb-a16fa123a641",
     "name": "Pull-Up",
     "equipmentType": "bodyweight",
     "bodyPart": "upper",
-    "aliases": ["pull up", "pullup", "pull ups", "pullups"]
+    "aliases": ["pull up", "pullup", "pull ups", "pullups"],
+    "muscle": "lats"
   },
   {
     "id": "28c36f11-3c2b-5058-aac7-5f281ce61398",
     "name": "Chin-Up",
     "equipmentType": "bodyweight",
     "bodyPart": "upper",
-    "aliases": ["chin up", "chinup", "chin ups", "chinups"]
+    "aliases": ["chin up", "chinup", "chin ups", "chinups"],
+    "muscle": "lats"
   },
   {
     "id": "2dde008c-509c-5d7c-853f-da59e1756a81",
     "name": "Push-Up",
     "equipmentType": "bodyweight",
     "bodyPart": "upper",
-    "aliases": ["push up", "pushup", "push ups", "pushups", "dand"]
+    "aliases": ["push up", "pushup", "push ups", "pushups", "dand"],
+    "muscle": "chest"
   },
   {
     "id": "96d3edde-8709-5e4c-9db2-484ac2b5f0bf",
     "name": "Dip",
     "equipmentType": "bodyweight",
     "bodyPart": "upper",
-    "aliases": ["dips", "tricep dips", "chest dips", "parallel bar dips"]
+    "aliases": ["dips", "tricep dips", "chest dips", "parallel bar dips"],
+    "muscle": "triceps"
   },
   {
     "id": "b80ded68-a836-5738-b809-5838a5f52c66",
     "name": "Bodyweight Squat",
     "equipmentType": "bodyweight",
     "bodyPart": "lower",
-    "aliases": ["air squat", "air squats", "bodyweight squats", "baithak"]
+    "aliases": ["air squat", "air squats", "bodyweight squats", "baithak"],
+    "muscle": "quads"
   },
   {
     "id": "2ea84b78-27e9-59a1-9905-d20ed15eaaf6",
     "name": "Hanging Leg Raise",
     "equipmentType": "bodyweight",
     "bodyPart": "core",
-    "aliases": ["leg raise", "leg raises", "hanging leg raises"]
+    "aliases": ["leg raise", "leg raises", "hanging leg raises"],
+    "muscle": "abs"
   },
   {
     "id": "7319770b-4aad-5607-8b34-e79393faf66f",
     "name": "Crunch",
     "equipmentType": "bodyweight",
     "bodyPart": "core",
-    "aliases": ["crunches", "sit up", "sit ups", "situp"]
+    "aliases": ["crunches", "sit up", "sit ups", "situp"],
+    "muscle": "abs"
   }
 ]

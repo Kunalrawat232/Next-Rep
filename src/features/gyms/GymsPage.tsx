@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
-import { buttonClasses } from '../../components';
+import { BackLink, buttonClasses } from '../../components';
 import { pickDefaultGym, summarizeBars } from '../../domain/gyms';
-import { BackLink } from './BackLink';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import { useGyms } from './useGyms';

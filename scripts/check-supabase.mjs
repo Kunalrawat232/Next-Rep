@@ -2,7 +2,16 @@
 // Usage: npm run check:supabase   (loads .env.local; prints PASS/FAIL only, never keys, passwords or tokens)
 // Reads from the database, except one call to consume_rate_limit(), which adds one row to the
 // test user's own rate-limit counter.
+import { readFileSync } from 'node:fs';
+
 const env = process.env;
+// The seed is the curated list plus the imported list (see scripts/generate-seed-sql.mjs).
+const expectedSeedCount = ['exercises.seed.json', 'exercises.extended.json']
+  .map(
+    (file) =>
+      JSON.parse(readFileSync(new URL(`../src/domain/${file}`, import.meta.url), 'utf8')).length,
+  )
+  .reduce((a, b) => a + b, 0);
 const url = (env.VITE_SUPABASE_URL ?? env.SUPABASE_URL ?? '').replace(/\/+$/, '');
 const anonKey = env.VITE_SUPABASE_ANON_KEY ?? env.SUPABASE_ANON_KEY ?? '';
 const users = {
@@ -153,8 +162,8 @@ async function main() {
     `HTTP ${ex.status}`,
   );
   report(
-    countOf(ex) === 56,
-    'seed loaded: 56 global exercises',
+    countOf(ex) === expectedSeedCount,
+    `seed loaded: ${expectedSeedCount} global exercises`,
     `found ${Number.isNaN(countOf(ex)) ? 'unknown' : countOf(ex)}`,
   );
 

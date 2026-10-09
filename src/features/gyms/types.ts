@@ -1,10 +1,9 @@
 import type { Gym, GymInput } from '../../domain/gyms';
+import type { Failure, Result } from '../../lib/result';
 
 /** `conflict` is a name or bar kind that is already used in the gym. */
-export type GymFailure = 'offline' | 'conflict' | 'unknown';
-
-export type GymResult<T = void> =
-  { status: 'ok'; value: T } | { status: 'error'; reason: GymFailure };
+export type GymFailure = Failure;
+export type GymResult<T = void> = Result<T>;
 
 /** What the gym screens need from the backend. Implemented for Supabase in src/data/remote/gyms.ts. */
 export interface GymService {
