@@ -136,3 +136,14 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: the new sign-in design adds "Forgot password?", a feature not in the plan; an existing test found two "Start workout" buttons after the change and was made exact.
 - How validated: _(developer to fill)_ Evidence: 638 unit tests pass; screenshot at 390 px checked.
 - Lesson: when a design repeats an action in a second place, make the test queries exact.
+
+## 2026-10-09: Gym setup
+
+- Tool: Claude Code with the `new-feature` flow, the advisor tool (a stronger reviewer model) before coding, and mutation checks
+- Asked: build gym setup (list, create, edit, delete, default gym, bar weights) from the new designs.
+- AI produced: migration 0002 (`gym_bars.kind`), gym domain rules, a Supabase gym service, the list and form screens, a shared `Chip`, tests at every layer, an integration test for the developer to run, and ADR-009.
+- Problems found: (1) my plan claimed "no schema change", but the advisor pointed out that nothing linked an exercise's equipment to a gym bar, so migration 0002 was added after asking; (2) the plan's default-gym swap would have been one statement, and a probe in PGlite showed it fails for some row orders, so it became two steps; (3) I ran the integration test config myself to check that a new file compiled, which loads `.env.local`, against the agreed rule (it was disclosed straight away; output was not read for secrets); (4) the advisor was not used between the design work and this plan, until the developer asked.
+- Review results: `code-reviewer`, `security-auditor` and `qa-tester` (193 new tests, 17 failing on purpose) found 2 high issues (a retry of create made a second gym; the UI ignored the oldest-gym default rule), a half-typed bar silently dropped on save, Enter in the add-bar fields saving the whole gym, double-click races, a thousands separator saved as 1 kg, look-alike names and a timestamp sort bug, and weak isolation tests. All were fixed except the non-atomic update, which is documented in ADR-009.
+- Decisions by the developer: kg only for now; no limit on the number of gyms; block deleting a gym that has workouts once workouts exist.
+- How validated: _(developer to fill)_ Evidence: 951 unit tests and 61 database tests pass; 5 of 7 deliberate breakages turned tests red (the other 2 are equivalent or shadowed); screenshots at 390 and 1440 px checked. Not yet run: the gym integration test on the hosted project (needs migration 0002 applied first).
+- Lesson: consult the advisor before fixing the data shape, not after; check what a command loads before running it, even to "just compile".

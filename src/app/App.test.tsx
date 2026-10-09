@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
+import { createFakeGymService } from '../test/fakeGyms';
 import { App } from './App';
 import { appRoutes } from './routes';
 
@@ -11,6 +12,7 @@ describe('App', () => {
     render(
       <App
         service={fake.service}
+        gymService={createFakeGymService().service}
         router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })}
       />,
     );
@@ -23,6 +25,7 @@ describe('App', () => {
     render(
       <App
         service={fake.service}
+        gymService={createFakeGymService().service}
         router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })}
         ensureProfile={async (id) => void calls.push(id)}
       />,
