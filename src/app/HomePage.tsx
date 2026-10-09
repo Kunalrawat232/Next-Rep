@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '../components';
 import { useAuth } from '../features/auth';
 
 export function HomePage() {
@@ -16,21 +17,34 @@ export function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-3xl font-semibold">Next Rep</h1>
-      <p className="text-ink-muted">Signed in as {state.user.email ?? 'your account'}</p>
-      <button
-        type="button"
-        onClick={signOut}
-        className="min-h-12 rounded-lg bg-surface-raised px-6"
-      >
-        Sign out
-      </button>
-      {signOutFailed && (
-        <p role="alert" className="text-red-300">
-          Could not sign out. Please try again.
+    <div className="flex flex-col gap-6">
+      <h1 className="text-display font-semibold">Ready to lift?</h1>
+
+      <section aria-label="Workout" className="flex flex-col gap-2">
+        <Button disabled aria-describedby="workout-note" className="w-full">
+          Start workout
+        </Button>
+        <p id="workout-note" className="text-caption text-ink-muted">
+          Workout logging is coming soon.
         </p>
-      )}
-    </main>
+      </section>
+
+      <section
+        aria-label="Account"
+        className="flex flex-col gap-4 rounded-md border border-line bg-surface-200 p-4"
+      >
+        <p className="text-callout text-ink-muted">
+          Signed in as {state.user.email ?? 'your account'}
+        </p>
+        <Button variant="secondary" onClick={signOut} className="self-start">
+          Sign out
+        </Button>
+        {signOutFailed && (
+          <p role="alert" className="text-callout text-danger">
+            Could not sign out. Please try again.
+          </p>
+        )}
+      </section>
+    </div>
   );
 }
