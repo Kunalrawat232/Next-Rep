@@ -307,6 +307,8 @@ describe('undo and personal records', () => {
       await screen.findByText(/New personal record: Barbell Bench Press, 62.5 kg × 5/),
     ).toBeInTheDocument();
     expect(screen.queryByText(/65 kg × 5/)).not.toBeInTheDocument();
+    // The button stays disabled until the first undo has finished, a moment after the banner moves.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Undo last' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Undo last' }));
     await waitFor(() => expect(screen.queryByText(/New personal record/)).not.toBeInTheDocument());
   });
