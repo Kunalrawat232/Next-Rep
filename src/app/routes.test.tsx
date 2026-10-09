@@ -46,7 +46,7 @@ describe('app routes', () => {
 
   it('offers Start workout, disabled until the workout feature exists', async () => {
     renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
-    expect(await screen.findByRole('button', { name: /start workout/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Start workout' })).toBeDisabled();
   });
 
   it('sends unknown paths to the home page', async () => {

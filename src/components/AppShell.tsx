@@ -125,6 +125,29 @@ export function AppShell() {
           </ul>
         </nav>
       </div>
+      {/* The phone's Workout entry: the sidebar item is desktop-only. Enabled once the workout page exists. */}
+      <button
+        type="button"
+        disabled
+        aria-label="Start workout (coming soon)"
+        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent disabled:cursor-not-allowed disabled:opacity-60 lg:hidden"
+      >
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" />
+          <path d="M19 11a7 7 0 0 1-14 0" />
+          <path d="M12 18v3" />
+        </svg>
+      </button>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-28 lg:px-8 lg:pb-8">
         <Outlet />
       </main>
