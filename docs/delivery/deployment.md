@@ -19,7 +19,7 @@ Free projects pause after inactivity: check the project is awake before demos an
 
 ### 1.2 Apply the schema and seed
 
-**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`. Run them in that order; the seed is safe to run again.
+**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`. Run them in that order; the seed is safe to run again, and each migration is run once.
 
 **Option B: Supabase CLI** (installed, v2.120.0).
 
@@ -124,7 +124,7 @@ cp .env.example .env.local
 ## 6. Checklist
 
 - [ ] Supabase project created (free); URL and publishable key saved
-- [ ] `0001_init.sql` then `seed.sql` applied; 7 tables with RLS; 56 global exercises
+- [ ] `0001_init.sql`, `seed.sql` and `0002_gym_bar_kind.sql` applied (`gym_bars` has a `kind` column); 7 tables with RLS; 56 global exercises
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [ ] Confirm-email decision made; Site URL set; two test users created
 - [ ] Gemini key created with **no billing**; `GEMINI_MODEL` chosen

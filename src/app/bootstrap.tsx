@@ -4,11 +4,13 @@ import {
   AUTH_STORAGE_KEY,
   createSupabase,
   createSupabaseAuthService,
+  createSupabaseGymService,
   ensureProfile,
   parseSupabaseEnv,
   readStoredUser,
 } from '../data/remote';
 import type { AuthService } from '../features/auth';
+import type { GymService } from '../features/gyms';
 import { App } from './App';
 import { ConfigError } from './ConfigError';
 import { appRoutes } from './routes';
@@ -18,6 +20,7 @@ type SupabaseClient = ReturnType<typeof createSupabase>;
 export type BootstrapDeps = {
   createSupabase: typeof createSupabase;
   createAuthService: (client: SupabaseClient) => AuthService;
+  createGymService: (client: SupabaseClient) => GymService;
   createRouter: () => ComponentProps<typeof RouterProvider>['router'];
   ensureProfile: (client: SupabaseClient, userId: string) => Promise<void>;
 };
@@ -32,6 +35,7 @@ const defaultDeps: BootstrapDeps = {
         return null; // storage blocked (some private modes)
       }
     }),
+  createGymService: createSupabaseGymService,
   createRouter: () => createBrowserRouter(appRoutes),
   ensureProfile,
 };
@@ -50,6 +54,7 @@ export function bootstrap(
   return (
     <App
       service={deps.createAuthService(client)}
+      gymService={deps.createGymService(client)}
       router={deps.createRouter()}
       ensureProfile={(userId) => deps.ensureProfile(client, userId)}
     />

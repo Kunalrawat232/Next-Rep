@@ -1,0 +1,211 @@
+import { describe, expect, it } from 'vitest';
+import {
+  barFor,
+  formatKg,
+  pickDefaultGym,
+  summarizeBars,
+  validateGymForm,
+  type Gym,
+  type GymForm,
+} from '.';
+
+const form = (over: Partial<GymForm> = {}): GymForm => ({
+  name: 'Home gym',
+  barbellKg: '15',
+  bars: [],
+  ...over,
+});
+const bar = (name: string, weightKg: string, kind: GymForm['bars'][number]['kind'] = 'other') => ({
+  name,
+  weightKg,
+  kind,
+});
+const gym = (over: Partial<Gym> = {}): Gym => ({
+  id: 'g1',
+  name: 'Home gym',
+  barbellKg: 15,
+  isDefault: false,
+  createdAt: '2026-10-01T10:00:00Z',
+  bars: [],
+  ...over,
+});
+
+describe('validateGymForm', () => {
+  it('accepts a plain gym and returns trimmed, numeric values', () => {
+    const r = validateGymForm(form({ name: '  Home gym  ', barbellKg: ' 20 ' }));
+    expect(r).toEqual({ ok: true, value: { name: 'Home gym', barbellKg: 20, bars: [] } });
+  });
+
+  it.each([
+    ['', 'empty'],
+    ['   ', 'blank'],
+    ['x'.repeat(81), 'too long'],
+  ])('rejects the name %j (%s)', (name) => {
+    const r = validateGymForm(form({ name }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.name).toBeTruthy();
+  });
+
+  it('accepts names of 1 and 80 characters', () => {
+    expect(validateGymForm(form({ name: 'x' })).ok).toBe(true);
+    expect(validateGymForm(form({ name: 'x'.repeat(80) })).ok).toBe(true);
+  });
+
+  it.each([
+    ['0', 0],
+    ['100', 100],
+    ['7.5', 7.5],
+    ['7,5', 7.5],
+    ['20.256', 20.26],
+    ['0.004', 0],
+  ])('reads barbell weight %j as %d', (text, kg) => {
+    const r = validateGymForm(form({ barbellKg: text }));
+    expect(r.ok && r.value.barbellKg).toBe(kg);
+  });
+
+  it.each([
+    '',
+    ' ',
+    'abc',
+    '-1',
+    '100.01',
+    '101',
+    'NaN',
+    'Infinity',
+    '1e2',
+    '12 kg',
+    '--5',
+    '0x10',
+  ])('rejects the barbell weight %j', (barbellKg) => {
+    const r = validateGymForm(form({ barbellKg }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.barbellKg).toBeTruthy();
+  });
+
+  it('keeps bar kinds and weights', () => {
+    const r = validateGymForm(
+      form({ bars: [bar('EZ bar', '7.5', 'ez_bar'), bar('Trap bar', '25')] }),
+    );
+    expect(r.ok && r.value.bars).toEqual([
+      { name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' },
+      { name: 'Trap bar', weightKg: 25, kind: 'other' },
+    ]);
+  });
+
+  it('reports errors against the bar that has them', () => {
+    const r = validateGymForm(
+      form({ bars: [bar('Good', '10'), bar('', '10'), bar('Heavy', '101')] }),
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errors.bars[0]).toBeUndefined();
+      expect(r.errors.bars[1]?.name).toBeTruthy();
+      expect(r.errors.bars[2]?.weightKg).toBeTruthy();
+    }
+  });
+
+  it('rejects a bar name over 60 characters but accepts exactly 60', () => {
+    expect(validateGymForm(form({ bars: [bar('x'.repeat(60), '10')] })).ok).toBe(true);
+    expect(validateGymForm(form({ bars: [bar('x'.repeat(61), '10')] })).ok).toBe(false);
+  });
+
+  it('rejects duplicate bar names, ignoring case and spaces', () => {
+    const r = validateGymForm(form({ bars: [bar('Axle bar', '20'), bar(' axle BAR ', '21')] }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.bars[1]?.name).toMatch(/already/i);
+  });
+
+  it('rejects a second EZ bar or Smith bar', () => {
+    const r = validateGymForm(
+      form({ bars: [bar('EZ bar', '7', 'ez_bar'), bar('EZ 2', '8', 'ez_bar')] }),
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.bars[1]?.name).toBeTruthy();
+    expect(
+      validateGymForm(form({ bars: [bar('S1', '7', 'smith'), bar('S2', '8', 'smith')] })).ok,
+    ).toBe(false);
+  });
+
+  it('allows many bars of the other kind', () => {
+    const bars = Array.from({ length: 12 }, (_, i) => bar(`Bar ${i}`, '10'));
+    expect(validateGymForm(form({ bars })).ok).toBe(true);
+  });
+});
+
+describe('formatKg', () => {
+  it.each([
+    [15, '15'],
+    [7.5, '7.5'],
+    [7.25, '7.25'],
+    [0, '0'],
+    [20.0, '20'],
+  ])('formats %d as %s', (kg, text) => expect(formatKg(kg)).toBe(text));
+});
+
+describe('summarizeBars', () => {
+  it('lists the barbell first, then the other bars in order', () => {
+    expect(
+      summarizeBars(
+        gym({
+          bars: [
+            { id: 'b1', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' },
+            { id: 'b2', name: 'Smith bar', weightKg: 12, kind: 'smith' },
+          ],
+        }),
+      ),
+    ).toBe('Barbell 15 kg · EZ bar 7.5 kg · Smith bar 12 kg');
+  });
+
+  it('shows just the barbell when there are no other bars', () => {
+    expect(summarizeBars(gym({ barbellKg: 20 }))).toBe('Barbell 20 kg');
+  });
+});
+
+describe('pickDefaultGym', () => {
+  it('is undefined with no gyms', () => expect(pickDefaultGym([])).toBeUndefined());
+
+  it('prefers the gym marked default', () => {
+    const gyms = [
+      gym({ id: 'a' }),
+      gym({ id: 'b', isDefault: true, createdAt: '2026-10-05T00:00:00Z' }),
+    ];
+    expect(pickDefaultGym(gyms)?.id).toBe('b');
+  });
+
+  it('falls back to the oldest gym when none is marked', () => {
+    const gyms = [
+      gym({ id: 'new', createdAt: '2026-10-05T00:00:00Z' }),
+      gym({ id: 'old', createdAt: '2026-09-01T00:00:00Z' }),
+    ];
+    expect(pickDefaultGym(gyms)?.id).toBe('old');
+  });
+
+  it('does not reorder the list it is given', () => {
+    const gyms = [gym({ id: 'b', createdAt: '2026-10-05T00:00:00Z' }), gym({ id: 'a' })];
+    pickDefaultGym(gyms);
+    expect(gyms.map((g) => g.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('barFor', () => {
+  const g = gym({
+    barbellKg: 15,
+    bars: [
+      { id: 'b1', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' },
+      { id: 'b2', name: 'Trap bar', weightKg: 25, kind: 'other' },
+    ],
+  });
+
+  it('uses the barbell weight for barbell exercises', () => expect(barFor(g, 'barbell')).toBe(15));
+  it('uses the EZ bar for EZ-bar exercises', () => expect(barFor(g, 'ez_bar')).toBe(7.5));
+  it('has no answer when the gym lacks that bar, so the caller must ask', () =>
+    expect(barFor(g, 'smith')).toBeUndefined());
+  it.each(['dumbbell', 'machine', 'cable', 'bodyweight'] as const)(
+    'has no bar for %s',
+    (equipment) => expect(barFor(g, equipment)).toBeUndefined(),
+  );
+  it('never uses an other-kind bar automatically', () => {
+    const only = gym({ bars: [{ id: 'b', name: 'EZ bar', weightKg: 9, kind: 'other' }] });
+    expect(barFor(only, 'ez_bar')).toBeUndefined();
+  });
+});

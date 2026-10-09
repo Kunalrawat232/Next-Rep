@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
+import { createFakeGymService } from '../test/fakeGyms';
 import { bootstrap, type BootstrapDeps } from './bootstrap';
 import { appRoutes } from './routes';
 
@@ -16,6 +17,7 @@ function deps() {
   const value = {
     createSupabase: vi.fn(() => ({ auth: {}, from: vi.fn() })),
     createAuthService: vi.fn(() => fake.service),
+    createGymService: vi.fn(() => createFakeGymService().service),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
     ensureProfile: vi.fn(async () => undefined),
   };
@@ -37,6 +39,7 @@ describe('bootstrap', () => {
     await screen.findByRole('heading', { name: 'Sign in', level: 2 });
     expect(d.spies.createSupabase).toHaveBeenCalledTimes(1);
     expect(d.spies.createAuthService).toHaveBeenCalledTimes(1);
+    expect(d.spies.createGymService).toHaveBeenCalledTimes(1);
     expect(d.spies.createRouter).toHaveBeenCalledTimes(1);
   });
 });

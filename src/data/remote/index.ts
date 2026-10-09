@@ -3,3 +3,4 @@ export { parseSupabaseEnv, unsafePublicEnvProblems, type EnvResult, type Supabas
 export { ensureProfile } from './profiles';
 export { createSupabaseAuthService } from './supabaseAuth';
 export { readStoredUser } from './storedSession';
+export { createSupabaseGymService } from './gyms';
