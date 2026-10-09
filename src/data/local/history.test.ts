@@ -77,3 +77,23 @@ describe('listSetsFor and getWorkout', () => {
     expect(await store.getWorkout(uuid())).toBeUndefined();
   });
 });
+
+describe('setsForExercises and allSets', () => {
+  it('returns every set of the given exercises across workouts, oldest first', async () => {
+    const { store } = freshLocal();
+    const w1 = await store.startWorkout(aWorkout());
+    const w2 = await store.startWorkout(aWorkout());
+    const a = await store.logSet(
+      aSet(w1.id, { exerciseId: uuid(7001), loggedAt: '2026-10-02T10:00:00.000Z' }),
+    );
+    const b = await store.logSet(
+      aSet(w2.id, { exerciseId: uuid(7001), loggedAt: '2026-10-01T10:00:00.000Z' }),
+    );
+    await store.logSet(aSet(w2.id, { exerciseId: uuid(7002) }));
+    expect((await store.setsForExercises([uuid(7001)])).map((s) => s.id)).toEqual([b.id, a.id]);
+    expect(await store.setsForExercises([uuid(7001), uuid(7001)])).toHaveLength(2);
+    expect(await store.setsForExercises([])).toEqual([]);
+    expect(await store.setsForExercises([uuid(7999)])).toEqual([]);
+    expect(await store.allSets()).toHaveLength(3);
+  });
+});

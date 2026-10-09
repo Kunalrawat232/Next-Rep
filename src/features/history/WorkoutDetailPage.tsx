@@ -6,6 +6,7 @@ import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/loc
 import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '../../domain/history';
 import { useExerciseService, useExercises } from '../exercises';
 import { useLogStore, useSyncStatus } from '../sync';
+import { useRecordMarks } from '../progress';
 import { SetList } from '../workout';
 import { countLabel, syncNote } from './rows';
 
@@ -51,6 +52,8 @@ export function WorkoutDetailPage() {
   }, [store, workoutId, attempt, pending, failed, syncing]);
 
   const here = loaded?.workoutId === workoutId ? loaded : null;
+  const shownSets = here?.status === 'ready' ? here.sets : [];
+  const marks = useRecordMarks(shownSets.map((s) => s.exerciseId));
   if (here?.status === 'error')
     return (
       <div role="alert" className="flex flex-col items-start gap-3">
@@ -108,7 +111,12 @@ export function WorkoutDetailPage() {
       )}
       {sets.length === 0 && <p className="text-callout text-ink-muted">No sets in this workout.</p>}
       {groupByExercise(sets).map((group) => (
-        <SetList key={group.exerciseId} title={nameOf(group.exerciseId)} sets={group.sets} />
+        <SetList
+          key={group.exerciseId}
+          title={nameOf(group.exerciseId)}
+          sets={group.sets}
+          marks={marks}
+        />
       ))}
     </div>
   );

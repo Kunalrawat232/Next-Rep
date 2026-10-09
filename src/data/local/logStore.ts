@@ -254,6 +254,20 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       return rows.map((row) => ({ ...row, gymSnapshot: readGymSnapshot(row.gymSnapshot) }));
     },
 
+    async setsForExercises(exerciseIds) {
+      const parts = await Promise.all(
+        [...new Set(exerciseIds)].map((id) =>
+          db.sets.where('[exerciseId+loggedAt]').between([id, ''], [id, '\uffff']).toArray(),
+        ),
+      );
+      return parts.flat().sort((a, b) => compareText(a.loggedAt, b.loggedAt));
+    },
+
+    async allSets() {
+      const rows = await db.sets.toArray();
+      return rows.sort((a, b) => compareText(a.loggedAt, b.loggedAt));
+    },
+
     async listSetsFor(workoutIds) {
       const rows = await db.sets.where('workoutId').anyOf(workoutIds).toArray();
       return rows.sort((a, b) => compareText(a.loggedAt, b.loggedAt));

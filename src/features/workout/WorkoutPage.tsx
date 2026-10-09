@@ -9,6 +9,8 @@ import { SyncBadge, useLogStore, useSyncControls } from '../sync';
 import { OfflineBanner } from './OfflineBanner';
 import { SetList } from './SetList';
 import { useFreshGym } from './useFreshGym';
+import { PrBadge, useRecordMarks } from '../progress';
+import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { useGymCatalog } from './useGymCatalog';
 import { useWorkout } from './useWorkout';
@@ -151,6 +153,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const [problem, setProblem] = useState<string | null>(null);
   const [undoing, setUndoing] = useState(false);
   useFreshGym(workout, reload);
+  const marks = useRecordMarks(sets.map((s) => s.exerciseId));
 
   const nameOf = (id: string) =>
     exercises.state.status === 'ready'
@@ -247,6 +250,18 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
 
       <OfflineBanner />
 
+      {last && marks.get(last.id) && (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-md border border-success bg-surface-200 p-4"
+        >
+          <PrBadge kind={marks.get(last.id)!} />
+          <span>
+            New personal record: {nameOf(last.exerciseId)}, {setSummary(last).headline}
+          </span>
+        </p>
+      )}
+
       {!exerciseId && (
         <p className="text-callout text-ink-muted">Choose an exercise to log your first set.</p>
       )}
@@ -255,10 +270,16 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
           title={nameOf(exerciseId)}
           sets={selected}
           empty="No sets yet. Tap instead to log one."
+          marks={marks}
         />
       )}
       {others.map((id) => (
-        <SetList key={id} title={nameOf(id)} sets={sets.filter((s) => s.exerciseId === id)} />
+        <SetList
+          key={id}
+          title={nameOf(id)}
+          sets={sets.filter((s) => s.exerciseId === id)}
+          marks={marks}
+        />
       ))}
 
       {problem && (

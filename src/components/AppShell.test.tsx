@@ -28,7 +28,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each(['Progress', 'Settings'])('%s is not a link yet, and says why', (name) => {
+  it.each(['Settings'])('%s is not a link yet, and says why', (name) => {
     renderShell();
     expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Main' });

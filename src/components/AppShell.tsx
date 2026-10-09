@@ -58,7 +58,7 @@ const ITEMS: Item[] = [
   },
   {
     label: 'Progress',
-    to: null,
+    to: '/progress',
     icon: (
       <Icon>
         <path d="M4 20V4" />

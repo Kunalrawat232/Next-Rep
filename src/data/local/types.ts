@@ -95,6 +95,10 @@ export interface LogStore {
   getWorkout(id: string): Promise<StoredWorkout | undefined>;
   /** Ended workouts, newest start first, at most `limit`. */
   endedWorkouts(limit: number): Promise<StoredWorkout[]>;
+  /** Every set of these exercises in any workout, oldest first. */
+  setsForExercises(exerciseIds: string[]): Promise<StoredSet[]>;
+  /** Every set on this device, oldest first. */
+  allSets(): Promise<StoredSet[]>;
   /** The sets of several workouts at once, oldest first. */
   listSetsFor(workoutIds: string[]): Promise<StoredSet[]>;
   /** The newest set of this exercise, in any workout. */

@@ -188,6 +188,25 @@ describe('signing out from Home', () => {
     expect(await db.sets.count()).toBe(1);
   });
 
+  it('signs out only once when Sign out is tapped twice quickly', async () => {
+    // Everything is already on the server, so there is nothing to warn about.
+    const { user, auth, db, workout } = await openWith([{ status: 'synced' }], '/', offline());
+    await db.workouts.update(workout.id, { syncStatus: 'synced' });
+    await user.dblClick(await screen.findByRole('button', { name: /sign out/i }));
+    await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(auth.service.signOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('signs out only once when Sign out anyway is tapped twice quickly', async () => {
+    const { user, auth } = await openWith([{ status: 'pending' }], '/', offline());
+    await user.click(await screen.findByRole('button', { name: /sign out/i }));
+    await user.dblClick(await screen.findByRole('button', { name: 'Sign out anyway' }));
+    await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(auth.service.signOut).toHaveBeenCalledTimes(1);
+  });
+
   it('signs out anyway on request, and keeps the waiting sets on the device', async () => {
     const { user, db, auth } = await openWith([{ status: 'pending' }], '/', offline());
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
