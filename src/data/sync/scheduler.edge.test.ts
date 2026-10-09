@@ -234,7 +234,14 @@ describe('things that fail', () => {
       browser.fire('online');
     }).not.toThrow();
     await settle();
-    expect(scheduler.status()).toEqual({ syncing: false, pending: 0, failed: 0, offline: false });
+    expect(scheduler.status()).toEqual({
+      syncing: false,
+      pending: 0,
+      failed: 0,
+      offline: false,
+      pulling: false,
+      pulledVersion: 0,
+    });
     scheduler.stop();
   });
 

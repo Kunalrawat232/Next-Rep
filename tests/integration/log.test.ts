@@ -6,7 +6,7 @@ import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createLogStore, openLocalDb } from '../../src/data/local';
 import { createSupabaseLogRemote } from '../../src/data/remote/log';
-import { createSyncWorker } from '../../src/data/sync';
+import { createSyncWorker, pullHistory } from '../../src/data/sync';
 
 const env = process.env;
 const url = env.VITE_SUPABASE_URL;
@@ -178,5 +178,60 @@ describe.skipIf(!configured)('recording and syncing on the hosted project', () =
     expect(result.status).toBe('ok');
     const row = await a.client.from('sets').select('deleted_at').eq('id', setId).single();
     expect(row.data!.deleted_at).not.toBeNull();
+  });
+
+  it('brings a finished workout and its sets to a second, empty device, typed as the app expects', async () => {
+    const first = device(a.id, a.client);
+    const workoutId = crypto.randomUUID();
+    await first.store.startWorkout({
+      id: workoutId,
+      gymId: null,
+      startedAt: new Date(Date.now() - 3_600_000).toISOString(),
+    });
+    const setId = crypto.randomUUID();
+    await first.store.logSet({
+      id: setId,
+      workoutId,
+      exerciseId: BENCH,
+      totalKg: 62.5,
+      barKg: 20,
+      perSideKg: 21.25,
+      inputMode: 'per_side',
+      reps: 6,
+      source: 'tap',
+      rawTranscript: null,
+      loggedAt: new Date().toISOString(),
+    });
+    await first.store.endWorkout(workoutId, new Date().toISOString());
+    await first.worker.run({ ignoreWait: true });
+
+    const second = device(a.id, a.client);
+    const remote = createSupabaseLogRemote(a.client);
+    const outcome = await pullHistory({ store: second.store, remote, userId: a.id });
+    expect(outcome.status).toBe('done');
+    // Nothing was refused: the server's types (numbers, times with an offset) pass the shared schemas.
+    expect(outcome).toMatchObject({ refused: 0 });
+    const [pulled] = await second.store.listSets(workoutId);
+    expect(pulled).toMatchObject({
+      id: setId,
+      totalKg: 62.5,
+      barKg: 20,
+      perSideKg: 21.25,
+      syncStatus: 'synced',
+    });
+    expect(pulled!.loggedAt.endsWith('Z')).toBe(true);
+    expect((await second.store.getWorkout(workoutId))?.endedAt).not.toBeNull();
+  });
+
+  it("never brings in another user's rows", async () => {
+    const other = device(b.id, b.client);
+    const outcome = await pullHistory({
+      store: other.store,
+      remote: createSupabaseLogRemote(b.client),
+      userId: b.id,
+    });
+    expect(outcome.status).toBe('done');
+    expect(await other.db.workouts.count()).toBe(0);
+    expect(await other.db.sets.count()).toBe(0);
   });
 });

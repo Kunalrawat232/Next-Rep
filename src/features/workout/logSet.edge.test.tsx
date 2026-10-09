@@ -3,7 +3,14 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, DUMBBELL_CURL, EZ_CURL, HOME_GYM, renderApp } from '../../test/appHarness';
+import {
+  BENCH,
+  DUMBBELL_CURL,
+  EZ_CURL,
+  HOME_GYM,
+  renderApp,
+  offlineServer,
+} from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
@@ -16,7 +23,7 @@ async function openLog(
   options: { snapshot?: GymSnapshot | null; gymId?: string | null; sets?: Seed[] } = {},
 ) {
   const userId = `edge-${Math.random()}`;
-  const seed = renderApp('/workout', { userId });
+  const seed = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await seed.store.startWorkout({
     ...aWorkout(),
     gymId: options.gymId === undefined ? HOME_GYM.id : options.gymId,
@@ -219,7 +226,7 @@ describe('what the page is asked to show', () => {
     'says the exercise is not found for %s',
     async (path) => {
       const userId = `edge-${Math.random()}`;
-      const seed = renderApp('/workout', { userId });
+      const seed = renderApp('/workout', { userId, server: offlineServer() });
       await seed.store.startWorkout({ ...aWorkout(), gymId: HOME_GYM.id, gymSnapshot: HOME });
       seed.unmount();
       renderApp(path, { userId });

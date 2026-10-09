@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, HOME_GYM, renderApp } from '../../test/appHarness';
+import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 
@@ -28,7 +28,7 @@ const offline = () => {
 /** Workouts already on the device, then the app at a path. */
 async function openWith(seeds: Seed[], path = '/history') {
   const userId = `edge-${Math.random()}`;
-  const first = renderApp('/', { userId });
+  const first = renderApp('/', { userId, server: offlineServer() });
   const ids: string[] = [];
   for (const seed of seeds) {
     const workout = await first.store.startWorkout({

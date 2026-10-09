@@ -16,7 +16,7 @@ export type HistoryState =
  */
 export function useHistory(): { state: HistoryState; showMore: () => void; retry: () => void } {
   const store = useLogStore();
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const [shown, setShown] = useState(PAGE_SIZE);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<HistoryState>({ status: 'loading' });
@@ -57,7 +57,7 @@ export function useHistory(): { state: HistoryState; showMore: () => void; retry
     return () => {
       current = false;
     };
-  }, [store, shown, attempt, pending, failed, syncing]);
+  }, [store, shown, attempt, pending, failed, syncing, pulledVersion]);
 
   const showMore = useCallback(() => setShown((n) => n + PAGE_SIZE), []);
   const retry = useCallback(() => {

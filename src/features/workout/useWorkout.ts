@@ -11,7 +11,7 @@ export type WorkoutState =
 export function useWorkout(): { state: WorkoutState; reload: () => Promise<void> } {
   const store = useLogStore();
   const [state, setState] = useState<WorkoutState>({ status: 'loading' });
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
 
   const load = useCallback(async (): Promise<WorkoutState> => {
     const workout = await store.activeWorkout();
@@ -29,7 +29,7 @@ export function useWorkout(): { state: WorkoutState; reload: () => Promise<void>
     return () => {
       current = false;
     };
-  }, [load, pending, failed, syncing]); // read again as sets reach the server, so statuses on screen stay true
+  }, [load, pending, failed, syncing, pulledVersion]); // read again as sets reach the server, so statuses on screen stay true
 
   const reload = useCallback(async () => setState(await load()), [load]);
   return { state, reload };

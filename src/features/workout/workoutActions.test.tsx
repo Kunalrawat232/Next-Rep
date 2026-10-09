@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
-import { BENCH, HOME_GYM, renderApp } from '../../test/appHarness';
+import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 
@@ -18,7 +18,7 @@ async function openWith(
   server = createFakeRemoteLog(),
 ) {
   const userId = `act-${Math.random()}`;
-  const first = renderApp('/workout', { userId });
+  const first = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await first.store.startWorkout({
     ...aWorkout(),
     startedAt: '2026-10-01T10:00:00.000Z',

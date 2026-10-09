@@ -13,7 +13,7 @@ const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
  */
 export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, RecordKind> {
   const store = useLogStore();
-  const { pending, failed, syncing } = useSyncStatus();
+  const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const idsKey = [...new Set(exerciseIds)].sort().join(',');
   const [marks, setMarks] = useState<ReadonlyMap<string, RecordKind>>(EMPTY);
 
@@ -36,7 +36,7 @@ export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, Recor
     return () => {
       current = false;
     };
-  }, [store, idsKey, pending, failed, syncing]);
+  }, [store, idsKey, pending, failed, syncing, pulledVersion]);
 
   return idsKey === '' ? EMPTY : marks;
 }
