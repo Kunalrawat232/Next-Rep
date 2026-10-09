@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
-import { Button, buttonClasses, Chip, TextField } from '../../components';
+import { BackLink, Button, buttonClasses, Chip, TextField } from '../../components';
 import {
   pickDefaultGym,
   validateGymForm,
@@ -10,7 +10,6 @@ import {
   type GymInput,
 } from '../../domain/gyms';
 import { useAuth } from '../auth';
-import { BackLink } from './BackLink';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import type { GymFailure, GymService } from './types';

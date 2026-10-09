@@ -1,6 +1,7 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { AppShell } from '../components';
 import { ProtectedRoute, SignInPage } from '../features/auth';
+import { CustomExercisePage, ExercisesPage } from '../features/exercises';
 import { GymFormPage, GymsPage } from '../features/gyms';
 import { HomePage } from './HomePage';
 
@@ -16,6 +17,8 @@ export const appRoutes: RouteObject[] = [
           { path: '/gyms', element: <GymsPage /> },
           { path: '/gyms/new', element: <GymFormPage /> },
           { path: '/gyms/:gymId', element: <GymFormPage /> },
+          { path: '/exercises', element: <ExercisesPage /> },
+          { path: '/exercises/new', element: <CustomExercisePage /> },
         ],
       },
     ],

@@ -24,6 +24,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:db
+      - run: npm run seed:check
       - run: npm run build
       - name: Fail if a secret key reached the bundle
         run: |

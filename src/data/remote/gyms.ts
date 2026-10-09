@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import type { Gym, GymInput } from '../../domain/gyms';
-import type { GymFailure, GymResult, GymService } from '../../features/gyms/types';
+import type { GymResult, GymService } from '../../features/gyms/types';
+import { failure } from './failure';
 
 type Client = Pick<SupabaseClient, 'from'>;
-type Failure = { status: 'error'; reason: GymFailure };
 
 // Postgres returns `numeric` as text through PostgREST in some setups and as a number in others.
 // Not z.coerce: that would turn null, '' or true into a weight.
@@ -31,21 +31,6 @@ const GymRowSchema = z.object({
     }),
   ),
 });
-
-// Not typed through `navigator`: this file is also compiled for the Node-side integration tests.
-function browserSaysOffline(): boolean {
-  const nav = (globalThis as { navigator?: { onLine?: boolean } }).navigator;
-  return nav?.onLine === false;
-}
-
-const UNIQUE_VIOLATION = '23505';
-
-function failure(error: { message: string; code?: string }): Failure {
-  // A server error has a code; a failed request has only a message.
-  const offline = browserSaysOffline() || (!error.code && /fetch|network/i.test(error.message));
-  if (offline) return { status: 'error', reason: 'offline' };
-  return { status: 'error', reason: error.code === UNIQUE_VIOLATION ? 'conflict' : 'unknown' };
-}
 
 const ok = <T>(value: T): GymResult<T> => ({ status: 'ok', value });
 

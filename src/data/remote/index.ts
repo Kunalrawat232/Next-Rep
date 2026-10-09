@@ -4,3 +4,4 @@ export { ensureProfile } from './profiles';
 export { createSupabaseAuthService } from './supabaseAuth';
 export { readStoredUser } from './storedSession';
 export { createSupabaseGymService } from './gyms';
+export { createSupabaseExerciseService } from './exercises';
