@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { Button, buttonClasses } from '../components';
 import { useAuth } from '../features/auth';
@@ -10,6 +10,8 @@ export function HomePage() {
   const store = useLogStore();
   const [signOutFailed, setSignOutFailed] = useState(false);
   const [waiting, setWaiting] = useState<number | null>(null);
+  // Taps while a sign-out is under way are ignored: the work below must run once.
+  const busy = useRef(false);
   if (state.status !== 'signedIn') return null;
 
   async function finishSignOut() {
@@ -25,10 +27,16 @@ export function HomePage() {
 
   // The user is told about waiting sets before anything is cleared, so "Stay signed in" changes nothing.
   async function signOut() {
-    const counts = await store.counts().catch(() => ({ pending: 0, failed: 0 }));
-    const remaining = counts.pending + counts.failed;
-    if (remaining > 0) setWaiting(remaining);
-    else await finishSignOut();
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const counts = await store.counts().catch(() => ({ pending: 0, failed: 0 }));
+      const remaining = counts.pending + counts.failed;
+      if (remaining > 0) setWaiting(remaining);
+      else await finishSignOut();
+    } finally {
+      busy.current = false;
+    }
   }
 
   return (

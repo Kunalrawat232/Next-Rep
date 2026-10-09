@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
@@ -37,6 +37,6 @@ describe('App', () => {
       />,
     );
     await screen.findByText(/signed in as/i);
-    expect(calls).toEqual(['u1']);
+    await waitFor(() => expect(calls).toEqual(['u1']));
   });
 });
