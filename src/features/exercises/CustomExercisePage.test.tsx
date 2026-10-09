@@ -4,6 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { createFakeAuthService } from '../../test/fakeAuth';
 import { createFakeExerciseService, customExercise } from '../../test/fakeExercises';
+import { tapTogether } from '../../test/doubleTap';
 import { AuthProvider } from '../auth';
 import { CustomExercisePage } from './CustomExercisePage';
 import { ExerciseServiceProvider } from './ExerciseServiceContext';
@@ -205,5 +206,15 @@ describe('CustomExercisePage', () => {
     renderForm();
     await nameField();
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/exercises');
+  });
+
+  it('creates one exercise when Save is tapped twice in the same instant', async () => {
+    const { fake, user } = renderForm();
+    await user.type(await nameField(), 'Zercher squat');
+    await user.click(screen.getByRole('button', { name: 'Lower' }));
+    tapTogether(screen.getByRole('button', { name: 'Save exercise' }));
+    await waitFor(() => expect(fake.service.create).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(fake.service.create).toHaveBeenCalledTimes(1);
   });
 });

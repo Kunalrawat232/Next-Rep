@@ -7,6 +7,7 @@ import { AuthProvider } from './AuthProvider';
 import { messageFor } from './authErrors';
 import { SignInPage } from './SignInPage';
 import type { AuthFailure, AuthResult } from './types';
+import { tapTogether } from '../../test/doubleTap';
 
 type Entry = string | { pathname: string; state: unknown };
 
@@ -92,7 +93,7 @@ describe('signing in', () => {
     await user.type(await screen.findByLabelText('Email'), 'a@b.co');
     await user.type(screen.getByLabelText('Password'), 'password1');
     const button = screen.getByRole('button', { name: /^sign in$/i });
-    await user.dblClick(button);
+    tapTogether(button);
     expect(fake.service.signIn).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
     await (async () => finish({ status: 'error', reason: 'invalid_credentials' }))();

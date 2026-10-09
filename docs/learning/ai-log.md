@@ -212,3 +212,13 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: pull on every app start, with all history and no date window; the QA agent is on hold until the whole UI is built, so no `qa-tester` run for this task.
 - How validated: _(developer to fill)_ Evidence: unit tests and 97 database tests pass; 90 random two-device scenarios converge (same sets and the same personal records); 17 of 19 deliberate breakages of the pull turn tests red (the two survivors are an `isActive` check and an `exclusive` call that overlap with each other). Not yet run: the hosted integration test (`npm run test:integration`), which checks that the real server's value types pass the shared schemas.
 - Lesson: when two devices share a server, test them against each other, and write the rule for what "deleted elsewhere" means before writing the code that deletes.
+
+## 2026-10-09: Double-tap guards
+
+- Tool: Claude Code with the advisor tool, a CI-like run (the tests pinned to two CPU cores) and a mutation check
+- Asked: fix the flaky "Sign out anyway tapped twice" test that failed on CI, and the double-tap bug behind it.
+- AI produced: one small hook (`usePending`) that decides from a ref, a test helper that taps in the same instant (`tapTogether`), and the hook applied to every save, delete, sign-in and undo.
+- Problems found: (1) the flaky test was a symptom: `user.dblClick` leaves a tick between the clicks, so on a slow machine the first action finished before the second tap; (2) switching the tests to same-instant taps showed that two taps on Log set, sign-in, the gym form's save, default and delete, and the custom exercise save really did run twice, because a `useState` guard still holds the old value until the next render; (3) my first attempt patched only Log set and Undo with refs, and the developer stopped it; the second attempt fixed the whole class with one hook; (4) the CI failure of the Progress PR was a different race, a test tapping a disabled Undo button.
+- Decisions by the developer: fix this before finishing the UI, and voice after that.
+- How validated: _(developer to fill)_ Evidence: the full suite passes repeatedly on two cores; removing the guard turns 7 tests red.
+- Lesson: when a test flakes under load, ask what real timing it is hiding, and make the test strict enough to show the bug.

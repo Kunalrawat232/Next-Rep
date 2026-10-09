@@ -8,6 +8,7 @@ import { AuthProvider } from '../auth';
 import { GymFormPage } from './GymFormPage';
 import { GymServiceProvider } from './GymServiceContext';
 import type { GymResult } from './types';
+import { tapTogether } from '../../test/doubleTap';
 
 function renderForm(path: string, fake = createFakeGymService(), signedIn = true) {
   const auth = createFakeAuthService(signedIn ? { id: 'u1', email: 'a@b.co' } : null);
@@ -328,9 +329,9 @@ describe('GymFormPage: saving, failures and retries', () => {
 
   it('sends one update when Save changes is double clicked', async () => {
     const fake = createFakeGymService([ezGym]);
-    const { user } = renderForm('/gyms/g1', fake);
+    renderForm('/gyms/g1', fake);
     await screen.findByLabelText('Gym name');
-    await user.dblClick(screen.getByRole('button', { name: 'Save changes' }));
+    tapTogether(screen.getByRole('button', { name: 'Save changes' }));
     expect(fake.service.update).toHaveBeenCalledTimes(1);
   });
 
@@ -370,9 +371,9 @@ describe('GymFormPage: default and delete actions', () => {
     const fake = createFakeGymService(notTheDefault);
     const gate = pendingOnce<void>();
     fake.service.setDefault.mockReturnValue(gate.promise);
-    const { user } = renderForm('/gyms/g1', fake);
+    renderForm('/gyms/g1', fake);
     await screen.findByLabelText('Gym name');
-    await user.dblClick(screen.getByRole('button', { name: 'Make this my default gym' }));
+    tapTogether(screen.getByRole('button', { name: 'Make this my default gym' }));
     expect(fake.service.setDefault).toHaveBeenCalledTimes(1);
     gate.resolve({ status: 'ok', value: undefined });
   });
@@ -384,7 +385,7 @@ describe('GymFormPage: default and delete actions', () => {
     const { user } = renderForm('/gyms/g1', fake);
     await screen.findByLabelText('Gym name');
     await user.click(screen.getByRole('button', { name: 'Delete gym' }));
-    await user.dblClick(screen.getByRole('button', { name: 'Yes, delete' }));
+    tapTogether(screen.getByRole('button', { name: 'Yes, delete' }));
     expect(fake.service.remove).toHaveBeenCalledTimes(1);
     gate.resolve({ status: 'ok', value: undefined });
   });

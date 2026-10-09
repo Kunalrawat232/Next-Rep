@@ -14,6 +14,7 @@ import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import type { GymFailure, GymService } from './types';
 import { useGyms } from './useGyms';
+import { usePending } from '../../lib/usePending';
 
 type FormBar = { id: string; name: string; weightKg: string; kind: BarKind };
 
@@ -99,7 +100,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
   );
   const [errors, setErrors] = useState<GymFormErrors>({ bars: {} });
   const [focusTick, setFocusTick] = useState(0);
-  const [pending, setPending] = useState(false);
+  const { pending, begin, end } = usePending();
   const [problem, setProblem] = useState<string | null>(null);
 
   const [draftKind, setDraftKind] = useState<BarKind>('other');
@@ -170,7 +171,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
       return;
     }
     setErrors({ bars: {} });
-    setPending(true);
+    if (!begin()) return;
     const input: GymInput = checked.value;
     try {
       const result = existing
@@ -185,13 +186,13 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
     } catch {
       if (mounted.current) setProblem(failureMessage('unknown', 'save the gym'));
     }
-    if (mounted.current) setPending(false);
+    if (mounted.current) end();
   }
 
   async function makeThisDefault() {
     if (!existing || pending) return;
     setProblem(null);
-    setPending(true);
+    if (!begin()) return;
     try {
       const result = await service.setDefault(existing.id);
       if (!mounted.current) return;
@@ -200,13 +201,13 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
     } catch {
       if (mounted.current) setProblem(failureMessage('unknown', 'change the default gym'));
     }
-    if (mounted.current) setPending(false);
+    if (mounted.current) end();
   }
 
   async function deleteGym() {
     if (!existing || pending) return;
     setProblem(null);
-    setPending(true);
+    if (!begin()) return;
     try {
       const result = await service.remove(existing.id);
       if (!mounted.current) return;
@@ -219,7 +220,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
       if (mounted.current) setProblem(failureMessage('unknown', 'delete the gym'));
     }
     if (mounted.current) {
-      setPending(false);
+      end();
       setConfirmingDelete(false);
     }
   }

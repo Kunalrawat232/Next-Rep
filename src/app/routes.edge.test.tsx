@@ -6,6 +6,7 @@ import { AuthProvider } from '../features/auth/AuthProvider';
 import { SyncProvider } from '../features/sync';
 import { createFakeAuthService } from '../test/fakeAuth';
 import { createFakeRemoteLog } from '../test/fakeRemoteLog';
+import { tapTogether } from '../test/doubleTap';
 import { appRoutes } from './routes';
 
 const ada = { id: 'u1', email: 'ada@example.com' };
@@ -85,12 +86,10 @@ describe('ProtectedRoute transitions', () => {
 
   it('survives rapid repeated sign-out taps without an unhandled error', async () => {
     const fake = createFakeAuthService(ada);
-    const { default: userEvent } = await import('@testing-library/user-event');
-    const user = userEvent.setup();
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     renderAt('/', fake);
     const button = await screen.findByRole('button', { name: /sign out/i });
-    await user.tripleClick(button);
+    tapTogether(button, 3);
     expect(await screen.findByRole('heading', { name: 'Sign in', level: 2 })).toBeInTheDocument();
     expect(error).not.toHaveBeenCalled();
     error.mockRestore();

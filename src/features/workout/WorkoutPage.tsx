@@ -14,6 +14,7 @@ import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { useGymCatalog } from './useGymCatalog';
 import { useWorkout } from './useWorkout';
+import { usePending } from '../../lib/usePending';
 
 export function WorkoutPage() {
   const { state, reload } = useWorkout();
@@ -33,16 +34,16 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
   const { notify } = useSyncControls();
   const [chosen, setChosen] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
+  const { pending: starting, begin: beginStart, end: endStart } = usePending();
   // One id for this screen, so a second tap starts the same workout instead of another one.
   const workoutId = useRef(crypto.randomUUID());
 
   async function start(gymId: string) {
-    if (catalog.status !== 'ready' || starting) return;
+    if (catalog.status !== 'ready') return;
     const gym = catalog.gyms.find((g) => g.id === gymId);
     if (!gym) return;
     setProblem(null);
-    setStarting(true);
+    if (!beginStart()) return;
     try {
       await store.startWorkout({
         id: workoutId.current,
@@ -54,7 +55,7 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
       await onStarted();
     } catch {
       setProblem('Could not start the workout. Please try again.');
-      setStarting(false);
+      endStart();
     }
   }
 
@@ -151,7 +152,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const online = useOnline();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [undoing, setUndoing] = useState(false);
+  const { pending: undoing, begin: beginUndo, end: endUndo } = usePending();
   useFreshGym(workout, reload);
   const marks = useRecordMarks(sets.map((s) => s.exerciseId));
 
@@ -166,9 +167,8 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const lastIsSynced = last?.syncStatus === 'synced';
 
   async function undo() {
-    if (!last || undoing) return;
+    if (!last || !beginUndo()) return;
     setProblem(null);
-    setUndoing(true);
     try {
       // The list on screen can be a moment behind the sync, so the set is read again first.
       const latest = (await store.listSets(workout.id)).at(-1);
@@ -188,7 +188,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       ignoreClosed(error);
       setProblem('Could not undo that set. Please try again.');
     } finally {
-      setUndoing(false);
+      endUndo();
     }
   }
 

@@ -4,6 +4,7 @@ import type { GymSnapshot } from '../../data/local/types';
 import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
+import { tapTogether } from '../../test/doubleTap';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -190,9 +191,9 @@ describe('signing out from Home', () => {
 
   it('signs out only once when Sign out is tapped twice quickly', async () => {
     // Everything is already on the server, so there is nothing to warn about.
-    const { user, auth, db, workout } = await openWith([{ status: 'synced' }], '/', offline());
+    const { auth, db, workout } = await openWith([{ status: 'synced' }], '/', offline());
     await db.workouts.update(workout.id, { syncStatus: 'synced' });
-    await user.dblClick(await screen.findByRole('button', { name: /sign out/i }));
+    tapTogether(await screen.findByRole('button', { name: /sign out/i }));
     await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(auth.service.signOut).toHaveBeenCalledTimes(1);
@@ -201,7 +202,7 @@ describe('signing out from Home', () => {
   it('signs out only once when Sign out anyway is tapped twice quickly', async () => {
     const { user, auth } = await openWith([{ status: 'pending' }], '/', offline());
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
-    await user.dblClick(await screen.findByRole('button', { name: 'Sign out anyway' }));
+    tapTogether(await screen.findByRole('button', { name: 'Sign out anyway' }));
     await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(auth.service.signOut).toHaveBeenCalledTimes(1);

@@ -12,6 +12,7 @@ import {
   offlineServer,
 } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
+import { tapTogether } from '../../test/doubleTap';
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
 const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
@@ -162,7 +163,7 @@ describe('saving', () => {
   it('saves one set for a double tap on Log set', async () => {
     const { user, store, workout } = await openLog(BENCH);
     await user.type(await weight(), '60');
-    await user.dblClick(logButton());
+    tapTogether(logButton());
     await waitFor(async () => expect(await store.listSets(workout.id)).not.toHaveLength(0));
     expect(await store.listSets(workout.id)).toHaveLength(1);
   });

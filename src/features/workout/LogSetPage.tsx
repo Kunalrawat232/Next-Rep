@@ -25,6 +25,7 @@ import { Stepper } from './Stepper';
 import { useFreshGym } from './useFreshGym';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { useWorkout } from './useWorkout';
+import { usePending } from '../../lib/usePending';
 
 export function LogSetPage() {
   const exerciseId = useExerciseParam();
@@ -116,7 +117,7 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
   const [weightText, setWeightText] = useState(last ? String(initial.weight) : '');
   const [repsText, setRepsText] = useState(String(initial.reps));
   const [asking, setAsking] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { pending: saving, begin, end } = usePending();
   const [problem, setProblem] = useState<string | null>(null);
   // The total that a weight per side was worked out from, so switching back gives exactly that total.
   const converted = useRef<{ total: string; perSide: string } | null>(null);
@@ -193,8 +194,7 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
   }
 
   async function save(resolved: ResolvedWeight) {
-    if (reps === null || saving) return;
-    setSaving(true);
+    if (reps === null || !begin()) return;
     setProblem(null);
     try {
       await store.logSet({
@@ -215,7 +215,7 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
       navigate(back);
     } catch {
       setProblem('Could not save the set. Please try again.');
-      setSaving(false);
+      end();
     }
   }
 

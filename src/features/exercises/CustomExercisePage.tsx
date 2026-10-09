@@ -11,6 +11,7 @@ import type { Failure } from '../../lib/result';
 import { useAuth } from '../auth';
 import { useExerciseService } from './ExerciseServiceContext';
 import { useExercises } from './useExercises';
+import { usePending } from '../../lib/usePending';
 
 // The order in the design: the common five, then the two bars.
 const EQUIPMENT_ORDER: EquipmentType[] = [
@@ -100,7 +101,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
   const [aliasesText, setAliasesText] = useState('');
   const [errors, setErrors] = useState<CustomExerciseErrors>({});
   const [focusTick, setFocusTick] = useState(0);
-  const [pending, setPending] = useState(false);
+  const { pending, begin, end } = usePending();
   const [problem, setProblem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
       return;
     }
     setErrors({});
-    setPending(true);
+    if (!begin()) return;
     try {
       const result = await service.create(userId, exerciseId, checked.value);
       if (!mounted.current) return;
@@ -144,7 +145,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
     } catch {
       if (mounted.current) setProblem('Could not save the exercise. Please try again.');
     }
-    if (mounted.current) setPending(false);
+    if (mounted.current) end();
   }
 
   return (
