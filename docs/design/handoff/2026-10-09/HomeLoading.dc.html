@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Rep home loading</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#000000;color:#F5F5F7;font-family:'Geist', -apple-system, system-ui, 'Helvetica Neue', sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;padding-top:56px">
+<div role="status" aria-busy="true" style="flex:1;display:flex;flex-direction:column;gap:16px;padding:0 16px;overflow:hidden"><span style="position:absolute;left:-9999px">Loading</span><div style="display:flex;align-items:center;justify-content:space-between;height:48px"><div style="width:190px;max-width:100%;height:28px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:96px;max-width:100%;height:32px;border-radius:999px;background:#2C2C2E;flex:0 0 auto"></div></div><div style="width:210px;max-width:100%;height:48px;border-radius:999px;background:#2C2C2E;flex:0 0 auto"></div><div style="background:#1C1C1E;border:1px solid #38383A;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px"><div style="width:110px;max-width:100%;height:14px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:160px;max-width:100%;height:22px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:260px;max-width:100%;height:40px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:100%;max-width:100%;height:14px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:80%;max-width:100%;height:14px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div></div><div style="width:100%;max-width:100%;height:56px;border-radius:14px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:130px;max-width:100%;height:22px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="background:#1C1C1E;border:1px solid #38383A;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:16px"><div style="width:100%;max-width:100%;height:20px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:100%;max-width:100%;height:20px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div><div style="width:100%;max-width:100%;height:20px;border-radius:8px;background:#2C2C2E;flex:0 0 auto"></div></div></div><nav style="display:flex;box-sizing:border-box;height:84px;padding:8px 8px 24px;border-top:1px solid #38383A;background:#000000"><a href="Home.dc.html" style="flex:1;min-height:48px;background:transparent;border:0;color:{{accent}};font-family:inherit;font-size:13px;line-height:18px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"></path><path d="M5 10v10h14V10"></path></svg>Home</a><a href="HistoryList.dc.html" style="flex:1;min-height:48px;background:transparent;border:0;color:#A1A1A6;font-family:inherit;font-size:13px;line-height:18px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>History</a><a href="Progress.dc.html" style="flex:1;min-height:48px;background:transparent;border:0;color:#A1A1A6;font-family:inherit;font-size:13px;line-height:18px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V4"></path><path d="M4 20h16"></path><path d="M8 15l4-4 3 3 5-6"></path></svg>Progress</a><a href="Settings.dc.html" style="flex:1;min-height:48px;background:transparent;border:0;color:#A1A1A6;font-family:inherit;font-size:13px;line-height:18px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Settings</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent": {"editor": "color", "default": "#5B8CFF", "options": ["#5B8CFF", "#2563EB", "#34C759"]}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#5B8CFF' };
+}
+}
+</script>
+</body>
+</html>

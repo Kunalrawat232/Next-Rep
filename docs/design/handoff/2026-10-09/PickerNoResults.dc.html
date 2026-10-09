@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Next Rep exercise no results</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;background:#000000;color:#F5F5F7;font-family:'Geist', -apple-system, system-ui, 'Helvetica Neue', sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;padding-top:56px">
+<div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 8px"><div style="display:flex;align-items:center"><a href="ActiveWorkout.dc.html" aria-label="Close" style="width:48px;height:48px;background:transparent;border:0;color:#F5F5F7;display:flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></a><div style="font-size:20px;line-height:26px;font-weight:600">Choose exercise</div></div><div style="width:48px"></div></div><div style="padding:0 16px"><div style="position:relative"><label for="s11" style="position:absolute;left:-9999px">Search exercises</label><span style="position:absolute;left:16px;top:16px;color:#A1A1A6"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></span><input id="s11" type="search" value="zercher squat" placeholder="Search exercises" style="height:56px;width:100%;box-sizing:border-box;background:#2C2C2E;border:2px solid {{accent}};border-radius:14px;padding:0 56px 0 52px;color:#F5F5F7;font-family:inherit;font-size:17px"><a href="PickerBrowse.dc.html" aria-label="Clear search" style="position:absolute;right:4px;top:4px;width:48px;height:48px;background:transparent;border:0;color:#A1A1A6;display:flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></a></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:32px 24px"><div style="width:96px;height:96px;border-radius:999px;background:#1C1C1E;border:1px solid #38383A;display:flex;align-items:center;justify-content:center;color:#A1A1A6"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></div><div style="font-size:20px;line-height:26px;font-weight:600">No exercises match “zercher squat”</div><div style="font-size:15px;line-height:20px;color:#A1A1A6;max-width:320px">Check the spelling, or add it as your own exercise.</div><div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;margin-top:8px"><a href="PickerCustom.dc.html" style="flex-shrink:0;height:56px;width:100%;border-radius:14px;background:{{accent}};color:#000000;border:0;font-family:inherit;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;text-decoration:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>Add “zercher squat”</a><a href="PickerBrowse.dc.html" style="flex-shrink:0;height:48px;width:100%;border-radius:14px;background:transparent;color:#F5F5F7;border:1px solid #38383A;font-family:inherit;font-size:17px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-sizing:border-box;text-decoration:none;">Clear search</a></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent": {"editor": "color", "default": "#5B8CFF", "options": ["#5B8CFF", "#2563EB", "#34C759"]}, "$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {
+renderVals() {
+return { accent: this.props.accent ?? '#5B8CFF' };
+}
+}
+</script>
+</body>
+</html>

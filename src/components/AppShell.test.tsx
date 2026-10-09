@@ -39,4 +39,12 @@ describe('AppShell', () => {
       expect(item).toHaveTextContent('coming soon');
     },
   );
+
+  it('offers a floating mic button as the phone entry to Workout, disabled until it exists', () => {
+    renderShell();
+    const mic = screen.getByRole('button', { name: /start workout/i });
+    expect(mic).toBeDisabled();
+    expect(mic).toHaveAccessibleName(/coming soon/i);
+    expect(mic.className).toContain('lg:hidden');
+  });
 });

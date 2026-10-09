@@ -22,7 +22,9 @@
 | Offline, WebOffline                               | Phase 3, not built.                                                                                                              |
 | Progress, WebProgress                             | Phase 4, not built.                                                                                                              |
 
-Navigation: bottom tab bar on phones (Home, History, Progress, Settings), sidebar from 1024px (adds Workout). Pages that do not exist yet show as disabled items, not as dead links.
+Navigation: bottom tab bar on phones (Home, History, Progress, Settings) plus a floating mic button as the phone's Workout entry (decided 2026-10-09), sidebar from 1024px (adds Workout).
+
+Handoff 2 (2026-10-09, `handoff/2026-10-09/`, 62 artboards) adds designs for gym setup, exercise picker, tap logging with per-side breakdown, the two prompts ("did you mean 60?", "total or without the bar?"), history, settings (including light mode), sign-in and create-account with a check-your-email screen, and first-time, loading and error states. Its sign-in adds a "Forgot password?" link and a Show/Hide password toggle; password reset is not built yet and needs a decision. Each screen is applied when its feature is built. Pages that do not exist yet show as disabled items, not as dead links.
 
 Shared components: see [design system](design-system.md). Every screen needs empty, loading and error states with friendly, actionable microcopy.
 
