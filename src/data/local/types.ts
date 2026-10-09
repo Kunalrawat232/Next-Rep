@@ -92,6 +92,11 @@ export interface LogStore {
   /** Stores a set, after checking it against the shared schema. Logging an id that exists changes nothing. */
   logSet(input: LoggedSet): Promise<StoredSet>;
   listSets(workoutId: string): Promise<StoredSet[]>;
+  getWorkout(id: string): Promise<StoredWorkout | undefined>;
+  /** Ended workouts, newest start first, at most `limit`. */
+  endedWorkouts(limit: number): Promise<StoredWorkout[]>;
+  /** The sets of several workouts at once, oldest first. */
+  listSetsFor(workoutIds: string[]): Promise<StoredSet[]>;
   /** The newest set of this exercise, in any workout. */
   lastSetFor(exerciseId: string): Promise<StoredSet | undefined>;
   /**
@@ -104,9 +109,9 @@ export interface LogStore {
   retryFailed(): Promise<number>;
   /** Forgets a set the server has deleted. Only for synced sets; unsynced ones go through removeUnsyncedSet. */
   removeSyncedSet(id: string): Promise<boolean>;
-  /** Keeps the gym list for offline use. */
   /** Updates the gym kept on a workout (local only, nothing to sync) after the gym was edited online. */
   refreshGymSnapshot(workoutId: string, snapshot: GymSnapshot): Promise<void>;
+  /** Keeps the gym list for offline use. */
   saveGyms(gyms: Gym[]): Promise<void>;
   /** The last saved gym list, or null if there is none. */
   cachedGyms(): Promise<Gym[] | null>;
