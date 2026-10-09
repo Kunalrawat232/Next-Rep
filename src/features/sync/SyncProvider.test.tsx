@@ -4,7 +4,7 @@ import { StrictMode, useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { createFakeAuthService } from '../../test/fakeAuth';
-import { aWorkout, uuid } from '../../test/localDb';
+import { aSet, aWorkout, uuid } from '../../test/localDb';
 import { AuthProvider, useAuth } from '../auth';
 import { SyncProvider, useLogStore, useSyncControls, useSyncStatus } from '.';
 
@@ -184,5 +184,87 @@ describe('SyncProvider', () => {
     console.error = spy;
     expect(() => render(<Probe />)).toThrow(/signed-in user/);
     console.error = original;
+  });
+});
+
+describe('deleteSyncedSet and purgeSynced', () => {
+  async function ready() {
+    const captured: {
+      controls?: ReturnType<typeof useSyncControls>;
+      store?: ReturnType<typeof useLogStore>;
+    } = {};
+    function Capture() {
+      const controls = useSyncControls();
+      const store = useLogStore();
+      useEffect(() => {
+        captured.controls = controls;
+        captured.store = store;
+      }, [controls, store]);
+      return null;
+    }
+    const auth = createFakeAuthService({ id: `u-${uuid()}`, email: 'a@b.co' });
+    const server = createFakeRemoteLog();
+    render(
+      <AuthProvider service={auth.service}>
+        <SyncProvider remote={server.remote} dexieDeps={dexieDeps}>
+          <Gate>
+            <Capture />
+          </Gate>
+        </SyncProvider>
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(captured.store).toBeDefined());
+    return { ...captured, server } as {
+      controls: ReturnType<typeof useSyncControls>;
+      store: ReturnType<typeof useLogStore>;
+      server: ReturnType<typeof createFakeRemoteLog>;
+    };
+  }
+
+  async function syncedSet(
+    store: ReturnType<typeof useLogStore>,
+    server: ReturnType<typeof createFakeRemoteLog>,
+    notify: () => void,
+  ) {
+    const w = await store.startWorkout(aWorkout());
+    const s = await store.logSet(aSet(w.id));
+    notify();
+    await waitFor(() => expect(server.sets.has(s.id)).toBe(true));
+    await waitFor(async () => expect((await store.listSets(w.id))[0]?.syncStatus).toBe('synced'));
+    return { w, s };
+  }
+
+  it('deletes a synced set on the server and then here', async () => {
+    const { controls, store, server } = await ready();
+    const { w, s } = await syncedSet(store, server, controls.notify);
+    expect(await controls.deleteSyncedSet(s.id)).toBe('deleted');
+    expect(server.sets.get(s.id)?.deletedAt).toBeTruthy();
+    expect(await store.listSets(w.id)).toEqual([]);
+  });
+
+  it('keeps the set here when the network is down, and says so', async () => {
+    const { controls, store, server } = await ready();
+    const { w, s } = await syncedSet(store, server, controls.notify);
+    server.setOffline(true);
+    expect(await controls.deleteSyncedSet(s.id)).toBe('offline');
+    expect(await store.listSets(w.id)).toHaveLength(1);
+  });
+
+  it('keeps the set here when the server refuses, and says it failed', async () => {
+    const { controls, store, server } = await ready();
+    const { w, s } = await syncedSet(store, server, controls.notify);
+    server.failNext('softDeleteSet', 'unknown');
+    expect(await controls.deleteSyncedSet(s.id)).toBe('failed');
+    expect(await store.listSets(w.id)).toHaveLength(1);
+  });
+
+  it('purges what the server has and reports what is still waiting', async () => {
+    const { controls, store, server } = await ready();
+    const { w } = await syncedSet(store, server, controls.notify);
+    server.setOffline(true);
+    await store.logSet(aSet(w.id));
+    const { remaining } = await controls.purgeSynced();
+    expect(remaining).toBeGreaterThan(0);
+    expect(await store.listSets(w.id)).toHaveLength(1);
   });
 });

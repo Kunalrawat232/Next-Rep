@@ -25,7 +25,13 @@ import {
 } from '../../data/sync';
 import { useAuth } from '../auth';
 
+export type DeleteResult = 'deleted' | 'offline' | 'failed';
+
 type Controls = Pick<SyncScheduler, 'notify' | 'refresh' | 'retryFailed'> & {
+  /** Deletes a set the server already has, and then forgets it here. Needs a connection. */
+  deleteSyncedSet(id: string): Promise<DeleteResult>;
+  /** For sign-out: forgets what the server already has and says how many rows are still waiting. */
+  purgeSynced(): Promise<{ remaining: number }>;
   /** Asks the browser to keep this data, once. Call it when the first set is logged. */
   ensurePersistence(): void;
 };
@@ -77,6 +83,16 @@ function SyncSession({ userId, remote, children, dexieDeps }: Props & { userId: 
       notify: scheduler.notify,
       refresh: scheduler.refresh,
       retryFailed: scheduler.retryFailed,
+      deleteSyncedSet: async (id) => {
+        const result = await remote.softDeleteSet(id, new Date().toISOString()).catch(() => null);
+        if (result?.status === 'ok') {
+          await store.removeSyncedSet(id);
+          await scheduler.refresh();
+          return 'deleted';
+        }
+        return result?.status === 'error' && result.reason === 'offline' ? 'offline' : 'failed';
+      },
+      purgeSynced: () => store.purgeSynced(),
       // Asked for once, after the first set is logged: a prompt on every start would be noise.
       ensurePersistence: () => {
         if (persistAsked) return;

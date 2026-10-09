@@ -1,5 +1,5 @@
 import Dexie, { type DexieOptions, type Table } from 'dexie';
-import type { PendingDeletion, StoredSet, StoredWorkout } from './types';
+import type { GymCache, PendingDeletion, StoredSet, StoredWorkout } from './types';
 
 /** Overrides for tests, where IndexedDB is a fake. */
 export type DexieDeps = Pick<DexieOptions, 'indexedDB' | 'IDBKeyRange'>;
@@ -8,6 +8,7 @@ export class LocalDb extends Dexie {
   workouts!: Table<StoredWorkout, string>;
   sets!: Table<StoredSet, string>;
   deletions!: Table<PendingDeletion, string>;
+  gymCache!: Table<GymCache, string>;
 
   constructor(name: string, deps: DexieDeps = {}) {
     super(name, deps);
@@ -16,6 +17,8 @@ export class LocalDb extends Dexie {
       sets: 'id, workoutId, syncStatus, [exerciseId+loggedAt]',
       deletions: 'id',
     });
+    // Version 2 adds the gym cache. Version 1 stays as it was, so data already on a device is kept.
+    this.version(2).stores({ gymCache: 'id' });
   }
 }
 

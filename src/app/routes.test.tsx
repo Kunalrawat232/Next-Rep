@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { IDBKeyRange, indexedDB } from 'fake-indexeddb';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AuthProvider } from '../features/auth/AuthProvider';
@@ -8,6 +9,8 @@ import { createFakeExerciseService } from '../test/fakeExercises';
 import { createFakeGymService, sampleGym } from '../test/fakeGyms';
 import { ExerciseServiceProvider } from '../features/exercises';
 import { GymServiceProvider } from '../features/gyms';
+import { SyncProvider } from '../features/sync';
+import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { appRoutes } from './routes';
 
 function renderAt(
@@ -20,7 +23,12 @@ function renderAt(
     <AuthProvider service={fake.service}>
       <GymServiceProvider service={gyms.service}>
         <ExerciseServiceProvider service={createFakeExerciseService().service}>
-          <RouterProvider router={router} />
+          <SyncProvider
+            remote={createFakeRemoteLog().remote}
+            dexieDeps={{ indexedDB, IDBKeyRange }}
+          >
+            <RouterProvider router={router} />
+          </SyncProvider>
         </ExerciseServiceProvider>
       </GymServiceProvider>
     </AuthProvider>,
@@ -89,9 +97,12 @@ describe('app routes', () => {
     expect(await screen.findByRole('navigation', { name: 'Main' })).toBeInTheDocument();
   });
 
-  it('offers Start workout, disabled until the workout feature exists', async () => {
+  it('offers Start workout as a link to the workout page', async () => {
     renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
-    expect(await screen.findByRole('button', { name: 'Start workout' })).toBeDisabled();
+    expect(await screen.findByRole('link', { name: 'Start workout' })).toHaveAttribute(
+      'href',
+      '/workout',
+    );
   });
 
   it('sends unknown paths to the home page', async () => {
@@ -106,8 +117,8 @@ describe('app routes', () => {
   it('signs out and returns to the sign-in page', async () => {
     const { fake, user } = renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
-    expect(fake.service.signOut).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('heading', { name: 'Sign in', level: 2 })).toBeInTheDocument();
+    expect(fake.service.signOut).toHaveBeenCalledTimes(1);
   });
 
   it('tells the user when sign-out fails, and keeps them signed in', async () => {

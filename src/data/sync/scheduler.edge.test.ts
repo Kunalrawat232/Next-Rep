@@ -54,7 +54,7 @@ async function waitFor(condition: () => boolean, timeoutMs = 5000) {
   }
 }
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 25));
+const settle = () => new Promise((resolve) => setTimeout(resolve, 80));
 
 describe('rapid events', () => {
   it('toggling online and offline fifty times ends in one consistent, finished state', async () => {

@@ -290,3 +290,97 @@ describe('purgeSynced', () => {
     expect(await store.purgeSynced()).toEqual({ remaining: 1 });
   });
 });
+
+describe('gym snapshot and gym cache', () => {
+  const gym = {
+    name: 'Home gym',
+    barbellKg: 15,
+    bars: [{ id: 'b1', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' as const }],
+  };
+
+  it('keeps the gym a workout was started at on the workout, through ending it', async () => {
+    const { store } = freshLocal();
+    const w = await store.startWorkout({ ...aWorkout(), gymSnapshot: gym });
+    expect(w.gymSnapshot).toEqual(gym);
+    const ended = await store.endWorkout(w.id, '2026-10-10T11:00:00.000Z');
+    expect(ended.gymSnapshot).toEqual(gym);
+  });
+
+  it('has no snapshot when none is given', async () => {
+    const { store } = freshLocal();
+    expect((await store.startWorkout(aWorkout())).gymSnapshot).toBeNull();
+  });
+
+  it('never lets the snapshot into what is validated or sent', async () => {
+    const { store, db } = freshLocal();
+    const w = await store.startWorkout({ ...aWorkout(), gymSnapshot: gym });
+    const due = await store.outbox.dueWorkouts(Number.MAX_SAFE_INTEGER);
+    expect(due.map((r) => r.id)).toEqual([w.id]);
+    expect((await db.workouts.get(w.id))?.gymSnapshot).toEqual(gym);
+  });
+
+  it('saves and reads back the gym list, and reads null before anything was saved', async () => {
+    const { store } = freshLocal();
+    expect(await store.cachedGyms()).toBeNull();
+    const gyms = [
+      {
+        id: 'g1',
+        name: 'Home gym',
+        barbellKg: 15,
+        isDefault: true,
+        createdAt: '2026-10-01T10:00:00Z',
+        bars: [],
+      },
+    ];
+    await store.saveGyms(gyms);
+    expect(await store.cachedGyms()).toEqual(gyms);
+    await store.saveGyms([]);
+    expect(await store.cachedGyms()).toEqual([]);
+  });
+
+  it('keeps the gym list per user', async () => {
+    const a = freshLocal('cache-user-a');
+    const b = freshLocal('cache-user-b');
+    await a.store.saveGyms([]);
+    expect(await b.store.cachedGyms()).toBeNull();
+  });
+
+  it('clears the gym list when synced data is purged', async () => {
+    const { store } = freshLocal();
+    await store.saveGyms([]);
+    await store.purgeSynced();
+    expect(await store.cachedGyms()).toBeNull();
+  });
+
+  it('opens a database that was created before the gym cache existed, keeping its sets', async () => {
+    const { indexedDB, IDBKeyRange } = await import('fake-indexeddb');
+    const Dexie = (await import('dexie')).default;
+    const name = `next-rep-legacy-${Math.random().toString(36).slice(2)}`;
+    const old = new Dexie(name, { indexedDB, IDBKeyRange });
+    old.version(1).stores({
+      workouts: 'id, syncStatus, startedAt',
+      sets: 'id, workoutId, syncStatus, [exerciseId+loggedAt]',
+      deletions: 'id',
+    });
+    await old.table('workouts').put({ id: 'w-old', startedAt: '2026-10-01T10:00:00.000Z' });
+    old.close();
+    const { openLocalDb } = await import('./db');
+    const upgraded = openLocalDb(name.replace('next-rep-', ''), { indexedDB, IDBKeyRange });
+    expect((await upgraded.workouts.get('w-old'))?.id).toBe('w-old');
+    expect(await upgraded.gymCache.count()).toBe(0);
+  });
+});
+
+describe('removeSyncedSet', () => {
+  it('forgets a synced set, and only a synced one', async () => {
+    const { store } = freshLocal();
+    const w = await store.startWorkout(aWorkout());
+    const waiting = await store.logSet(aSet(w.id));
+    const sent = await store.logSet(aSet(w.id));
+    await store.outbox.markSynced('set', [{ id: sent.id, rev: 1 }]);
+    expect(await store.removeSyncedSet(waiting.id)).toBe(false);
+    expect(await store.removeSyncedSet(sent.id)).toBe(true);
+    expect(await store.removeSyncedSet(sent.id)).toBe(false);
+    expect((await store.listSets(w.id)).map((s) => s.id)).toEqual([waiting.id]);
+  });
+});

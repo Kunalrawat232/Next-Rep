@@ -1,3 +1,4 @@
+import type { Gym } from '../../domain/gyms';
 import type { LoggedSet, Workout } from '../../domain/schemas';
 
 /** Where a row is in its trip to the server. `failed` rows wait for a manual retry. */
@@ -16,8 +17,16 @@ export type SyncMeta = {
   lastAttemptAt: number | null;
 };
 
+/** The gym a workout was started at, kept on the workout so its bar weights are known offline and after a reload. */
+export type GymSnapshot = Pick<Gym, 'name' | 'barbellKg' | 'bars'>;
+
+/** The last gym list the server gave, kept so a new workout can start without a connection. */
+export type GymCache = { id: 'list'; gyms: Gym[]; savedAt: number };
+
 export type StoredWorkout = Workout &
   SyncMeta & {
+    /** Local only: never sent to the server. */
+    gymSnapshot: GymSnapshot | null;
     /** The server has had this workout at some point, so its sets may go, whatever happens to later edits. */
     everSynced: boolean;
   };
@@ -36,7 +45,12 @@ export type PendingDeletion = {
   failed: boolean;
 };
 
-export type NewWorkout = { id: string; gymId: string | null; startedAt: string };
+export type NewWorkout = {
+  id: string;
+  gymId: string | null;
+  startedAt: string;
+  gymSnapshot?: GymSnapshot | null;
+};
 
 /** The rows the sync worker works through. */
 export interface Outbox {
@@ -88,6 +102,14 @@ export interface LogStore {
   counts(): Promise<{ pending: number; failed: number }>;
   /** Puts failed rows and deletions back in the queue. Returns how many. */
   retryFailed(): Promise<number>;
+  /** Forgets a set the server has deleted. Only for synced sets; unsynced ones go through removeUnsyncedSet. */
+  removeSyncedSet(id: string): Promise<boolean>;
+  /** Keeps the gym list for offline use. */
+  /** Updates the gym kept on a workout (local only, nothing to sync) after the gym was edited online. */
+  refreshGymSnapshot(workoutId: string, snapshot: GymSnapshot): Promise<void>;
+  saveGyms(gyms: Gym[]): Promise<void>;
+  /** The last saved gym list, or null if there is none. */
+  cachedGyms(): Promise<Gym[] | null>;
   /** Deletes everything the server already has, and keeps what is still unsynced. Returns how much remains. */
   purgeSynced(): Promise<{ remaining: number }>;
   outbox: Outbox;
