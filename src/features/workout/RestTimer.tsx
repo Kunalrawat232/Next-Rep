@@ -92,11 +92,9 @@ export function RestTimer({ timer }: { timer: Timer }) {
           </form>
           {timer.remaining !== null && (
             <div className="flex gap-2">
-              {!timer.over && (
-                <Button variant="secondary" onClick={timer.extend}>
-                  +{REST_EXTEND} s
-                </Button>
-              )}
+              <Button variant="secondary" onClick={timer.extend}>
+                +{REST_EXTEND} s
+              </Button>
               <Button
                 variant="secondary"
                 onClick={() => {

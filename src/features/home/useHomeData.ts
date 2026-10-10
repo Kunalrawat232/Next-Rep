@@ -4,6 +4,10 @@ import type { Session } from '../../domain/progression';
 import { groupByExercise } from '../../domain/history';
 import { useLogStore, useSyncStatus } from '../sync';
 
+/** Rows on the device are not trusted: a set without a real weight and rep count is left out. */
+const isReadable = (s: StoredSet) =>
+  Number.isFinite(s.totalKg) && s.totalKg >= 0 && Number.isInteger(s.reps) && s.reps > 0;
+
 export type LastWorkout = { workout: StoredWorkout; sets: StoredSet[] };
 
 export type HomeData =
@@ -32,16 +36,22 @@ export function useHomeData(): HomeData {
   useEffect(() => {
     let current = true;
     (async () => {
-      const recent = await store.endedWorkouts(10);
-      const sets = await store.listSetsFor(recent.map((w) => w.id));
-      const workout = recent.find((w) => sets.some((s) => s.workoutId === w.id));
+      // Finished workouts with no sets are skipped, so look further back until one has sets.
+      let sets: StoredSet[] = [];
+      let workout: StoredWorkout | undefined;
+      for (const limit of [10, 50, 500]) {
+        const recent = await store.endedWorkouts(limit);
+        sets = (await store.listSetsFor(recent.map((w) => w.id))).filter(isReadable);
+        workout = recent.find((w) => sets.some((s) => s.workoutId === w.id));
+        if (workout || recent.length < limit) break;
+      }
       if (!workout) {
         if (current) setData({ status: 'ready', last: null, exerciseId: null, sessions: [] });
         return;
       }
       const lastSets = sets.filter((s) => s.workoutId === workout.id);
       const exerciseId = groupByExercise(lastSets)[0]!.exerciseId;
-      const all = await store.setsForExercises([exerciseId]);
+      const all = (await store.setsForExercises([exerciseId])).filter(isReadable);
       const byWorkout = new Map<string, StoredSet[]>();
       for (const s of all) byWorkout.set(s.workoutId, [...(byWorkout.get(s.workoutId) ?? []), s]);
       const finished = await Promise.all(

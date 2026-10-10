@@ -4,7 +4,7 @@ const UNIQUE_VIOLATION = '23505';
 
 // What browsers say when a request never got an answer: Chrome and Edge "Failed to fetch", Firefox
 // "NetworkError…", Safari "Load failed".
-const NETWORK_MESSAGE = /fetch|network|load failed/i;
+const NETWORK_MESSAGE = /fetch|network|load failed|internet connection/i;
 
 /**
  * Turns a Supabase error into a reason the screens and the sync worker can act on. Server text is

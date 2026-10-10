@@ -14,7 +14,9 @@ export function startRest(now: number, seconds: number): number {
 
 /** Whole seconds left, rounded up so the last second shows as 0:01 and never 0:00 early. */
 export function remainingSeconds(endsAt: number, now: number): number {
-  return Math.max(0, Math.ceil((endsAt - now) / 1000));
+  const left = Math.ceil((endsAt - now) / 1000);
+  // Never more than the longest rest, so a clock set back does not show an hour of rest.
+  return Number.isFinite(left) ? Math.min(REST_MAX, Math.max(0, left)) : 0;
 }
 
 export function isRestOver(endsAt: number, now: number): boolean {
@@ -28,7 +30,11 @@ export function extendRest(endsAt: number, now: number, seconds: number = REST_E
 
 /** A stored end time that cannot be a real rest: further ahead than the longest rest, or over for more than an hour. */
 export function isRestStale(endsAt: number, now: number): boolean {
-  return endsAt > now + REST_MAX * 1000 || now - endsAt > REST_STALE_AFTER * 1000;
+  return (
+    !Number.isFinite(endsAt) ||
+    endsAt > now + REST_MAX * 1000 ||
+    now - endsAt > REST_STALE_AFTER * 1000
+  );
 }
 
 /** `m:ss`, as in 1:24. */

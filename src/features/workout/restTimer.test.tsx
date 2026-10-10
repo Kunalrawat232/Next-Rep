@@ -135,15 +135,16 @@ describe('the rest timer', () => {
     expect(vibrate).toHaveBeenCalledTimes(1);
   });
 
-  it('offers Dismiss, not +30 s, once the rest is over', async () => {
+  it('offers Dismiss once the rest is over, and +30 s starts a new 30 seconds', async () => {
     const { user } = await openWorkout();
     await user.click(pill());
     await user.click(within(panel()).getByRole('button', { name: '60 s' }));
     passSeconds(61);
     await waitFor(() => expect(pill()).toHaveTextContent('Rest over'));
     await user.click(pill());
-    expect(within(panel()).queryByRole('button', { name: '+30 s' })).not.toBeInTheDocument();
-    await user.click(within(panel()).getByRole('button', { name: 'Dismiss' }));
+    await user.click(within(panel()).getByRole('button', { name: '+30 s' }));
+    expect(pill()).toHaveTextContent('Rest 0:30');
+    await user.click(within(panel()).getByRole('button', { name: 'Stop rest' }));
     expect(pill()).toHaveTextContent(/^Rest$/);
   });
 

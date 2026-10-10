@@ -42,6 +42,9 @@ export const DECREASE_FRACTION = 0.1;
 const hundredths = (kg: number) => Math.round(kg * 100);
 const EPSILON = 1e-9;
 
+const isUsable = (s: SessionSet) =>
+  Number.isFinite(s.totalKg) && s.totalKg >= 0 && Number.isInteger(s.reps) && s.reps > 0;
+
 type Working = {
   totalKg: number;
   barKg: number | null;
@@ -56,7 +59,9 @@ function working(session: Session): Working | null {
   const top = Math.max(...session.sets.map((s) => hundredths(s.totalKg)));
   const sets = session.sets
     .filter((s) => hundredths(s.totalKg) === top)
-    .sort((a, b) => (a.loggedAt < b.loggedAt ? -1 : a.loggedAt > b.loggedAt ? 1 : 0));
+    .sort(
+      (a, b) => (a.loggedAt < b.loggedAt ? -1 : a.loggedAt > b.loggedAt ? 1 : 0) || a.reps - b.reps,
+    );
   const first = sets[0]!;
   return {
     totalKg: first.totalKg,
@@ -105,8 +110,10 @@ export function suggest(input: {
   equipment: EquipmentType;
   unit: Unit;
 }): Suggestion | null {
-  const { sessions, bodyPart, equipment, unit } = input;
+  const { bodyPart, equipment, unit } = input;
   if (equipment === 'bodyweight') return null;
+  // Rows come from the device and are not trusted: a set that is not a real weight and rep count is ignored.
+  const sessions = input.sessions.map((session) => ({ sets: session.sets.filter(isUsable) }));
   const last =
     [...sessions]
       .reverse()

@@ -61,6 +61,8 @@ export function useRestTimer(workoutId: string): RestTimer {
   });
   const [endsAt, setEndsAt] = useState<number | null>(first.endsAt);
   const [now, setNow] = useState(first.now);
+  // The end time as last set, so two taps in the same instant both see the first one's result.
+  const latest = useRef<number | null>(first.endsAt);
   // The end time already announced, so a rest that is over when the page opens does not buzz.
   const announced = useRef<number | null>(
     first.endsAt !== null && isRestOver(first.endsAt, first.now) ? first.endsAt : null,
@@ -90,6 +92,7 @@ export function useRestTimer(workoutId: string): RestTimer {
   const set = useCallback(
     (next: number | null) => {
       setNow(Date.now());
+      latest.current = next;
       setEndsAt(next);
       writeEndsAt(userId, workoutId, next);
     },
@@ -98,8 +101,8 @@ export function useRestTimer(workoutId: string): RestTimer {
 
   const start = useCallback((seconds: number) => set(startRest(Date.now(), seconds)), [set]);
   const extend = useCallback(() => {
-    if (endsAt !== null) set(extendRest(endsAt, Date.now()));
-  }, [endsAt, set]);
+    if (latest.current !== null) set(extendRest(latest.current, Date.now()));
+  }, [set]);
   const stop = useCallback(() => set(null), [set]);
 
   return {

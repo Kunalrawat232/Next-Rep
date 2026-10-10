@@ -273,3 +273,13 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: (1) one deliberate breakage survived the first tests, the check that stops a buzz while the page is hidden; a test was added; (2) a lint rule rejects reading the clock while rendering, so the start time is read once in a lazy state initialiser; (3) the sync badge is also a status region, so the "Rest over" announcement is found among several.
 - How validated: _(developer to fill)_ Not yet run: the timer in a real browser on a phone (vibration support differs, and iOS Safari has none).
 - Lesson: store when something ends, not how long is left, and a reload, a locked screen and a background tab stop being special cases.
+
+## 2026-10-10: QA pass over the whole UI
+
+- Tool: three `qa-tester` agents in parallel, split by area (newest screens and domain, history/progress/settings/units, data and sync), each told to add new files only and to mark a test that exposes a real bug as an expected failure with a `BUG:` note
+- Asked: find what the tests so far do not cover, now that the UI is complete.
+- AI produced: 614 tests in 27 new `*.qa.test.*` files and 22 reported bugs; none were in the highest severity class.
+- Problems found: Home crashed on a damaged set row and missed the last real workout behind ten empty ones; a corrupt custom exercise row made loading throw; half-cent rounding was wrong; the rest timer misbehaved after a clock change, with NaN, and for focus and double taps. All fixed and the tests turned into normal ones. Open items for the developer: a weight typed in lb that shows the same as an earlier kg set (60 kg and 132.3 lb) can be marked as a record, and two stored weights 0.01 kg apart show as separate lines in lb; permission-denied and expired-session answers from the server are retried forever instead of showing as failed; a failing local read leaves the workout screen on "Loading…".
+- Decisions by the developer: _(to fill)_ which of the open items to fix before the freeze.
+- How validated: _(developer to fill)_ Evidence: 3514 tests pass, 7 expected failures remain, all of them listed with the reason. Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
+- Lesson: ask the tester to keep a real bug as an expected failure; the suite stays green, the list of bugs stays visible, and fixing one turns into a loud "unexpectedly passed".
