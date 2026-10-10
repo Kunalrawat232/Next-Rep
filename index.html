@@ -7,6 +7,16 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Next Rep</title>
+    <script>
+      // Applies the saved theme before the first paint, so a light-mode user never sees a dark flash.
+      try {
+        var t = localStorage.getItem('next-rep-theme');
+        if (t === 'light') {
+          document.documentElement.dataset.theme = 'light';
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#fbfbfd');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

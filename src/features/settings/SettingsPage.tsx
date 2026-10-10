@@ -1,0 +1,110 @@
+import { Link } from 'react-router';
+import { buttonClasses, Chip, Switch } from '../../components';
+import { formatKg, pickDefaultGym } from '../../domain/gyms';
+import { useAuth } from '../auth';
+import { useGymCatalog } from '../workout';
+import { SignOutPanel } from './SignOutPanel';
+import { useTheme } from './useTheme';
+import { useUnit } from './UnitProvider';
+
+const section = 'flex flex-col gap-3 rounded-md border border-line bg-surface-200 p-4';
+
+/** Weight unit, default gym, appearance and the account. */
+export function SettingsPage() {
+  const { state } = useAuth();
+  const { unit, setUnit } = useUnit();
+  const { theme, setTheme } = useTheme();
+  const { catalog, reload } = useGymCatalog();
+  if (state.status !== 'signedIn') return null;
+
+  const gym = catalog.status === 'ready' ? pickDefaultGym(catalog.gyms) : undefined;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h1 className="text-title font-semibold">Settings</h1>
+
+      <section aria-labelledby="units-heading" className={section}>
+        <h2 id="units-heading" className="text-headline font-semibold">
+          Units
+        </h2>
+        <p className="text-callout text-ink-muted">Weight unit. Weights are always saved in kg.</p>
+        <div role="group" aria-label="Weight unit" className="flex gap-2">
+          <Chip selected={unit === 'kg'} onClick={() => setUnit('kg')}>
+            kg
+          </Chip>
+          <Chip selected={unit === 'lb'} onClick={() => setUnit('lb')}>
+            lb
+          </Chip>
+        </div>
+      </section>
+
+      <section aria-labelledby="gym-heading" className={section}>
+        <h2 id="gym-heading" className="text-headline font-semibold">
+          Default gym
+        </h2>
+        {catalog.status === 'loading' && (
+          <p role="status" className="text-callout text-ink-muted">
+            Loading…
+          </p>
+        )}
+        {catalog.status === 'error' && (
+          <div role="alert" className="flex flex-col items-start gap-2">
+            <p className="text-callout">Could not load your gyms.</p>
+            <button type="button" onClick={reload} className={buttonClasses('secondary')}>
+              Try again
+            </button>
+          </div>
+        )}
+        {catalog.status === 'ready' && gym && (
+          <>
+            <p className="text-body font-semibold">{gym.name}</p>
+            <p className="text-callout text-ink-muted">
+              {formatKg(gym.barbellKg)} kg barbell, used when you start a workout
+            </p>
+            <Link to="/gyms" className={buttonClasses('secondary', 'self-start')}>
+              Manage gyms
+            </Link>
+          </>
+        )}
+        {catalog.status === 'ready' && !gym && (
+          <>
+            <p className="text-callout text-ink-muted">
+              You have no gym yet. Add one so every weight adds up with the right bar.
+            </p>
+            <Link to="/gyms/new" className={buttonClasses('primary', 'self-start')}>
+              Add a gym
+            </Link>
+          </>
+        )}
+      </section>
+
+      <section aria-labelledby="appearance-heading" className={section}>
+        <h2 id="appearance-heading" className="text-headline font-semibold">
+          Appearance
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-body font-semibold">Light mode</span>
+            <span className="text-callout text-ink-muted">Dark is the default during workouts</span>
+          </div>
+          <Switch
+            label="Light mode"
+            checked={theme === 'light'}
+            onChange={(on) => setTheme(on ? 'light' : 'dark')}
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="account-heading" className={section}>
+        <h2 id="account-heading" className="text-headline font-semibold">
+          Account
+        </h2>
+        <div className="flex flex-col">
+          <span className="text-body font-semibold">{state.user.email ?? 'Your account'}</span>
+          <span className="text-callout text-ink-muted">Signed in</span>
+        </div>
+        <SignOutPanel />
+      </section>
+    </div>
+  );
+}

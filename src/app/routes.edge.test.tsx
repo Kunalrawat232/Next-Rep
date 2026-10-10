@@ -79,7 +79,7 @@ describe('ProtectedRoute transitions', () => {
     const user = userEvent.setup();
     renderAt('/', fake);
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not sign out/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't sign you out/i);
     await user.click(screen.getByRole('button', { name: /sign out/i }));
     expect(await screen.findByRole('heading', { name: 'Sign in', level: 2 })).toBeInTheDocument();
   });

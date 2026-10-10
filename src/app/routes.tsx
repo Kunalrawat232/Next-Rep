@@ -4,6 +4,7 @@ import { ProtectedRoute, SignInPage } from '../features/auth';
 import { CustomExercisePage, ExercisesPage } from '../features/exercises';
 import { GymFormPage, GymsPage } from '../features/gyms';
 import { HistoryPage, WorkoutDetailPage } from '../features/history';
+import { SettingsPage } from '../features/settings';
 import { ChooseExercisePage, LogSetPage, WorkoutPage } from '../features/workout';
 import { HomePage } from './HomePage';
 
@@ -21,6 +22,7 @@ export const appRoutes: RouteObject[] = [
           { path: '/gyms/:gymId', element: <GymFormPage /> },
           { path: '/exercises', element: <ExercisesPage /> },
           { path: '/exercises/new', element: <CustomExercisePage /> },
+          { path: '/settings', element: <SettingsPage /> },
           { path: '/history', element: <HistoryPage /> },
           { path: '/history/:workoutId', element: <WorkoutDetailPage /> },
           {

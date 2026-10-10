@@ -126,7 +126,7 @@ describe('app routes', () => {
     fake.service.signOut.mockRejectedValueOnce(new Error('boom'));
     const { user } = renderAt('/', fake);
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not sign out/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't sign you out/i);
     expect(screen.getByText(/signed in as a@b\.co/i)).toBeInTheDocument();
   });
 });

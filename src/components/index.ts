@@ -4,3 +4,4 @@ export { Logo } from './Logo';
 export { TextField } from './TextField';
 export { Chip } from './Chip';
 export { BackLink } from './BackLink';
+export { Switch } from './Switch';

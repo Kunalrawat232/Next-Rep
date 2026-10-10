@@ -28,13 +28,15 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each(['Settings'])('%s is not a link yet, and says why', (name) => {
+  it.each([
+    ['Home', '/'],
+    ['History', '/history'],
+    ['Progress', '/progress'],
+    ['Settings', '/settings'],
+  ])('links %s to %s', (name, href) => {
     renderShell();
-    expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    const item = within(nav).getByText(name).closest('[aria-disabled="true"]');
-    expect(item).not.toBeNull();
-    expect(item).toHaveTextContent('coming soon');
+    expect(within(nav).getByRole('link', { name })).toHaveAttribute('href', href);
   });
 
   it('links Workout in the sidebar to the workout page', () => {

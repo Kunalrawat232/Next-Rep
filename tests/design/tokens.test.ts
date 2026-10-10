@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { THEME_COLOR } from '../../src/features/settings/themeColors';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const css = read('../../src/index.css');
@@ -70,5 +71,12 @@ describe('design tokens', () => {
     it('ink on surface-300 (inputs)', () => {
       expect(contrast(theme['ink']!, theme['surface-300']!)).toBeGreaterThanOrEqual(4.5);
     });
+  });
+});
+
+describe('the colour of the browser bars', () => {
+  it('is the page background of each theme, as index.html and the Settings switch use it', () => {
+    expect(colours(blockAfter('@theme'))['surface-100']).toBe(THEME_COLOR.dark);
+    expect(colours(blockAfter("[data-theme='light']"))['surface-100']).toBe(THEME_COLOR.light);
   });
 });

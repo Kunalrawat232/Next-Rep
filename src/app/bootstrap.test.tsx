@@ -4,6 +4,7 @@ import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
 import { createFakeExerciseService } from '../test/fakeExercises';
+import { createFakeProfileService } from '../test/fakeProfile';
 import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { createFakeGymService } from '../test/fakeGyms';
 import { bootstrap, type BootstrapDeps } from './bootstrap';
@@ -22,6 +23,7 @@ function deps() {
     createGymService: vi.fn(() => createFakeGymService().service),
     createExerciseService: vi.fn(() => createFakeExerciseService().service),
     createLogRemote: vi.fn(() => createFakeRemoteLog().remote),
+    createProfileService: vi.fn(() => createFakeProfileService().service),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
     ensureProfile: vi.fn(async () => undefined),
   };

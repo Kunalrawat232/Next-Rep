@@ -1,48 +1,11 @@
-import { useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { Button, buttonClasses } from '../components';
+import { buttonClasses } from '../components';
 import { useAuth } from '../features/auth';
-import { useLogStore, useSyncControls } from '../features/sync';
+import { SignOutPanel } from '../features/settings';
 
 export function HomePage() {
-  const { state, service } = useAuth();
-  const { purgeSynced } = useSyncControls();
-  const store = useLogStore();
-  const [signOutFailed, setSignOutFailed] = useState(false);
-  const [waiting, setWaiting] = useState<number | null>(null);
-  // Taps while a sign-out is under way are ignored: the work below must run once.
-  const busy = useRef(false);
+  const { state } = useAuth();
   if (state.status !== 'signedIn') return null;
-
-  async function finishSignOut() {
-    setSignOutFailed(false);
-    // What the server already has is cleared from this device. Sets still waiting stay.
-    await purgeSynced().catch(() => undefined);
-    try {
-      await service.signOut();
-    } catch {
-      setSignOutFailed(true);
-    }
-  }
-
-  async function once(work: () => Promise<void>) {
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      await work();
-    } finally {
-      busy.current = false;
-    }
-  }
-
-  // The user is told about waiting sets before anything is cleared, so "Stay signed in" changes nothing.
-  const signOut = () =>
-    once(async () => {
-      const counts = await store.counts().catch(() => ({ pending: 0, failed: 0 }));
-      const remaining = counts.pending + counts.failed;
-      if (remaining > 0) setWaiting(remaining);
-      else await finishSignOut();
-    });
 
   return (
     <div className="flex flex-col gap-6">
@@ -70,31 +33,7 @@ export function HomePage() {
         <p className="text-callout text-ink-muted">
           Signed in as {state.user.email ?? 'your account'}
         </p>
-        {waiting === null ? (
-          <Button variant="secondary" onClick={() => void signOut()} className="self-start">
-            Sign out
-          </Button>
-        ) : (
-          <div role="group" aria-label="Sets waiting" className="flex flex-col gap-3">
-            <p>
-              {waiting} {waiting === 1 ? 'item is' : 'items are'} still waiting to sync. They stay
-              on this device until you are online again, and a new sign-in will send them.
-            </p>
-            <div className="flex gap-2">
-              <Button variant="danger" onClick={() => void once(finishSignOut)}>
-                Sign out anyway
-              </Button>
-              <Button variant="secondary" onClick={() => setWaiting(null)}>
-                Stay signed in
-              </Button>
-            </div>
-          </div>
-        )}
-        {signOutFailed && (
-          <p role="alert" className="text-callout text-danger">
-            Could not sign out. Please try again.
-          </p>
-        )}
+        <SignOutPanel />
       </section>
     </div>
   );

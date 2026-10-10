@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { Logo } from './Logo';
 
-type Item = { label: string; to: string | null; icon: ReactNode; desktopOnly?: boolean };
+type Item = { label: string; to: string; icon: ReactNode; desktopOnly?: boolean };
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -22,7 +22,6 @@ function Icon({ children }: { children: ReactNode }) {
   );
 }
 
-// A null `to` is a page that is not built yet. Each one gets a route here as it ships.
 const ITEMS: Item[] = [
   {
     label: 'Home',
@@ -69,7 +68,7 @@ const ITEMS: Item[] = [
   },
   {
     label: 'Settings',
-    to: null,
+    to: '/settings',
     icon: (
       <Icon>
         <circle cx="12" cy="8" r="4" />
@@ -97,29 +96,16 @@ export function AppShell() {
                 key={item.label}
                 className={item.desktopOnly ? 'hidden lg:block' : 'flex flex-1 lg:block'}
               >
-                {item.to ? (
-                  <NavLink
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) =>
-                      `${itemBase} ${isActive ? 'text-accent lg:bg-surface-200' : 'text-ink-muted'}`
-                    }
-                  >
-                    {item.icon}
-                    {item.label}
-                  </NavLink>
-                ) : (
-                  <span
-                    aria-disabled="true"
-                    className={`${itemBase} cursor-not-allowed text-ink-muted opacity-60`}
-                  >
-                    {item.icon}
-                    <span>
-                      {item.label}
-                      <span className="sr-only"> (coming soon)</span>
-                    </span>
-                  </span>
-                )}
+                <NavLink
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) =>
+                    `${itemBase} ${isActive ? 'text-accent lg:bg-surface-200' : 'text-ink-muted'}`
+                  }
+                >
+                  {item.icon}
+                  {item.label}
+                </NavLink>
               </li>
             ))}
           </ul>

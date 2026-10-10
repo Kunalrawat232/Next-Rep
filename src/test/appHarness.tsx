@@ -5,14 +5,17 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { createLogStore, openLocalDb } from '../data/local';
 import type { Exercise } from '../domain/exercises';
 import type { Gym } from '../domain/gyms';
+import type { Unit } from '../domain/schemas';
 import { appRoutes } from '../app/routes';
 import { AuthProvider } from '../features/auth';
 import { ExerciseServiceProvider } from '../features/exercises';
 import { GymServiceProvider } from '../features/gyms';
+import { ProfileServiceProvider, UnitProvider } from '../features/settings';
 import { SyncProvider } from '../features/sync';
 import { createFakeAuthService } from './fakeAuth';
 import { createFakeExerciseService } from './fakeExercises';
 import { createFakeGymService, sampleGym } from './fakeGyms';
+import { createFakeProfileService } from './fakeProfile';
 import { createFakeRemoteLog } from './fakeRemoteLog';
 
 /** A server that cannot be reached: for the setup phase of a test, so the app does not sync or pull while rows are being put in place. */
@@ -42,6 +45,8 @@ type Options = {
   gymsFail?: 'offline' | 'unknown';
   customExercises?: Exercise[];
   userId?: string;
+  /** The unit the server already has for this user. */
+  savedUnit?: Unit | null;
   /** A server made earlier, to set it up (offline, held) before the app starts talking to it. */
   server?: ReturnType<typeof createFakeRemoteLog>;
 };
@@ -55,16 +60,21 @@ export function renderApp(path: string, options: Options = {}) {
   if (options.gymsFail) gyms.failNext('list', options.gymsFail);
   const exercises = createFakeExerciseService(options.customExercises ?? []);
   const server = options.server ?? createFakeRemoteLog();
+  const profile = createFakeProfileService(options.savedUnit ?? null);
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   const view = render(
     <AuthProvider service={auth.service}>
-      <GymServiceProvider service={gyms.service}>
-        <ExerciseServiceProvider service={exercises.service}>
-          <SyncProvider remote={server.remote} dexieDeps={deps}>
-            <RouterProvider router={router} />
-          </SyncProvider>
-        </ExerciseServiceProvider>
-      </GymServiceProvider>
+      <ProfileServiceProvider service={profile.service}>
+        <UnitProvider>
+          <GymServiceProvider service={gyms.service}>
+            <ExerciseServiceProvider service={exercises.service}>
+              <SyncProvider remote={server.remote} dexieDeps={deps}>
+                <RouterProvider router={router} />
+              </SyncProvider>
+            </ExerciseServiceProvider>
+          </GymServiceProvider>
+        </UnitProvider>
+      </ProfileServiceProvider>
     </AuthProvider>,
   );
   /** A second handle on the same on-device database, to set things up and to look inside. */
@@ -74,6 +84,7 @@ export function renderApp(path: string, options: Options = {}) {
     router,
     user: userEvent.setup(),
     server,
+    profile,
     gyms,
     exercises,
     auth,
