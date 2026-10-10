@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '.';
+import { dayLabel, durationMinutes, formatDuration, groupByExercise, topSet } from '.';
 
 // Dates are built in local time, so the tests do not depend on the machine's time zone.
 const local = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m - 1, d, h, min);
@@ -90,5 +90,20 @@ describe('groupByExercise', () => {
     const copy = [...input];
     groupByExercise(input);
     expect(input).toEqual(copy);
+  });
+});
+
+describe('topSet', () => {
+  it('finds the heaviest set and counts the sets at that weight', () => {
+    const sets = [{ totalKg: 50 }, { totalKg: 60 }, { totalKg: 60 }, { totalKg: 55 }];
+    expect(topSet(sets)).toEqual({ top: sets[1], count: 2 });
+  });
+
+  it('compares in hundredths, so 60 and 60.001 are the same weight', () => {
+    expect(topSet([{ totalKg: 60 }, { totalKg: 60.001 }])?.count).toBe(2);
+  });
+
+  it('has no top set for no sets', () => {
+    expect(topSet([])).toBeNull();
   });
 });

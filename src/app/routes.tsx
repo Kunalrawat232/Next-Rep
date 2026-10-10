@@ -4,9 +4,9 @@ import { ProtectedRoute, SignInPage } from '../features/auth';
 import { CustomExercisePage, ExercisesPage } from '../features/exercises';
 import { GymFormPage, GymsPage } from '../features/gyms';
 import { HistoryPage, WorkoutDetailPage } from '../features/history';
+import { HomePage } from '../features/home';
 import { SettingsPage } from '../features/settings';
 import { ChooseExercisePage, LogSetPage, WorkoutPage } from '../features/workout';
-import { HomePage } from './HomePage';
 
 export const appRoutes: RouteObject[] = [
   { path: '/sign-in', element: <SignInPage /> },

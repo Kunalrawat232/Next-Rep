@@ -72,6 +72,7 @@ See [ADR-005](../architecture/decisions/005-progression-rules.md). Simple, conse
 - Missed reps in two consecutive sessions: suggest about 10% less.
 - Always show the reason ("You hit 3 × 8 at 60 kg last time").
 - Always labelled a **suggestion**, never coaching or medical advice. The user decides.
+- Built in `src/domain/progression` (`suggest`, `describeSuggestion`); the details (working sets, target reps, the weight grid, bodyweight) are in the ADR-005 clarification. Increases are +2.5 kg / +5 lb (upper body, core) or +5 kg / +10 lb (lower body), landing on a weight the entry steppers can reach. Shown on Home.
 
 ## Validator behaviour (`src/domain/validation`)
 

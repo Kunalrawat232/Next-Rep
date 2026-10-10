@@ -21,9 +21,11 @@ test.describe('workout', () => {
     await page.getByLabel('Email').fill(email!);
     await page.getByLabel('Password').fill(password!);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await expect(page.getByText(`Signed in as ${email!.toLowerCase()}`)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: /Ready to lift\?|Welcome to Next Rep/ }),
+    ).toBeVisible();
 
-    await page.getByRole('link', { name: 'Start workout' }).click();
+    await page.goto('/workout');
     if (await page.getByRole('heading', { name: /add a gym first/i }).isVisible()) {
       await page.getByRole('link', { name: 'Add a gym' }).click();
       await page.getByLabel('Gym name').fill('E2E gym');

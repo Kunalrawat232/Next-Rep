@@ -122,7 +122,7 @@ describe('the question dialog', () => {
 describe('signing out', () => {
   it('changes nothing on the device when you stay signed in', async () => {
     // Offline, so the set stays waiting and the warning appears whatever the machine's speed.
-    const { user, store } = await openWith('/', [60], HOME, offlineServer());
+    const { user, store } = await openWith('/settings', [60], HOME, offlineServer());
     await store.saveGyms([HOME_GYM]);
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     await user.click(await screen.findByRole('button', { name: 'Stay signed in' }));

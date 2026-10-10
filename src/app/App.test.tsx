@@ -35,11 +35,11 @@ describe('App', () => {
         exerciseService={createFakeExerciseService().service}
         profileService={createFakeProfileService().service}
         logRemote={createFakeRemoteLog().remote}
-        router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })}
+        router={createMemoryRouter(appRoutes, { initialEntries: ['/settings'] })}
         ensureProfile={async (id) => void calls.push(id)}
       />,
     );
-    await screen.findByText(/signed in as/i);
+    await screen.findByText('a@b.co');
     await waitFor(() => expect(calls).toEqual(['u1']));
   });
 });

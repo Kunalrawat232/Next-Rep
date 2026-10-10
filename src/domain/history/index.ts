@@ -62,3 +62,16 @@ export function groupByExercise<T extends Logged>(sets: T[]): { exerciseId: stri
   }
   return [...groups].map(([exerciseId, grouped]) => ({ exerciseId, sets: grouped }));
 }
+
+const hundredths = (kg: number) => Math.round(kg * 100);
+
+/** The heaviest set (the first one on a tie) and how many sets were done at that weight, compared in hundredths. */
+export function topSet<T extends { totalKg: number }>(sets: T[]): { top: T; count: number } | null {
+  const [first, ...rest] = sets;
+  if (!first) return null;
+  const top = rest.reduce((a, b) => (hundredths(b.totalKg) > hundredths(a.totalKg) ? b : a), first);
+  return {
+    top,
+    count: sets.filter((s) => hundredths(s.totalKg) === hundredths(top.totalKg)).length,
+  };
+}

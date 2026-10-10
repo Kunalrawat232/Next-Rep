@@ -253,3 +253,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: do this cleanup before the Home screen and the rest timer, which would otherwise add more copies.
 - How validated: _(developer to fill)_ Evidence: 2730 unit tests pass three times in a row on two cores; the guard fails when a copy is added back; the rendered HTML of 32 screen states is identical before and after (apart from attribute order on three sections), checked before the later review fixes, which only touch the loading messages and three boxes' border colour.
 - Lesson: before a refactor that must change nothing, record what it must not change.
+
+## 2026-10-10: Progression suggestion and the new Home screen
+
+- Tool: Claude Code with property tests, mutation checks and `code-reviewer`
+- Asked: suggest what to lift next (ADR-005) and rebuild Home from the design: ready to lift, sync pill, gym line, today's suggestion, last workout and a first-time state.
+- AI produced: a pure `suggest` function with 40 table tests and 4000 seeded random cases, a Home hook reading the on-device log, the new Home screen, and updated sign-out tests (the account card moved to Settings).
+- Decisions by the developer: the suggestion shows on Home only; the log screen still prefills from the last set.
+- How validated: _(developer to fill)_ Not yet run: Home in a real browser, and the updated e2e specs (they sign out through Settings now).
+- Lesson: when no target reps are stored, derive them from the last sets and say so in the rules.
