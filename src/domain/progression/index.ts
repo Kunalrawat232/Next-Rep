@@ -141,7 +141,7 @@ export function suggest(input: {
   const lastShown = toDisplay(last.totalKg, unit);
 
   if (last.hit) {
-    let target = nearest(grid, lastShown + INCREASE[bodyPart][unit]);
+    let target = Math.max(grid.min, nearest(grid, lastShown + INCREASE[bodyPart][unit]));
     if (target <= lastShown + EPSILON) target = above(grid, lastShown);
     // Never past the limit: the largest load on the grid that is within it, and nothing if that is no more than last time.
     if (target > grid.max) target = below(grid, grid.max);

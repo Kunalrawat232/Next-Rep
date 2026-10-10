@@ -167,15 +167,12 @@ describe('how each failure is classified', () => {
 
   // BUG: worker.ts:100 reads result.status without a guard, so a remote that resolves to undefined
   // (a bug in a service, not reachable through the typed Result) rejects run() instead of deferring.
-  it.fails(
-    'BUG: a remote that returns undefined instead of a Result does not crash the pass',
-    async () => {
-      const s = setup();
-      await withSets(s, 1);
-      s.server.remote.upsertWorkouts.mockImplementation((async () => undefined) as never);
-      await expect(s.worker.run()).resolves.toBeDefined();
-    },
-  );
+  it('BUG: a remote that returns undefined instead of a Result does not crash the pass', async () => {
+    const s = setup();
+    await withSets(s, 1);
+    s.server.remote.upsertWorkouts.mockImplementation((async () => undefined) as never);
+    await expect(s.worker.run()).resolves.toBeDefined();
+  });
 });
 
 describe('offline then online mid-run', () => {

@@ -43,7 +43,8 @@ export function Stepper({
 }: Props) {
   const id = useId();
   const noteId = `${id}-error`;
-  const lower = label.charAt(0).toLowerCase() + label.slice(1);
+  // An acronym such as RPE keeps its capitals; only an ordinary first letter is lowered.
+  const lower = /^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-callout font-medium text-ink-muted">

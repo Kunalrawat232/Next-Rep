@@ -59,7 +59,14 @@ export function LogSetPage() {
       .then((set) => {
         if (current) setLastSet({ exerciseId, set });
       })
-      .catch(ignoreClosed);
+      .catch((error: unknown) => {
+        try {
+          ignoreClosed(error);
+        } catch {
+          // Without the last set the form simply starts from its defaults.
+          if (current) setLastSet({ exerciseId, set: undefined });
+        }
+      });
     return () => {
       current = false;
     };
@@ -74,6 +81,12 @@ export function LogSetPage() {
     return <LoadingMessage />;
   const exercise =
     exercises.status === 'ready' ? exercises.exercises.find((e) => e.id === exerciseId) : undefined;
+  if (workoutState.status === 'error')
+    return (
+      <ErrorMessage onRetry={() => void reload()}>
+        Could not read your workout from this device.
+      </ErrorMessage>
+    );
   if (workoutState.status !== 'open' || !exercise)
     return (
       <NotFound

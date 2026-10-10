@@ -113,6 +113,8 @@ export function setSummary(
   if (set.barKg === null) return { headline, detail: null };
   const side = perSideShown(set, unit);
   const plates = roundKg(toDisplay(set.totalKg, unit) - toDisplay(set.barKg, unit));
+  // A total below its own bar cannot be loaded as plates: say only what the bar is.
+  if (plates < 0) return { headline, detail: `${formatWeight(set.barKg, unit)} ${label} bar` };
   const rest = side === null ? `${plates} ${label} plates` : `${side} ${label} each side`;
   return { headline, detail: `${formatWeight(set.barKg, unit)} ${label} bar + ${rest}` };
 }

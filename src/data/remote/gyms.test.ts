@@ -103,7 +103,10 @@ describe('list', () => {
       reason: 'offline',
     });
     const other = fakeClient({
-      'gyms:select': { data: null, error: { code: '42501', message: 'row-level security' } },
+      'gyms:select': {
+        data: null,
+        error: { code: '42501', message: 'permission denied for table gyms' },
+      },
     });
     expect(await createSupabaseGymService(other.client).list()).toEqual({
       status: 'error',

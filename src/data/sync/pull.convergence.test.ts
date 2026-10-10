@@ -94,8 +94,8 @@ describe('a second device that pulls', () => {
       expect(await b.store.counts()).toEqual({ pending: 0, failed: 0 });
 
       // The same personal records, from the same sets.
-      const marksA = recordMarks(setsA);
-      const marksB = recordMarks(await b.db.sets.toArray());
+      const marksA = recordMarks(setsA, 'kg');
+      const marksB = recordMarks(await b.db.sets.toArray(), 'kg');
       expect([...marksB]).toEqual([...marksA]);
 
       // Pulling again, here or on the first device, changes nothing.

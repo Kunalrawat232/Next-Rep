@@ -32,6 +32,12 @@ import { withUnit } from '../../domain/units';
 export function WorkoutPage() {
   const { state, reload } = useWorkout();
   if (state.status === 'loading') return <LoadingMessage />;
+  if (state.status === 'error')
+    return (
+      <ErrorMessage onRetry={() => void reload()}>
+        Could not read your workout from this device.
+      </ErrorMessage>
+    );
   if (state.status === 'none') return <StartWorkout onStarted={reload} />;
   return <ActiveWorkout workout={state.workout} sets={state.sets} reload={reload} />;
 }

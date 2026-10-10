@@ -24,6 +24,24 @@ describe('failure(): classification of backend errors', () => {
     ['too many requests', '429', 'unknown'],
     ['server error', '500', 'unknown'],
   ];
+  it('a row-level security refusal is a refusal of the row, so it can be shown as failed', () => {
+    setOnline(true);
+    expect(
+      failure({
+        message: 'new row violates row-level security policy for table "sets"',
+        code: '42501',
+      }),
+    ).toEqual({ status: 'error', reason: 'rejected' });
+  });
+
+  it('a plain permission denied stays unknown, as it can be a session being renewed', () => {
+    setOnline(true);
+    expect(failure({ message: 'permission denied for table sets', code: '42501' })).toEqual({
+      status: 'error',
+      reason: 'unknown',
+    });
+  });
+
   it.each(withCode)('%s (%s) is %s', (_label, code, reason) => {
     setOnline(true);
     expect(failure({ message: 'server text', code })).toEqual({ status: 'error', reason });

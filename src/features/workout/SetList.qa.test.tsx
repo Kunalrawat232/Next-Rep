@@ -100,7 +100,7 @@ describe('SetList', () => {
   });
 
   // BUG (low, needs a stored total below its bar): src/domain/workout/index.ts:116 the detail line reads "+ -5 kg plates" instead of hiding or explaining.
-  it.fails('never shows a negative plate weight', () => {
+  it('never shows a negative plate weight', () => {
     render(
       <SetList title="X" sets={[stored({ totalKg: 15, barKg: 20, perSideKg: null, reps: 5 })]} />,
     );

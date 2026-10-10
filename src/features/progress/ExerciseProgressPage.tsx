@@ -38,9 +38,9 @@ export function ExerciseProgressPage() {
       ? (exercises.exercises.find((e) => e.id === exerciseId)?.name ?? 'Custom exercise')
       : 'Exercise';
   const { sets } = state;
-  const points = sessionBests(sets);
-  const records = currentRecords(sets);
-  const marks = recordMarks(sets);
+  const points = sessionBests(sets, unit);
+  const records = currentRecords(sets, unit);
+  const marks = recordMarks(sets, unit);
   const now = new Date();
   return (
     <div className="flex flex-col gap-6">

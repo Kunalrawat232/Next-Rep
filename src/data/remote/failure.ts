@@ -1,6 +1,7 @@
 import type { Result } from '../../lib/result';
 
 const UNIQUE_VIOLATION = '23505';
+const INSUFFICIENT_PRIVILEGE = '42501';
 
 // What browsers say when a request never got an answer: Chrome and Edge "Failed to fetch", Firefox
 // "NetworkError…", Safari "Load failed".
@@ -18,6 +19,10 @@ export function failure(error: { message: string; code?: string }): Result<never
     return { status: 'error', reason };
   }
   if (error.code === UNIQUE_VIOLATION) return { status: 'error', reason: 'conflict' };
+  // A row policy turning the row down is a refusal of that row. A plain "permission denied" can be a
+  // session in the middle of renewing, so it stays "unknown" and is tried again later.
+  if (error.code === INSUFFICIENT_PRIVILEGE && /row-level security/i.test(error.message))
+    return { status: 'error', reason: 'rejected' };
   // Constraint (23xxx) and bad-data (22xxx) errors are about the row sent, not about the server.
   if (/^2[23]/.test(error.code)) return { status: 'error', reason: 'rejected' };
   return { status: 'error', reason: 'unknown' };

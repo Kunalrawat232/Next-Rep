@@ -32,7 +32,7 @@ export function ProgressPage() {
   const rows = groupByExercise(state.sets)
     .map(({ exerciseId, sets }) => ({
       id: exerciseId,
-      heaviest: currentRecords(sets).heaviest,
+      heaviest: currentRecords(sets, unit).heaviest,
       last: sets[sets.length - 1]!.loggedAt,
     }))
     .sort((a, b) => (a.last < b.last ? 1 : a.last > b.last ? -1 : 0));

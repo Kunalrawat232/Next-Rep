@@ -115,7 +115,7 @@ describe('Stepper behaviour', () => {
   });
 
   // BUG (low): src/features/workout/Stepper.tsx:46 the button name lowercases only the first letter, so an acronym label becomes "Decrease rPE".
-  it.fails('keeps an acronym label readable in the button names', () => {
+  it('keeps an acronym label readable in the button names', () => {
     setup({ label: 'RPE' });
     expect(screen.getByRole('button', { name: 'Decrease RPE' })).toBeInTheDocument();
   });

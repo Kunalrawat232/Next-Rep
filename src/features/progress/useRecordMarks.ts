@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ignoreClosed } from '../../data/local';
 import { recordMarks, type RecordKind } from '../../domain/records';
+import { useUnit } from '../settings/UnitProvider';
 import { useLogStore, useSyncStatus } from '../sync';
 
 const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
@@ -13,6 +14,7 @@ const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
  */
 export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, RecordKind> {
   const store = useLogStore();
+  const { unit } = useUnit();
   const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const idsKey = [...new Set(exerciseIds)].sort().join(',');
   const [marks, setMarks] = useState<ReadonlyMap<string, RecordKind>>(EMPTY);
@@ -23,7 +25,7 @@ export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, Recor
     store
       .setsForExercises(idsKey.split(','))
       .then((sets) => {
-        if (current) setMarks(recordMarks(sets));
+        if (current) setMarks(recordMarks(sets, unit));
       })
       .catch((error: unknown) => {
         try {
@@ -36,7 +38,7 @@ export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, Recor
     return () => {
       current = false;
     };
-  }, [store, idsKey, pending, failed, syncing, pulledVersion]);
+  }, [store, unit, idsKey, pending, failed, syncing, pulledVersion]);
 
   return idsKey === '' ? EMPTY : marks;
 }

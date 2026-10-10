@@ -66,7 +66,7 @@ describe('QA exercise progress shows what is stored, in the unit chosen', () => 
   // BUG: two stored weights 0.01 kg apart (60 and 60.01) show as the same 132.3 lb, so the records
   // list has two lines that read "Most reps at 132.3 lb". Same root cause as the false record for
   // the same displayed weight (records compare hundredths of a kg, not the unit shown).
-  it.fails('lists one line per displayed weight in lb', async () => {
+  it('lists one line per displayed weight in lb', async () => {
     await openWith(
       [
         { daysAgo: 2, sets: [{ totalKg: 60, reps: 8 }] },

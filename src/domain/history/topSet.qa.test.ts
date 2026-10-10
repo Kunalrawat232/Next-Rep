@@ -51,7 +51,7 @@ describe('topSet', () => {
   });
 
   // BUG (low, needs corrupt data): src/domain/history/index.ts:73 a NaN weight is never counted: a list of only NaN gives count 0, shown as "0 sets" on Home.
-  it.fails('counts at least one set when it returns a top set', () => {
+  it('counts at least one set when it returns a top set', () => {
     expect(topSet([row(Number.NaN, 'a')])!.count).toBeGreaterThanOrEqual(1);
   });
 });

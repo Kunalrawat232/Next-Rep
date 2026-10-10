@@ -54,7 +54,7 @@ All thresholds live in **one config file** so they can be tuned and tested.
 
 ## Personal records (`src/domain/records`)
 
-A set is a personal record (PR) when it beats the sets **before it** of the same exercise, in order of logged time (then id). Records are worked out from the sets each time, never stored, so undoing a set fixes the badges. Weights are compared in hundredths of a kg.
+A set is a personal record (PR) when it beats the sets **before it** of the same exercise, in order of logged time (then id). Records are worked out from the sets each time, never stored, so undoing a set fixes the badges. Weights are compared **as shown**, in hundredths of the shown unit (kg or lb), so 60 kg and the 60.01 kg that comes back from typing 132.3 lb are the same weight and the second is no record. The unit is therefore an input to the record functions.
 
 - **PR (heaviest weight):** heavier than every earlier set, whatever the reps. Never the first set of an exercise, and never at 0 kg.
 - **Rep PR:** more reps than any earlier set at exactly that weight. It needs an earlier set at that weight, so the first set at a new weight is not a rep PR.

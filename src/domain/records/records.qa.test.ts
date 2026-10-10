@@ -16,7 +16,7 @@ const set = (totalKg: number, reps: number, minute: number, exerciseId = EX, wor
 
 /** Marks in time order as a string such as "-,W,-,R", so a scenario reads at a glance. */
 const marksString = (sets: ReturnType<typeof set>[]) => {
-  const marks = recordMarks(sets);
+  const marks = recordMarks(sets, 'kg');
   return [...sets]
     .sort((a, b) => (a.loggedAt < b.loggedAt ? -1 : 1))
     .map((s) => (marks.has(s.id) ? (marks.get(s.id) === 'weight' ? 'W' : 'R') : '-'))
@@ -140,7 +140,7 @@ describe('QA recordMarks scenarios', () => {
 
   it('does not let another exercise at the same weight make a record', () => {
     const sets = [set(60, 5, 0, 'a'), set(60, 9, 1, 'b'), set(60, 6, 2, 'a'), set(100, 1, 3, 'b')];
-    const marks = recordMarks(sets);
+    const marks = recordMarks(sets, 'kg');
     expect(marks.get(sets[2]!.id)).toBe('reps');
     expect(marks.get(sets[3]!.id)).toBe('weight');
     expect(marks.has(sets[1]!.id)).toBe(false);
@@ -148,13 +148,12 @@ describe('QA recordMarks scenarios', () => {
 });
 
 describe('QA kg and lb: the same weight shown twice is not a record', () => {
-  // BUG: 60 kg shows as 132.3 lb, and 132.3 lb typed converts to 60.01 kg, so a set that LOOKS the
-  // same as the last one is marked as a weight record (compared in hundredths of a kg, not in the
-  // unit shown). Hits anyone who logged in kg and then switched to lb (or back).
-  it.fails('a weight typed in lb that shows the same as an earlier kg set is no record', () => {
+  // 60 kg shows as 132.3 lb, and 132.3 lb typed converts to 60.01 kg: a set that looks the same as
+  // the last one is no record, because weights are compared as shown.
+  it('a weight typed in lb that shows the same as an earlier kg set is no record', () => {
     const shown = toDisplay(60, 'lb');
     const typedKg = fromDisplay(shown, 'lb');
-    const marks = recordMarks([set(60, 8, 0), set(typedKg, 8, 1)]);
+    const marks = recordMarks([set(60, 8, 0), set(typedKg, 8, 1)], 'lb');
     expect(toDisplay(typedKg, 'lb')).toBe(shown);
     expect(marks.size).toBe(0);
   });
@@ -162,7 +161,9 @@ describe('QA kg and lb: the same weight shown twice is not a record', () => {
   it('the same lb weight typed twice is the same kg, so no record', () => {
     for (let tenths = 10; tenths <= 11_023; tenths += 7) {
       const kg = fromDisplay(tenths / 10, 'lb');
-      expect(recordMarks([set(kg, 5, 0), set(fromDisplay(tenths / 10, 'lb'), 5, 1)]).size).toBe(0);
+      expect(
+        recordMarks([set(kg, 5, 0), set(fromDisplay(tenths / 10, 'lb'), 5, 1)], 'kg').size,
+      ).toBe(0);
     }
   });
 
@@ -185,12 +186,12 @@ describe('QA sessionBests and currentRecords agree', () => {
       set(65, 5, 2, EX, 'b'),
       set(62.5, 9, 3, EX, 'c'),
     ];
-    const bests = sessionBests(sets);
-    const heaviest = currentRecords(sets).heaviest!;
+    const bests = sessionBests(sets, 'kg');
+    const heaviest = currentRecords(sets, 'kg').heaviest!;
     expect(bests.map((b) => `${b.totalKg}x${b.reps}`)).toEqual(['60x8', '65x5', '62.5x9']);
     expect(heaviest).toMatchObject({ totalKg: 65, reps: 5 });
     expect(bests.some((b) => b.setId === heaviest.setId)).toBe(true);
-    expect(currentRecords([...sets].reverse())).toEqual(currentRecords(sets));
+    expect(currentRecords([...sets].reverse(), 'kg')).toEqual(currentRecords(sets, 'kg'));
   });
 });
 

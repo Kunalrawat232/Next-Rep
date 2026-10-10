@@ -157,7 +157,7 @@ describe('decreases', () => {
 describe('weights that are not on a plate grid', () => {
   // BUG (low, needs corrupt data): src/domain/progression/index.ts:76 `nearest` does not clamp to the bar, so a stored total below its own bar
   // gives an "increase" to a load below the bar (17.5 kg on a 20 kg bar).
-  it.fails('never suggests a barbell load below the bar it was logged with', () => {
+  it('never suggests a barbell load below the bar it was logged with', () => {
     const r = ask([{ sets: [s(15, 8, 1, 20)] }]);
     if (r) expect(r.totalKg).toBeGreaterThanOrEqual(20);
   });

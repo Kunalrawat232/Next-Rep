@@ -72,6 +72,9 @@ export function topSet<T extends { totalKg: number }>(sets: T[]): { top: T; coun
   const top = rest.reduce((a, b) => (hundredths(b.totalKg) > hundredths(a.totalKg) ? b : a), first);
   return {
     top,
-    count: sets.filter((s) => hundredths(s.totalKg) === hundredths(top.totalKg)).length,
+    count: Math.max(
+      1,
+      sets.filter((s) => hundredths(s.totalKg) === hundredths(top.totalKg)).length,
+    ),
   };
 }
