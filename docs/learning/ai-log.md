@@ -260,7 +260,7 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Asked: suggest what to lift next (ADR-005) and rebuild Home from the design: ready to lift, sync pill, gym line, today's suggestion, last workout and a first-time state.
 - AI produced: a pure `suggest` function with 40 table tests and 4000 seeded random cases, a Home hook reading the on-device log, the new Home screen, and updated sign-out tests (the account card moved to Settings).
 - Decisions by the developer: the suggestion shows on Home only; the log screen still prefills from the last set.
-- How validated: _(developer to fill)_ Not yet run: Home in a real browser, and the updated e2e specs (they sign out through Settings now).
+- How validated: _(developer to fill)_ Run by the developer on 2026-10-10: all 4 e2e specs pass against the hosted project (sign-in through Settings sign-out, and a workout logged online and offline). The first runs of the workout spec failed twice for timing mistakes in the spec itself (an instant `isVisible()` check, and leaving the gym form before the save finished); the app was right both times. Not yet run: Home and the rest timer on a real phone.
 - Lesson: when no target reps are stored, derive them from the last sets and say so in the rules.
 
 ## 2026-10-10: Rest timer

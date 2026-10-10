@@ -26,14 +26,21 @@ test.describe('workout', () => {
     ).toBeVisible();
 
     await page.goto('/workout');
-    if (await page.getByRole('heading', { name: /add a gym first/i }).isVisible()) {
+    // isVisible() does not wait, so first wait until the page shows one of the two states.
+    const addGym = page.getByRole('heading', { name: /add a gym first/i });
+    const start = page.getByRole('button', { name: 'Start workout' });
+    await expect(addGym.or(start)).toBeVisible();
+    if (await addGym.isVisible()) {
       await page.getByRole('link', { name: 'Add a gym' }).click();
       await page.getByLabel('Gym name').fill('E2E gym');
       await page.getByLabel('Barbell weight (kg)').fill('20');
       await page.getByRole('button', { name: 'Create gym' }).click();
+      // The form goes to the gym list once the gym is saved; leaving earlier would cancel the save.
+      await expect(page).toHaveURL(/\/gyms$/);
+      await expect(page.getByText('E2E gym')).toBeVisible();
       await page.goto('/workout');
     }
-    await page.getByRole('button', { name: 'Start workout' }).click();
+    await start.click();
 
     await page.getByRole('link', { name: 'Choose exercise' }).click();
     await page.getByRole('searchbox', { name: 'Search exercises' }).fill('barbell bench press');

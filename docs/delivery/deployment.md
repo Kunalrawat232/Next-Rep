@@ -68,7 +68,7 @@ The same credentials let you run `npm run test:integration` (profile access rule
 **Hosted checks: what ran and what has not** (single statement; as recorded in the AI log, 2026-10-10):
 
 - Ran, 2026-10-08, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
-- Not run yet: `npm run test:e2e`; the integration tests added later for gyms, exercises, the log sync and the history pull; and migrations 0002 and 0003 plus the re-seed on the hosted project were not recorded as applied. The profile upsert used by Settings has no integration test yet.
+- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull; and migrations 0002 and 0003 plus the re-seed on the hosted project were not recorded as applied. The profile upsert used by Settings has no integration test yet.
 
 ## 2. Gemini API key (free tier, no billing)
 
