@@ -21,7 +21,9 @@ import { useFreshGym } from './useFreshGym';
 import { PrBadge, useRecordMarks } from '../progress';
 import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
+import { RestTimer } from './RestTimer';
 import { useGymCatalog } from './useGymCatalog';
+import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
 import { useUnit } from '../settings/UnitProvider';
@@ -150,6 +152,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const [problem, setProblem] = useState<string | null>(null);
   const { pending: undoing, begin: beginUndo, end: endUndo } = usePending();
   useFreshGym(workout, reload);
+  const rest = useRestTimer(workout.id);
   const marks = useRecordMarks(sets.map((s) => s.exerciseId));
 
   const nameOf = (id: string) =>
@@ -191,6 +194,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   async function end() {
     try {
       await store.endWorkout(workout.id, new Date().toISOString());
+      rest.stop();
       notify();
       navigate('/');
     } catch {
@@ -224,6 +228,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
           )}
           <SyncBadge />
         </div>
+        <RestTimer timer={rest} />
       </header>
 
       {confirmingEnd && (

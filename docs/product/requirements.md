@@ -21,7 +21,7 @@
 - Offline-tolerant set logging: local-first save with a sync queue ([offline sync](../architecture/offline-sync.md))
 - Gemini fallback (via serverless function) for phrases the parser cannot understand confidently
 - "What should I lift today?" suggestion based on simple progressive-overload rules
-- Rest timer started by voice ("rest 90 seconds") or tap
+- Rest timer started by voice ("rest 90 seconds") or tap (tap is built; voice comes with the voice task)
 
 ### Could have (only if ahead of schedule)
 

@@ -262,3 +262,14 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions by the developer: the suggestion shows on Home only; the log screen still prefills from the last set.
 - How validated: _(developer to fill)_ Not yet run: Home in a real browser, and the updated e2e specs (they sign out through Settings now).
 - Lesson: when no target reps are stored, derive them from the last sets and say so in the rules.
+
+## 2026-10-10: Rest timer
+
+- Tool: Claude Code with mutation checks and `code-reviewer`
+- Asked: a rest timer on the workout screen: tap presets (60, 90, 120, 180 s) and a custom length, a countdown that stays right after a reload, "Rest over" with vibration.
+- AI produced: a pure `domain/rest` module (start, remaining, extend, format, custom-length check) with table and seeded property tests, a `useRestTimer` hook that keeps only the end time on the device, the `RestTimer` pill and panel, and 25 screen tests on a faked clock.
+- Decisions by the developer: the custom length is 30 to 900 seconds (the plan said 10 to 900).
+- Review results: `code-reviewer` found that a corrupt stored end time (far ahead, or days old) would show a huge countdown or an old "Rest over" (now dropped), that focus was lost when the panel closed (now returns to the pill, and Escape closes it), that +30 s on a rest already over added time to the past (now counts from now), and `aria-controls` pointing at a panel that was not there. Two open tabs do not follow each other, and the clock is the device clock: both are documented, not fixed.
+- Problems found: (1) one deliberate breakage survived the first tests, the check that stops a buzz while the page is hidden; a test was added; (2) a lint rule rejects reading the clock while rendering, so the start time is read once in a lazy state initialiser; (3) the sync badge is also a status region, so the "Rest over" announcement is found among several.
+- How validated: _(developer to fill)_ Not yet run: the timer in a real browser on a phone (vibration support differs, and iOS Safari has none).
+- Lesson: store when something ends, not how long is left, and a reload, a locked screen and a background tab stop being special cases.
