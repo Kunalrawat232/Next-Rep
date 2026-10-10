@@ -13,9 +13,9 @@
 
 ## Commits
 
-Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`. Small, frequent, meaningful.
+Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`. Meaningful, one per finished task.
 
-One short subject line per commit, no body: the detail belongs in the docs and `docs/learning/ai-log.md`.
+One finished task = one commit: a single short Conventional Commit subject line, no body, plus the Co-Authored-By attribution trailer when the harness asks for one (the trailer is the only allowed body). Ask before any other commit. Never push without approval. The detail belongs in the docs and `docs/learning/ai-log.md`.
 
 ## Accessibility
 

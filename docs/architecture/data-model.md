@@ -1,6 +1,6 @@
 # Data model (Supabase / Postgres)
 
-All tables have `user_id uuid references auth.users not null` (except the shared exercise catalogue) and **RLS enabled**. Timestamps are `timestamptz`. Schema changes go in `supabase/migrations/` as numbered SQL files, never edited only in the dashboard.
+All tables have `user_id uuid references auth.users not null`, except `profiles` (keyed by `id`, which is the auth user id) and the shared exercise catalogue (`user_id` is null for global rows) and **RLS enabled**. Timestamps are `timestamptz`. Schema changes go in `supabase/migrations/` as numbered SQL files, never edited only in the dashboard.
 
 | Table             | Key columns                                                                                                                                                                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -17,7 +17,7 @@ All tables have `user_id uuid references auth.users not null` (except the shared
 - `exercises`: everyone signed in can `select` rows where `user_id is null` (global) or `user_id = auth.uid()`; insert/update/delete only own rows.
 - All other tables: `select`, `insert`, `update`, `delete` only where `user_id = auth.uid()`; `insert` and `update` also check `user_id = auth.uid()` (`WITH CHECK`) so a row cannot be reassigned to another user.
 - Policies use `to authenticated` plus the ownership predicate, written as `(select auth.uid()) = user_id`.
-- No `SECURITY DEFINER` functions are used to work around permissions.
+- No `SECURITY DEFINER` function is used to work around permissions. The one exception, `consume_rate_limit`, is deliberate (see Integrity beyond RLS).
 - Write an automated test proving user A cannot read or write user B's rows. This is a key security demo point.
 
 ## Integrity beyond RLS
@@ -30,11 +30,11 @@ All tables have `user_id uuid references auth.users not null` (except the shared
 
 ## Constraints
 
-- `reps between 1 and 100`, `total_kg between 0 and 500`, sensible length limits on text columns.
+- Check constraints on reps and weights repeat the validator ranges (values in [weight rules](../domain/weight-rules.md), source `src/domain/validation/config.ts`), plus sensible length limits on text columns.
 - `sets.id` and `workouts.id` are primary keys used for idempotent upserts.
 - Index on `(user_id, exercise_id, logged_at desc)` for history and charts; every foreign key is indexed.
 - `sets`: `total_kg = bar_kg + 2 × per_side_kg` whenever both are present, and `input_mode = 'per_side'` requires both. **Editing a set's weight must update `total_kg`, `bar_kg`, `per_side_kg` and `input_mode` together**, otherwise the database rejects it.
-- `exercises.muscle` is one of 16 muscle groups (check constraint, mirrored by `src/domain/exercises/muscles.ts`) or null. About 892 global exercises are seeded: 56 curated with voice aliases and about 835 imported ([ADR-010](decisions/010-exercise-library-and-muscle-search.md)).
+- `exercises.muscle` is one of 16 muscle groups (check constraint, mirrored by `src/domain/exercises/muscles.ts`) or null. About 890 global exercises are seeded: curated ones with voice aliases plus imported ones (the counts are in the two seed JSON files under `src/domain/`; [ADR-010](decisions/010-exercise-library-and-muscle-search.md)).
 - One default gym per user (partial unique index); exercise names unique per owner, case-insensitive.
 - `gym_bars`: at most one `ez_bar` and one `smith` per gym (partial unique index), bar names unique per gym ignoring case. The barbell is `gyms.default_bar_kg`, not a `gym_bars` row. A logged exercise finds its bar by equipment: barbell, then the gym's barbell weight; EZ bar and Smith, then the bar of that `kind`; `other` bars are manual overrides only ([ADR-009](decisions/009-gym-bars-and-default-gym.md)).
 - Data API privileges: `anon` has none; `authenticated` gets table privileges and RLS decides rows; `api_rate_limits` has no direct privileges.

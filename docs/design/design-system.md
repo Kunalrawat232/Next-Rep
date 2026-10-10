@@ -1,6 +1,6 @@
 # Design system
 
-The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off on 2026-10-08. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
+The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off on 2026-10-08. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/); the second handoff of 2026-10-09 (60 artboards) is in [`handoff/2026-10-09/`](handoff/2026-10-09/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
 
 ## Direction
 
@@ -28,13 +28,18 @@ Type: Geist (self-hosted, variable). Styles `display` 40/44, `title` 28/34, `hea
 
 ## Shared components
 
-Built so far, in `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below). Keep these names identical in code and in Claude Design; the rest come with their features:
+Keep these names identical in code and in Claude Design.
 
-`VoiceButton`, `TranscriptBubble`, `SetConfirmCard`, `WeightBreakdown`, `AmbiguityPrompt`, `SetRow`, `SyncBadge`, `RestTimer`, `ExercisePicker`, `ProgressChart`, `PRBadge`, `SuggestionCard`, `OfflineBanner`.
+**Built** (generic ones in `src/components/`, feature ones next to their feature):
+
+- `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below, floating mic as the phone's Workout entry), `Chip`, `BackLink`, `Switch`, and the shared boxes and messages listed in the next section.
+- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer` and `OfflineBanner` (`src/features/workout`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`).
+
+**Not built yet:** `VoiceButton` (the workout screen has a disabled voice button), `TranscriptBubble`, `SetConfirmCard` (the confirm step for voice sets), `SuggestionCard` (today's suggestion is plain markup on Home, not a component). Status: planned (Phase 3), not built yet, for the three voice ones.
 
 ## Status
 
-Tokens, font, logo, PWA icons, shell, sign-in and home are applied. Not yet designed: gym setup, history, settings, exercise picker, sign-up, empty and error states (due 11 to 15 Oct). The light theme exists in CSS but has no switch until Settings. Run `/design-sync` once the first real feature components exist.
+As of 2026-10-10: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch) and the empty, loading and error states are applied. Not applied: the voice screens and prompts that need voice (listening, parsing, `SetConfirmCard`) and the offline-banner variants for voice, which are planned for Phase 3. Home, settings, units and the shared components below are on `feat/home`, not yet merged. Run `/design-sync` once the first real feature components exist.
 
 ## Shared UI components (`src/components`)
 

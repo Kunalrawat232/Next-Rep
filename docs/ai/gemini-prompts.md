@@ -1,6 +1,6 @@
 # Gemini prompts
 
-The prompt used by `/api/parse`. The code mirrors this file; change both together. Model name comes from `GEMINI_MODEL`, never hardcoded.
+Status: planned (Phase 3), not built yet: `/api/parse` returns 501 and no prompt is in code. This file is the draft the function will mirror; change both together once it exists. Model name comes from `GEMINI_MODEL`, never hardcoded.
 
 ## Requirements
 

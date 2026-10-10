@@ -1,6 +1,6 @@
 # ADR-002: Logged weight is the total, including the bar
 
-- **Status:** accepted (2026-10-08)
+- **Status:** accepted (2026-10-08); addendum 2026-10-10 (display unit)
 
 ## Context
 
@@ -9,7 +9,7 @@
 ## Decision
 
 - The logged weight is always the **TOTAL weight lifted, including the bar**, matching established lifting apps.
-- All weights are **stored in kg** (numeric, up to 2 decimals). Display can convert to lb later (1 lb = 0.45359237 kg).
+- All weights are **stored in kg** (numeric, up to 2 decimals). Display can convert to lb (1 lb = 0.45359237 kg; done, see the addendum).
 - Per-side input is converted on entry: `total = bar_kg + 2 × per_side_kg`.
 - Alongside `total_kg` store `bar_kg` (nullable), `per_side_kg` (nullable) and `input_mode` so the breakdown can be shown later.
 - Charts, PRs and suggestions use `total_kg` only.
@@ -24,7 +24,7 @@
 ## Consequences
 
 - One number for all analytics; the breakdown is kept for display.
-- The parser and UI must resolve "total or per side?" before saving, using bar settings from the gym profile or an exercise override.
+- The parser and UI must resolve "total or per side?" before saving, using the bar settings of the gym (the user can choose a different bar of that gym).
 - Dumbbell semantics are an explicit exception that every consumer of `total_kg` must respect.
 
 ## Addendum (2026-10-10): the weight unit is a display and entry choice
@@ -33,4 +33,4 @@ Storage stays kg. The user's unit (kg or lb, Settings) decides how every weight 
 
 - A weight shown in lb is rounded to 1 decimal and one typed in lb is stored as kg to 2 decimals, so any lb value typed to 0.1 shows again as typed. The other way is not exact (60 kg shows as 132.3 lb, which is 60.01 kg), so a field that starts from a stored weight (the last set, a gym's bar) remembers the stored value and uses it while the text is unchanged. Without that, accepting a prefilled weight would store a different number and show a false record.
 - A weight typed per side in lb is added up in lb first (bar + 2 × side) and converted once, so the same weight typed as a total or per side is the same kg. Adding the converted parts in kg can differ by 0.01 kg, which would count as a record.
-- Records and charts compare stored kg and are the same in both units.
+- Records are compared as shown, in hundredths of the unit shown (kg or lb), so the unit is an input to the record functions. See [weight rules](../../domain/weight-rules.md) (Personal records).

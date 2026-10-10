@@ -1,5 +1,7 @@
 # Voice grammar and parser specification
 
+Status: planned (Phase 3), not built yet. Only the `ParseResult` schema exists in `src/domain/parser/`; this page is the specification.
+
 ## Intents (small, fixed set)
 
 | Intent        | Example phrases                                                      |
@@ -25,7 +27,7 @@
 
 The parser returns a `ParseResult` (schema in [API contracts](../architecture/api-contracts.md)) with `intent`, optional `exerciseId` and match score, `weight` (`value`, `unit`, `mode`: `total` | `per_side` | `unspecified`), `reps`, `restSeconds`, a `confidence` from 0 to 1 (computed from match scores and completeness), `issues` (machine-readable reasons such as `NO_REPS`, `AMBIGUOUS_WEIGHT_MODE`), the `rawTranscript` and `source` (`parser` or `gemini`).
 
-- The confidence threshold for skipping the Gemini fallback lives in config (start at 0.8, tune with tests).
-- The parser is a **pure function** with table-driven tests in `tests/fixtures/voice-phrases.json`, aiming for 150+ phrases including Hinglish, noisy and adversarial cases.
+- The confidence threshold for skipping the Gemini fallback will live in config (start at 0.8, tune with tests); see [API contracts](../architecture/api-contracts.md).
+- The parser is a **pure function** with table-driven tests in `tests/fixtures/voice-phrases.json` (planned, the file does not exist yet), aiming for 150+ phrases including Hinglish, noisy and adversarial cases.
 - Recognition language defaults to `en-IN`.
 - Transcripts are untrusted input: the parser never executes or interprets them beyond the grammar above.

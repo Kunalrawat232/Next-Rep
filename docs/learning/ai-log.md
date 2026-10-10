@@ -130,9 +130,9 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 
 ## 2026-10-09: Second design handoff and floating mic
 
-- Tool: Claude Design (the developer's 48 new artboards), then Claude Code
+- Tool: Claude Design (the developer's updated artboards), then Claude Code
 - Asked: read the updated design and make the phone's Workout entry a floating mic button.
-- AI produced: a saved copy of the 62 artboards, a disabled floating mic in the app shell with a test, and notes in `screens.md`.
+- AI produced: a saved copy of the 60 artboards, a disabled floating mic in the app shell with a test, and notes in `screens.md`.
 - Problems found: the new sign-in design adds "Forgot password?", a feature not in the plan; an existing test found two "Start workout" buttons after the change and was made exact.
 - How validated: _(developer to fill)_ Evidence: 638 unit tests pass; screenshot at 390 px checked.
 - Lesson: when a design repeats an action in a second place, make the test queries exact.
@@ -278,8 +278,8 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 
 - Tool: three `qa-tester` agents in parallel, split by area (newest screens and domain, history/progress/settings/units, data and sync), each told to add new files only and to mark a test that exposes a real bug as an expected failure with a `BUG:` note
 - Asked: find what the tests so far do not cover, now that the UI is complete.
-- AI produced: 614 tests in 27 new `*.qa.test.*` files and 22 reported bugs; none were in the highest severity class.
+- AI produced: 26 new `*.qa.test.*` files (the agents first reported 614 tests in 27 files; not re-counted) and 22 reported bugs; none were in the highest severity class.
 - Problems found: Home crashed on a damaged set row and missed the last real workout behind ten empty ones; a corrupt custom exercise row made loading throw; half-cent rounding was wrong; the rest timer misbehaved after a clock change, with NaN, and for focus and double taps. All fixed and the tests turned into normal ones. The developer then asked for all open items to be fixed: records now compare weights as shown, in the unit shown (a first attempt with a fixed tolerance of two hundredths broke the tests that say one hundredth of a kg is a record, and was dropped); a row-level-security refusal is now a refusal of the row, while a plain permission denied or an expired session stays "tried again later"; a failing local read shows a message with Try again on the workout screens. Not changed, and why: making a gym edit atomic needs a database function, which ADR-009 deferred on purpose and is a change to the data layer to be decided first; the "Today" label on an open History screen is not refreshed after midnight.
 - Decisions by the developer: _(to fill)_ which of the open items to fix before the freeze.
-- How validated: _(developer to fill)_ Evidence: 3514 tests pass, 7 expected failures remain, all of them listed with the reason. Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
+- How validated: _(developer to fill)_ Evidence: all 22 bugs fixed and 0 expected-failure tests left; the last full run on 2026-10-10 was 139 test files and about 3530 tests, all passing (an earlier run in the same task showed 3514 passing with 7 expected failures, before the later fixes). Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
 - Lesson: ask the tester to keep a real bug as an expected failure; the suite stays green, the list of bugs stays visible, and fixing one turns into a loud "unexpectedly passed".

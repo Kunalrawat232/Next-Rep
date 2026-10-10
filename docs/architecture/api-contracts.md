@@ -1,5 +1,7 @@
 # API contracts
 
+Status: planned (Phase 3), not built yet. `api/parse.ts` is a stub that answers 501; `src/domain/parser/` holds only the `ParseResult` schema; there are no `/api/parse` tests. Everything below is the intended contract.
+
 ## `POST /api/parse` (Gemini fallback)
 
 Vercel serverless function in `api/parse.ts`. See [ADR-003](decisions/003-gemini-as-fallback-only.md) and [Gemini prompts](../ai/gemini-prompts.md).

@@ -1,5 +1,7 @@
 # Offline-tolerant design ("the middle option")
 
+Overview only. The details are in [ADR-011](decisions/011-local-log-and-sync-worker.md) (push, failure classes, attempts and waits) and [ADR-012](decisions/012-pull-history-from-server.md) (pull).
+
 Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)): **online by default, but set logging works offline.**
 
 ## Rules
@@ -13,12 +15,12 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 - Workouts started offline also get client UUIDs and sync the same way (**workout row before its sets**).
 - Global seeded exercises have stable UUIDs, so offline-created sets can reference them before sync.
 - The UI shows a small sync badge: "3 sets waiting to sync" / "All synced" / "Sync failed, tap to retry".
-- Voice and Gemini features show "Needs internet" when offline; tap logging remains fully usable.
+- Voice and Gemini features (planned, Phase 3) will show "Needs internet" when offline; tap logging remains fully usable.
 - Request persistent storage (`navigator.storage.persist()`) where supported, and sync as soon as possible because browsers (especially iOS Safari) may evict local data.
 
 ## Components
 
-`src/data/local/` (Dexie DB and repositories) · `src/data/remote/` (Supabase client and repositories) · `src/data/sync/` (queue + worker). Queue logic is unit-tested with `fake-indexeddb`; the offline-then-sync journey is covered by a Playwright test using offline mode.
+`src/data/local/` (Dexie DB and repositories) · `src/data/remote/` (Supabase client and repositories) · `src/data/sync/` (queue + worker). Queue logic is unit-tested with `fake-indexeddb`; the offline-then-sync journey is covered by a Playwright test using offline mode (developer-run, not in CI).
 
 ## As built (2026-10-09)
 

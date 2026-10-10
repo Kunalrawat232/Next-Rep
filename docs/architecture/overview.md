@@ -1,5 +1,7 @@
 # Architecture overview
 
+Status: planned (Phase 3), not built yet: voice input, the parser and `/api/parse` (the Gemini fallback). Built: auth, gyms, exercises, tap logging, offline log and sync, history, progress, Home and Settings. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
+
 ## Components
 
 ```
@@ -22,7 +24,9 @@ Google Gemini API (free tier) ... called ONLY by /api/parse, ONLY as a fallback
 Laya (later, optional) .......... intent model, not part of the MVP (ADR-004)
 ```
 
-## Data flow: logging a set by voice
+## Data flow: logging a set by voice (planned, Phase 3)
+
+Status: planned (Phase 3), not built yet. Tap logging, which is built, follows steps 3, 6 (for tap, the ambiguity prompt), 7 and 8.
 
 1. The user holds the mic button; the Web Speech API returns a transcript (plus alternatives if available).
 2. The **parser** (local, deterministic) extracts intent, exercise, weight, unit, reps and weight mode, and returns a confidence score. See [voice grammar](../domain/voice-grammar.md).
@@ -39,24 +43,7 @@ Speech recognition and Gemini are treated as **untrusted inputs**. All numbers t
 
 ## Folder structure
 
-```
-/
-├── CLAUDE.md, README.md, .env.example
-├── .claude/            settings.json, hooks/, agents/, skills/
-├── .githooks/          pre-commit (gitleaks)
-├── .github/workflows/  ci.yml
-├── api/                parse.ts   (Vercel serverless function, Gemini fallback)
-├── src/
-│   ├── app/            routing, providers, layout
-│   ├── features/       auth, gyms, exercises, workout, voice, history, progress
-│   ├── domain/         PURE logic, no React, no I/O: parser, weight, validation, progression, exercises.seed.json
-│   ├── data/           local/ (Dexie), remote/ (Supabase), sync/ (queue + worker)
-│   ├── components/     shared UI components
-│   └── lib/            small utilities
-├── supabase/           migrations/ (SQL schema + RLS), seed.sql
-├── tests/              e2e/ (Playwright), fixtures/ (voice phrase tables)
-└── docs/
-```
+The current project map is in [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) section 2.
 
 **Rule:** `src/domain/` stays pure (no React, no network, no storage). This keeps it fully unit-testable and is where most AI-generated tests focus.
 

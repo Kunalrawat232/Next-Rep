@@ -18,7 +18,7 @@ Users must sign in so that Row Level Security can isolate their data, and the ap
 - **Sign-out** clears the local session only (`scope: local`). Offline, the library clears it and then reports that the server could not be told; that error counts as signed out.
 - **Passwords:** at least 8 characters; at most 72 **bytes**, because bcrypt ignores the rest.
 - **Redirect after sign-in** goes only to an in-app path made of plain path characters, never to `/sign-in`.
-- **Security headers** in `vercel.json`: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (microphone allowed for the later voice feature) and `frame-ancestors 'none'`. A fuller Content Security Policy waits until it can be tested on a real preview deployment.
+- **Security headers** in `vercel.json`: `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` (microphone allowed for the planned voice feature) and `frame-ancestors 'none'`. A fuller Content Security Policy waits until it can be tested on a real preview deployment.
 
 ## Alternatives considered
 
@@ -30,7 +30,7 @@ Users must sign in so that Row Level Security can isolate their data, and the ap
 ## Consequences
 
 - No "forgot password" in the MVP: it needs reliable email delivery.
-- Switching accounts on one device must clear the other user's local data; this belongs to the offline store in Phase 3 and is not handled yet.
+- Switching accounts on one device must clear the other user's local data; this belongs to the offline store (done: one database per user, see [ADR-011](011-local-log-and-sync-worker.md)).
 - Local sign-out leaves the refresh token valid on the server until it expires, which matters on a shared device.
 - The session sits in local storage, so an XSS bug would expose it. React escaping only, no `dangerouslySetInnerHTML`, the headers above and a later CSP are the mitigations.
 - Reading the stored session depends on the library's storage format (`{ user: { id, email } }`); it is validated with Zod and a mismatch simply reads as signed out.
