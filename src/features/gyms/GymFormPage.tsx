@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { BackLink, Button, buttonClasses, Chip, TextField } from '../../components';
+import { useNavigate, useParams } from 'react-router';
+import {
+  Button,
+  Card,
+  cardClasses,
+  Chip,
+  ErrorMessage,
+  LoadingMessage,
+  NotFound,
+  PageHeader,
+  TextField,
+} from '../../components';
 import {
   pickDefaultGym,
   validateGymForm,
@@ -46,24 +56,11 @@ export function GymFormPage() {
   const { state, reload } = useGyms(service);
 
   if (auth.status !== 'signedIn') return null;
-  if (state.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+  if (state.status === 'loading') return <LoadingMessage />;
   if (state.status === 'error') return <GymsLoadError reason={state.reason} onRetry={reload} />;
 
   const existing = gymId ? state.gyms.find((gym) => gym.id === gymId) : undefined;
-  if (gymId && !existing)
-    return (
-      <div className="flex flex-col items-start gap-4">
-        <h1 className="text-title font-semibold">Gym not found</h1>
-        <Link to="/gyms" className={buttonClasses('secondary')}>
-          Back to gyms
-        </Link>
-      </div>
-    );
+  if (gymId && !existing) return <NotFound title="Gym not found" to="/gyms" label="Back to gyms" />;
 
   return (
     <GymForm
@@ -248,10 +245,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/gyms" />
-        <h1 className="text-title font-semibold">{existing ? 'Edit gym' : 'New gym'}</h1>
-      </header>
+      <PageHeader back="/gyms" title={existing ? 'Edit gym' : 'New gym'} />
 
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
         <TextField
@@ -306,10 +300,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
           )}
           <ul className="flex flex-col gap-2">
             {bars.map((bar, index) => (
-              <li
-                key={bar.id}
-                className="flex items-end gap-2 rounded-md border border-line bg-surface-200 p-4"
-              >
+              <li key={bar.id} className={cardClasses('flex items-end gap-2')}>
                 <div className="flex-1">
                   <TextField
                     label={`${bar.name} weight (${unit})`}
@@ -389,11 +380,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
           </fieldset>
         </section>
 
-        {problem && (
-          <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-            {problem}
-          </p>
-        )}
+        {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
         <Button type="submit" disabled={pending}>
           {pending ? 'Saving…' : existing ? 'Save changes' : 'Create gym'}
@@ -410,7 +397,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
             </Button>
           )}
           {confirmingDelete ? (
-            <div className="flex flex-col gap-4 rounded-md border border-danger bg-surface-200 p-4">
+            <Card tone="danger" className="flex flex-col gap-4">
               <p>Delete {existing.name}? Its bars go with it.</p>
               <div className="flex gap-2">
                 <Button variant="danger" disabled={pending} onClick={deleteGym}>
@@ -420,7 +407,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
                   Cancel
                 </Button>
               </div>
-            </div>
+            </Card>
           ) : (
             <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
               Delete gym

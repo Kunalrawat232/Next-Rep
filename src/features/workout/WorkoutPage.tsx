@@ -1,6 +1,15 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { BackLink, Button, buttonClasses } from '../../components';
+import {
+  Button,
+  buttonClasses,
+  Card,
+  cardClasses,
+  EmptyState,
+  ErrorMessage,
+  LoadingMessage,
+  PageHeader,
+} from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import { pickDefaultGym } from '../../domain/gyms';
 import { useOnline } from '../../lib/useOnline';
@@ -20,12 +29,7 @@ import { withUnit } from '../../domain/units';
 
 export function WorkoutPage() {
   const { state, reload } = useWorkout();
-  if (state.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+  if (state.status === 'loading') return <LoadingMessage />;
   if (state.status === 'none') return <StartWorkout onStarted={reload} />;
   return <ActiveWorkout workout={state.workout} sets={state.sets} reload={reload} />;
 }
@@ -64,37 +68,29 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/" />
-        <h1 className="text-title font-semibold">Workout</h1>
-      </header>
+      <PageHeader back="/" title="Workout" />
       <OfflineBanner />
 
-      {catalog.status === 'loading' && (
-        <p role="status" className="text-ink-muted">
-          Loading your gyms…
-        </p>
-      )}
+      {catalog.status === 'loading' && <LoadingMessage>Loading your gyms…</LoadingMessage>}
       {catalog.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
-          <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
+          <ErrorMessage>
             Could not load your gyms. Connect once to load them, and they stay available offline.
-          </p>
+          </ErrorMessage>
           <Button variant="secondary" onClick={reload}>
             Try again
           </Button>
         </div>
       )}
       {catalog.status === 'ready' && catalog.gyms.length === 0 && (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">Add a gym first</h2>
-          <p className="text-callout text-ink-muted">
-            A workout needs a gym, so the bar weight is added to every weight you log.
-          </p>
+        <EmptyState
+          title="Add a gym first"
+          message="A workout needs a gym, so the bar weight is added to every weight you log."
+        >
           <Link to="/gyms/new" className={buttonClasses('primary')}>
             Add a gym
           </Link>
-        </section>
+        </EmptyState>
       )}
       {catalog.status === 'ready' && catalog.gyms.length > 0 && (
         <>
@@ -127,11 +123,7 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
               );
             })}
           </fieldset>
-          {problem && (
-            <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-              {problem}
-            </p>
-          )}
+          {problem && <ErrorMessage>{problem}</ErrorMessage>}
           <Button
             disabled={starting}
             onClick={() => void start(chosen ?? pickDefaultGym(catalog.gyms)!.id)}
@@ -235,11 +227,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       </header>
 
       {confirmingEnd && (
-        <div
-          role="group"
-          aria-label="End workout"
-          className="flex flex-col gap-4 rounded-md border border-danger bg-surface-200 p-4"
-        >
+        <Card tone="danger" role="group" aria-label="End workout" className="flex flex-col gap-4">
           <p>End this workout? You can start a new one afterwards.</p>
           <div className="flex gap-2">
             <Button variant="danger" onClick={() => void end()}>
@@ -249,16 +237,13 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
               Keep going
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       <OfflineBanner />
 
       {last && marks.get(last.id) && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-md border border-success bg-surface-200 p-4"
-        >
+        <p role="status" className={cardClasses('flex items-center gap-2', 'success')}>
           <PrBadge kind={marks.get(last.id)!} />
           <span>
             New personal record: {nameOf(last.exerciseId)}, {setSummary(last, unit).headline}
@@ -286,11 +271,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         />
       ))}
 
-      {problem && (
-        <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-          {problem}
-        </p>
-      )}
+      {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
       <div className="flex flex-col gap-3">
         <Button disabled aria-describedby="voice-note" className="w-full">

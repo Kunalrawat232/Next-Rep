@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { buttonClasses } from '../components';
+import { buttonClasses, Card } from '../components';
 import { useAuth } from '../features/auth';
 import { SignOutPanel } from '../features/settings';
 
@@ -26,15 +26,12 @@ export function HomePage() {
         </Link>
       </section>
 
-      <section
-        aria-label="Account"
-        className="flex flex-col gap-4 rounded-md border border-line bg-surface-200 p-4"
-      >
+      <Card as="section" aria-label="Account" className="flex flex-col gap-4">
         <p className="text-callout text-ink-muted">
           Signed in as {state.user.email ?? 'your account'}
         </p>
         <SignOutPanel />
-      </section>
+      </Card>
     </div>
   );
 }

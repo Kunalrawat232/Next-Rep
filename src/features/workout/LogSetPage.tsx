@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { BackLink, Button, buttonClasses, Chip } from '../../components';
+import {
+  Button,
+  buttonClasses,
+  Chip,
+  EmptyState,
+  ErrorMessage,
+  LoadingMessage,
+  NotFound,
+  PageHeader,
+} from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import { EQUIPMENT_LABEL, type Exercise } from '../../domain/exercises';
 import { barFor } from '../../domain/gyms';
@@ -62,23 +71,16 @@ export function LogSetPage() {
     exercises.status === 'loading' ||
     (exerciseId && last === 'loading')
   )
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+    return <LoadingMessage />;
   const exercise =
     exercises.status === 'ready' ? exercises.exercises.find((e) => e.id === exerciseId) : undefined;
   if (workoutState.status !== 'open' || !exercise)
     return (
-      <div className="flex flex-col items-start gap-4">
-        <h1 className="text-title font-semibold">
-          {workoutState.status !== 'open' ? 'No workout is open' : 'Exercise not found'}
-        </h1>
-        <Link to="/workout" className={buttonClasses('secondary')}>
-          Back to the workout
-        </Link>
-      </div>
+      <NotFound
+        title={workoutState.status !== 'open' ? 'No workout is open' : 'Exercise not found'}
+        to="/workout"
+        label="Back to the workout"
+      />
     );
 
   return (
@@ -140,23 +142,21 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
   if (hasBar && bar === undefined)
     return (
       <div className="flex flex-col gap-6">
-        <header className="flex items-center gap-2">
-          <BackLink to={back} />
-          <h1 className="text-title font-semibold">{exercise.name}</h1>
-        </header>
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">
-            No {EQUIPMENT_LABEL[equipment]} set for {gymName}
-          </h2>
-          <p className="text-callout text-ink-muted">
-            The bar weight is added to every weight you log, so it has to be set first.
-          </p>
+        <PageHeader back={back} title={exercise.name} />
+        <EmptyState
+          title={
+            <>
+              No {EQUIPMENT_LABEL[equipment]} set for {gymName}
+            </>
+          }
+          message="The bar weight is added to every weight you log, so it has to be set first."
+        >
           {workout.gymId && (
             <Link to={`/gyms/${workout.gymId}`} className={buttonClasses('primary')}>
               Set the bar for this gym
             </Link>
           )}
-        </section>
+        </EmptyState>
       </div>
     );
 
@@ -267,10 +267,7 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to={back} />
-        <h1 className="text-title font-semibold">{exercise.name}</h1>
-      </header>
+      <PageHeader back={back} title={exercise.name} />
 
       {hasBar && usesModeToggle(equipment) && (
         <div role="group" aria-label="Weight entry" className="flex gap-2">
@@ -335,11 +332,7 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
         </ul>
       )}
 
-      {problem && (
-        <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-          {problem}
-        </p>
-      )}
+      {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
       <Button disabled={disabled} onClick={logSet}>
         {saving ? 'Saving…' : 'Log set'}

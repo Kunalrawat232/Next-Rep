@@ -1,6 +1,13 @@
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
-import { BackLink, Button, buttonClasses } from '../../components';
+import {
+  buttonClasses,
+  EmptyState,
+  LoadingMessage,
+  NotFound,
+  PageHeader,
+  RetryMessage,
+} from '../../components';
 import { withUnit } from '../../domain/units';
 import { dayLabel } from '../../domain/history';
 import { currentRecords, recordMarks, sessionBests } from '../../domain/records';
@@ -21,29 +28,10 @@ export function ExerciseProgressPage() {
   const { state: exercises } = useExercises(useExerciseService());
 
   if (!exerciseId)
-    return (
-      <div className="flex flex-col items-start gap-4">
-        <h1 className="text-title font-semibold">Exercise not found</h1>
-        <Link to="/progress" className={buttonClasses('secondary')}>
-          Back to progress
-        </Link>
-      </div>
-    );
+    return <NotFound title="Exercise not found" to="/progress" label="Back to progress" />;
   if (state.status === 'error')
-    return (
-      <div role="alert" className="flex flex-col items-start gap-3">
-        <p>Could not read your sets from this device.</p>
-        <Button variant="secondary" onClick={retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  if (state.status === 'loading' || exercises.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+    return <RetryMessage onRetry={retry}>Could not read your sets from this device.</RetryMessage>;
+  if (state.status === 'loading' || exercises.status === 'loading') return <LoadingMessage />;
 
   const name =
     exercises.status === 'ready'
@@ -56,21 +44,17 @@ export function ExerciseProgressPage() {
   const now = new Date();
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/progress" />
-        <h1 className="text-title font-semibold">{name}</h1>
-      </header>
+      <PageHeader back="/progress" title={name} />
 
       {sets.length === 0 ? (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">No sets logged yet</h2>
-          <p className="text-callout text-ink-muted">
-            Log this exercise and its progress shows up here.
-          </p>
+        <EmptyState
+          title="No sets logged yet"
+          message="Log this exercise and its progress shows up here."
+        >
           <Link to="/workout" className={buttonClasses('primary')}>
             Start workout
           </Link>
-        </section>
+        </EmptyState>
       ) : (
         <>
           <section aria-label="Records" className="flex flex-col gap-2">

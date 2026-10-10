@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Button, Chip } from '../../components';
+import { Button, cardClasses, Chip, EmptyState } from '../../components';
 import {
   EQUIPMENT_FILTERS,
   EQUIPMENT_LABEL,
@@ -49,8 +49,7 @@ function Row({
       <span className="block text-callout text-ink-muted">{subtitleFor(exercise)}</span>
     </>
   );
-  const box =
-    'flex min-h-touch w-full flex-col justify-center rounded-md border border-line bg-surface-200 p-4 text-left';
+  const box = cardClasses('flex min-h-touch w-full flex-col justify-center text-left');
   return (
     <li>
       {onSelect ? (
@@ -160,7 +159,7 @@ export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSele
         <div
           role="status"
           aria-label="Your exercises"
-          className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-surface-200 p-4"
+          className={cardClasses('flex flex-wrap items-center gap-3')}
         >
           <p className="flex-1 text-callout">
             {customProblem === 'offline'
@@ -197,15 +196,16 @@ export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSele
           </section>
         </>
       ) : total === 0 ? (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">
-            {query.trim()
-              ? `No exercises match “${query.trim()}”`
-              : 'No exercises with that equipment'}
-          </h2>
-          <p className="text-callout text-ink-muted">
-            Check the spelling, or add it as your own exercise.
-          </p>
+        <EmptyState
+          title={
+            <>
+              {query.trim()
+                ? `No exercises match “${query.trim()}”`
+                : 'No exercises with that equipment'}
+            </>
+          }
+          message="Check the spelling, or add it as your own exercise."
+        >
           <Link to={addHref} className="min-h-touch content-center font-semibold text-accent">
             {query.trim() ? `Add “${query.trim()}”` : 'Add a custom exercise'}
           </Link>
@@ -218,7 +218,7 @@ export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSele
           >
             Show all exercises
           </Button>
-        </section>
+        </EmptyState>
       ) : (
         <section className="flex flex-col gap-2">
           <List items={results.slice(0, shown)} query={query} onSelect={onSelect} />

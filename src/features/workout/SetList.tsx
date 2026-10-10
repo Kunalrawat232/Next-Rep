@@ -3,6 +3,7 @@ import type { RecordKind } from '../../domain/records';
 import { setSummary } from '../../domain/workout';
 import { PrBadge } from '../progress';
 import { useUnit } from '../settings/UnitProvider';
+import { cardClasses } from '../../components';
 
 /** The sets of one exercise, numbered, with the bar breakdown when there is one. */
 export function SetList({
@@ -28,10 +29,7 @@ export function SetList({
           {sets.map((set, index) => {
             const { headline, detail } = setSummary(set, unit);
             return (
-              <li
-                key={set.id}
-                className="flex items-center gap-4 rounded-md border border-line bg-surface-200 p-4"
-              >
+              <li key={set.id} className={cardClasses('flex items-center gap-4')}>
                 <span className="w-6 text-callout text-ink-muted">{index + 1}</span>
                 <span className="flex flex-1 flex-col">
                   <span className="text-headline font-semibold tabular-nums">{headline}</span>

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router';
-import { Button } from '../../components';
+import { Button, ErrorMessage, LoadingMessage } from '../../components';
 import { ExercisePicker, useExerciseService, useExercises } from '../exercises';
 
 /** Picks the exercise for the workout, and goes back to it. */
@@ -30,16 +30,10 @@ export function ChooseExercisePage() {
           </svg>
         </Link>
       </header>
-      {state.status === 'loading' && (
-        <p role="status" className="text-ink-muted">
-          Loading exercises…
-        </p>
-      )}
+      {state.status === 'loading' && <LoadingMessage>Loading exercises…</LoadingMessage>}
       {state.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
-          <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-            Could not load the exercises. Please try again.
-          </p>
+          <ErrorMessage>Could not load the exercises. Please try again.</ErrorMessage>
           <Button variant="secondary" onClick={reload}>
             Try again
           </Button>

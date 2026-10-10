@@ -35,3 +35,13 @@ Built so far, in `src/components/`: `Logo`, `Button` (primary, secondary), `Text
 ## Status
 
 Tokens, font, logo, PWA icons, shell, sign-in and home are applied. Not yet designed: gym setup, history, settings, exercise picker, sign-up, empty and error states (due 11 to 15 Oct). The light theme exists in CSS but has no switch until Settings. Run `/design-sync` once the first real feature components exist.
+
+## Shared UI components (`src/components`)
+
+Screens are built from these and never copy their classes (`src/components/noCopies.test.ts` fails if they come back):
+
+- `Card` and `cardClasses`: the bordered box. The border colour is its tone (normal, `danger`, `warning`, `success`, `accent`). Callers add only layout classes (`flex flex-col gap-3`): border, background, radius and padding are fixed, because when two Tailwind utilities conflict the stylesheet decides, not their order, so a caller cannot override them.
+- `ErrorMessage` (red box; with `onRetry` it holds a Try again button), `RetryMessage` (plain, with Try again), `LoadingMessage`, `EmptyState` (title, message, ways forward), `NotFound` (title, message, way back), `PageHeader` (back link, title, optional action), `Section` (titled card labelled by its heading), `Switch`, `Button`, `Chip`, `TextField`, `BackLink`.
+- Wrappers do not add landmarks or accessible names of their own: an unlabelled box is not a region.
+
+Left as they are on purpose: an error box with its button outside it (`GymsLoadError` and four pages), the retry messages in Settings and the sign-out panel (their own text style), the sign-in route's loading line, the Choose exercise header (a close link, not a back link), the list of problems on the log screen and the gym form's bar rows (no background).

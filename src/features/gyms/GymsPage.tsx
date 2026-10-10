@@ -1,5 +1,11 @@
 import { Link } from 'react-router';
-import { BackLink, buttonClasses } from '../../components';
+import {
+  buttonClasses,
+  cardClasses,
+  EmptyState,
+  LoadingMessage,
+  PageHeader,
+} from '../../components';
 import { pickDefaultGym, summarizeBars } from '../../domain/gyms';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
@@ -13,35 +19,30 @@ export function GymsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BackLink to="/" />
-          <h1 className="text-title font-semibold">Gyms</h1>
-        </div>
-        <Link
-          to="/gyms/new"
-          className="flex min-h-touch items-center px-2 text-body font-semibold text-accent"
-        >
-          Add
-        </Link>
-      </header>
+      <PageHeader
+        back="/"
+        title="Gyms"
+        actions={
+          <Link
+            to="/gyms/new"
+            className="flex min-h-touch items-center px-2 text-body font-semibold text-accent"
+          >
+            Add
+          </Link>
+        }
+      />
 
-      {state.status === 'loading' && (
-        <p role="status" className="text-ink-muted">
-          Loading gyms…
-        </p>
-      )}
+      {state.status === 'loading' && <LoadingMessage>Loading gyms…</LoadingMessage>}
       {state.status === 'error' && <GymsLoadError reason={state.reason} onRetry={reload} />}
       {state.status === 'ready' && state.gyms.length === 0 && (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">Add your first gym</h2>
-          <p className="text-callout text-ink-muted">
-            A gym remembers its bar weights, so the weights you log always include the bar.
-          </p>
+        <EmptyState
+          title="Add your first gym"
+          message="A gym remembers its bar weights, so the weights you log always include the bar."
+        >
           <Link to="/gyms/new" className={buttonClasses('primary')}>
             Add a gym
           </Link>
-        </section>
+        </EmptyState>
       )}
       {state.status === 'ready' && state.gyms.length > 0 && (
         <>
@@ -53,7 +54,7 @@ export function GymsPage() {
               <li key={gym.id}>
                 <Link
                   to={`/gyms/${gym.id}`}
-                  className="flex min-h-touch flex-col gap-1 rounded-md border border-line bg-surface-200 p-4"
+                  className={cardClasses('flex min-h-touch flex-col gap-1')}
                 >
                   <span className="flex items-center gap-2 text-body font-semibold">
                     {gym.name}

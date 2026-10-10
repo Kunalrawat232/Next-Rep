@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { Button, Logo, TextField } from '../../components';
+import { Button, cardClasses, ErrorMessage, Logo, TextField } from '../../components';
 import { useAuth } from './AuthProvider';
 import { messageFor } from './authErrors';
 import {
@@ -119,16 +119,9 @@ export function SignInPage() {
             error={fieldErrors.password}
           />
 
-          {failure && (
-            <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-              {messageFor(failure)}
-            </p>
-          )}
+          {failure && <ErrorMessage>{messageFor(failure)}</ErrorMessage>}
           {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
-          <p
-            role="status"
-            className={checkEmail ? 'rounded-md border border-line bg-surface-200 p-4' : undefined}
-          >
+          <p role="status" className={checkEmail ? cardClasses('') : undefined}>
             {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
           </p>
 

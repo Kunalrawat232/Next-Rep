@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { buttonClasses, Chip, Switch } from '../../components';
+import { buttonClasses, Chip, Section, Switch } from '../../components';
 import { pickDefaultGym } from '../../domain/gyms';
 import { withUnit } from '../../domain/units';
 import { useAuth } from '../auth';
@@ -7,8 +7,6 @@ import { useGymCatalog } from '../workout';
 import { SignOutPanel } from './SignOutPanel';
 import { useTheme } from './useTheme';
 import { useUnit } from './UnitProvider';
-
-const section = 'flex flex-col gap-3 rounded-md border border-line bg-surface-200 p-4';
 
 /** Weight unit, default gym, appearance and the account. */
 export function SettingsPage() {
@@ -24,10 +22,7 @@ export function SettingsPage() {
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">Settings</h1>
 
-      <section aria-labelledby="units-heading" className={section}>
-        <h2 id="units-heading" className="text-headline font-semibold">
-          Units
-        </h2>
+      <Section headingId="units-heading" title="Units">
         <p className="text-callout text-ink-muted">
           Weights are shown and typed in this unit. They are always saved in kg.
         </p>
@@ -39,12 +34,9 @@ export function SettingsPage() {
             lb
           </Chip>
         </div>
-      </section>
+      </Section>
 
-      <section aria-labelledby="gym-heading" className={section}>
-        <h2 id="gym-heading" className="text-headline font-semibold">
-          Default gym
-        </h2>
+      <Section headingId="gym-heading" title="Default gym">
         {catalog.status === 'loading' && (
           <p role="status" className="text-callout text-ink-muted">
             Loading…
@@ -79,12 +71,9 @@ export function SettingsPage() {
             </Link>
           </>
         )}
-      </section>
+      </Section>
 
-      <section aria-labelledby="appearance-heading" className={section}>
-        <h2 id="appearance-heading" className="text-headline font-semibold">
-          Appearance
-        </h2>
+      <Section headingId="appearance-heading" title="Appearance">
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-body font-semibold">Light mode</span>
@@ -96,18 +85,15 @@ export function SettingsPage() {
             onChange={(on) => setTheme(on ? 'light' : 'dark')}
           />
         </div>
-      </section>
+      </Section>
 
-      <section aria-labelledby="account-heading" className={section}>
-        <h2 id="account-heading" className="text-headline font-semibold">
-          Account
-        </h2>
+      <Section headingId="account-heading" title="Account">
         <div className="flex flex-col">
           <span className="text-body font-semibold">{state.user.email ?? 'Your account'}</span>
           <span className="text-callout text-ink-muted">Signed in</span>
         </div>
         <SignOutPanel />
-      </section>
+      </Section>
     </div>
   );
 }

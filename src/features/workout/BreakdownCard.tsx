@@ -1,4 +1,5 @@
 import type { Breakdown } from '../../domain/workout';
+import { cardClasses } from '../../components';
 
 type Props = {
   gymName: string;
@@ -11,10 +12,7 @@ type Props = {
 /** How the weight is made up, as the validator resolved it. */
 export function BreakdownCard({ gymName, breakdown, message }: Props) {
   return (
-    <section
-      aria-label="Weight breakdown"
-      className="flex flex-col gap-3 rounded-md border border-line bg-surface-200 p-4"
-    >
+    <section aria-label="Weight breakdown" className={cardClasses('flex flex-col gap-3')}>
       <h2 className="text-caption font-medium text-ink-muted">Weight breakdown · {gymName}</h2>
       {breakdown ? (
         <dl className="flex flex-col gap-2">

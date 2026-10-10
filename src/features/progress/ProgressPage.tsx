@@ -1,5 +1,11 @@
 import { Link } from 'react-router';
-import { Button, buttonClasses } from '../../components';
+import {
+  buttonClasses,
+  cardClasses,
+  EmptyState,
+  LoadingMessage,
+  RetryMessage,
+} from '../../components';
 import { dayLabel, groupByExercise } from '../../domain/history';
 import { currentRecords } from '../../domain/records';
 import { withUnit } from '../../domain/units';
@@ -16,20 +22,8 @@ export function ProgressPage() {
   const { state: exercises } = useExercises(useExerciseService());
 
   if (state.status === 'error')
-    return (
-      <div role="alert" className="flex flex-col items-start gap-3">
-        <p>Could not read your sets from this device.</p>
-        <Button variant="secondary" onClick={retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  if (state.status === 'loading' || exercises.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+    return <RetryMessage onRetry={retry}>Could not read your sets from this device.</RetryMessage>;
+  if (state.status === 'loading' || exercises.status === 'loading') return <LoadingMessage />;
 
   const nameOf = (id: string) =>
     exercises.status === 'ready'
@@ -48,28 +42,21 @@ export function ProgressPage() {
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">Progress</h1>
       {rows.length === 0 && pulling ? (
-        <p role="status" className="text-ink-muted">
-          Loading your history…
-        </p>
+        <LoadingMessage>Loading your history…</LoadingMessage>
       ) : rows.length === 0 ? (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">Nothing to chart yet</h2>
-          <p className="text-callout text-ink-muted">
-            Log a few sets and your progress for each exercise shows up here. Sets from before you
-            last signed out are not kept on this device.
-          </p>
+        <EmptyState
+          title="Nothing to chart yet"
+          message="Log a few sets and your progress for each exercise shows up here. Sets from before you last signed out are not kept on this device."
+        >
           <Link to="/workout" className={buttonClasses('primary')}>
             Start workout
           </Link>
-        </section>
+        </EmptyState>
       ) : (
         <ul className="flex flex-col gap-2">
           {rows.map((row) => (
             <li key={row.id}>
-              <Link
-                to={`/progress/${row.id}`}
-                className="flex flex-col gap-1 rounded-md border border-line bg-surface-200 p-4"
-              >
+              <Link to={`/progress/${row.id}`} className={cardClasses('flex flex-col gap-1')}>
                 <span className="text-headline font-semibold">{nameOf(row.id)}</span>
                 <span className="text-callout text-ink-muted">
                   {row.heaviest &&
