@@ -3,6 +3,7 @@
 // through here and being shown to the user. Rules: docs/domain/weight-rules.md. Thresholds: ./config.
 import { usesBar, type EquipmentType, type InputMode, type Unit } from '../schemas';
 import { isMultipleOf, perSideFromTotal, roundKg, toKg } from '../weight';
+import { formatWeight, maxDisplay, toDisplay, withUnit } from '../units';
 import { VALIDATION_CONFIG } from './config';
 
 export type WeightMode = 'total' | 'per_side' | 'unspecified';
@@ -22,6 +23,8 @@ export type SetCandidate = {
 };
 
 export type ValidationContext = {
+  /** The unit to write weights in, in messages and options. The unit of the typed weight when missing. */
+  displayUnit?: Unit;
   /** Total of the same exercise in the last session, in kg. Missing or not positive means no history. */
   lastTotalKg?: number;
 };
@@ -62,6 +65,8 @@ export type ValidationResult =
 type Prepared = {
   spoken: number;
   unit: Unit;
+  /** The unit weights are written in, in messages and options. */
+  display: Unit;
   valueKg: number;
   barKg: number | null;
   mode: WeightMode;
@@ -72,9 +77,10 @@ type Prepared = {
 
 type InBand = (totalKg: number) => boolean;
 
-const { ranges, jumpFraction, plateStepKg, confusablePairs } = VALIDATION_CONFIG;
+const { ranges, jumpFraction, plateStep, confusablePairs } = VALIDATION_CONFIG;
 const EPSILON = 1e-9;
-const fmt = (kg: number) => String(roundKg(kg));
+/** A weight in kg as the user is shown it: "60 kg" or "132.3 lb". */
+const w = (kg: number, p: { display: Unit }) => withUnit(kg, p.display);
 
 /** The number speech recognition may have confused with this one, or null (13 <-> 30 ... 19 <-> 90). */
 function confusableOf(value: number): number | null {
@@ -106,7 +112,11 @@ function readAs(
   return { totalKg: valueKg, barKg, perSideKg, inputMode: 'total' };
 }
 
-function sanityIssues({ weight, reps }: SetCandidate, barKg: number | null): Issue[] {
+function sanityIssues(
+  { weight, reps }: SetCandidate,
+  barKg: number | null,
+  display: Unit,
+): Issue[] {
   const issues: Issue[] = [];
   if (!Number.isFinite(reps) || !Number.isInteger(reps)) {
     issues.push({ code: 'INVALID_NUMBER', message: 'Reps must be a whole number.' });
@@ -122,31 +132,32 @@ function sanityIssues({ weight, reps }: SetCandidate, barKg: number | null): Iss
   if (barKg !== null && !(barKg >= ranges.barKg.min && barKg <= ranges.barKg.max)) {
     issues.push({
       code: 'INVALID_NUMBER',
-      message: `Bar weight must be between ${ranges.barKg.min} and ${ranges.barKg.max} kg.`,
+      message: `Bar weight must be between ${formatWeight(ranges.barKg.min, display)} and ${maxDisplay(ranges.barKg.max, display)} ${display}.`,
     });
   }
   return issues;
 }
 
-function outOfRangeIssue(kind: 'total' | 'per_side', valueKg: number): Issue {
+function outOfRangeIssue(kind: 'total' | 'per_side', valueKg: number, display: Unit): Issue {
   return kind === 'per_side' && valueKg > ranges.perSideKg.max
     ? {
         code: 'PER_SIDE_OUT_OF_RANGE',
-        message: `Weight per side must be at most ${ranges.perSideKg.max} kg.`,
+        message: `Weight per side must be at most ${maxDisplay(ranges.perSideKg.max, display)} ${display}.`,
       }
     : {
         code: 'WEIGHT_OUT_OF_RANGE',
-        message: `Total weight must be at most ${ranges.totalKg.max} kg.`,
+        message: `Total weight must be at most ${maxDisplay(ranges.totalKg.max, display)} ${display}.`,
       };
 }
 
 /** Settles mode and the literal reading. Returns a rejection instead when it cannot. */
-function prepare(candidate: SetCandidate): Prepared | ValidationResult {
+function prepare(candidate: SetCandidate, displayUnit?: Unit): Prepared | ValidationResult {
   const { equipment, weight } = candidate;
+  const display = displayUnit ?? weight.unit;
   const hasBar = usesBar(equipment);
   const rawBar = hasBar ? candidate.barKg : null;
 
-  const rejects = sanityIssues(candidate, rawBar);
+  const rejects = sanityIssues(candidate, rawBar, display);
   if (rejects.length > 0) return { status: 'reject', issues: rejects };
 
   const barKg = rawBar === null ? null : roundKg(rawBar);
@@ -177,11 +188,13 @@ function prepare(candidate: SetCandidate): Prepared | ValidationResult {
 
   const kind = mode === 'per_side' ? 'per_side' : 'total';
   const literal = readAs(kind, valueKg, barKg);
-  if (literal === null) return { status: 'reject', issues: [outOfRangeIssue(kind, valueKg)] };
+  if (literal === null)
+    return { status: 'reject', issues: [outOfRangeIssue(kind, valueKg, display)] };
 
   return {
     spoken: weight.value,
     unit: weight.unit,
+    display,
     valueKg,
     barKg,
     mode,
@@ -198,12 +211,12 @@ function perSideOption(
   if (p.barKg === null) return null;
   const reading = readAs('per_side', p.valueKg, p.barKg);
   if (!reading || (inBand !== null && !inBand(reading.totalKg))) return null;
-  const label = `${fmt(p.valueKg)} kg per side (${fmt(reading.totalKg)} kg total)`;
+  const label = `${w(p.valueKg, p)} per side (${w(reading.totalKg, p)} total)`;
   return {
     option: { kind: 'per_side', label, resolved: reading },
     issue: {
       code: 'PER_SIDE_PLAUSIBLE',
-      message: `As ${fmt(p.valueKg)} kg per side it is ${fmt(reading.totalKg)} kg in total, close to last time.`,
+      message: `As ${w(p.valueKg, p)} per side it is ${w(reading.totalKg, p)} in total, close to last time.`,
     },
   };
 }
@@ -220,7 +233,7 @@ function confusableOption(p: Prepared, inBand: InBand): { option: Option; issue:
   return {
     option: {
       kind: 'confusable',
-      label: `Did you mean ${alternative}? (${fmt(reading.totalKg)} kg total)`,
+      label: `Did you mean ${alternative}? (${w(reading.totalKg, p)} total)`,
       resolved: reading,
     },
     issue: {
@@ -232,7 +245,7 @@ function confusableOption(p: Prepared, inBand: InBand): { option: Option; issue:
 
 const asSaidOption = (p: Prepared): Option => ({
   kind: 'as_said',
-  label: `${fmt(p.literal.totalKg)} kg total, as said`,
+  label: `${w(p.literal.totalKg, p)} total, as said`,
   resolved: p.literal,
 });
 
@@ -247,14 +260,14 @@ function askBelowBar(p: Prepared, inBand: InBand | null): ValidationResult | nul
   if (perSide) options.push(perSide.option);
   options.push({
     kind: 'total_no_bar',
-    label: `${fmt(p.valueKg)} kg total, without the ${fmt(p.barKg)} kg bar`,
+    label: `${w(p.valueKg, p)} total, without the ${w(p.barKg, p)} bar`,
     resolved: { totalKg: p.valueKg, barKg: null, perSideKg: null, inputMode: 'total' },
   });
 
   const issues: Issue[] = [
     {
       code: 'TOTAL_BELOW_BAR',
-      message: `${fmt(p.valueKg)} kg is less than the ${fmt(p.barKg)} kg bar. Is that the total or per side?`,
+      message: `${w(p.valueKg, p)} is less than the ${w(p.barKg, p)} bar. Is that the total or per side?`,
     },
   ];
   if (confusable) issues.push(confusable.issue);
@@ -269,7 +282,7 @@ function askLargeJump(p: Prepared, last: number, inBand: InBand): ValidationResu
   const issues: Issue[] = [
     {
       code: 'LARGE_JUMP',
-      message: `${fmt(p.literal.totalKg)} kg is a big change from last time (${fmt(last)} kg).`,
+      message: `${w(p.literal.totalKg, p)} is a big change from last time (${w(last, p)}).`,
     },
   ];
   const perSide = p.mode === 'unspecified' ? perSideOption(p, inBand) : null;
@@ -298,10 +311,14 @@ function plateWarning(p: Prepared): Issue | null {
   // Measured on the exact per-side weight, not the stored breakdown, which is dropped when inexact.
   const perSideKg =
     p.barKg === null ? null : p.mode === 'per_side' ? p.valueKg : (p.valueKg - p.barKg) / 2;
-  if (perSideKg === null || isMultipleOf(perSideKg, plateStepKg)) return null;
+  if (perSideKg === null) return null;
+  // Checked as shown, in the unit's own plate size: 20.41 kg is 45 lb, a plate size, not 44.9965.
+  const shown = toDisplay(perSideKg, p.display);
+  const step = plateStep[p.display];
+  if (isMultipleOf(shown, step)) return null;
   return {
     code: 'PLATE_INCREMENT',
-    message: `${fmt(perSideKg)} kg per side is not a multiple of ${plateStepKg} kg. Check the plates.`,
+    message: `${shown} ${p.display} per side is not a multiple of ${step} ${p.display}. Check the plates.`,
   };
 }
 
@@ -318,7 +335,7 @@ export function validateSet(
   candidate: SetCandidate,
   context: ValidationContext = {},
 ): ValidationResult {
-  const prepared = prepare(candidate);
+  const prepared = prepare(candidate, context.displayUnit);
   if ('status' in prepared) return prepared;
 
   const last = context.lastTotalKg;

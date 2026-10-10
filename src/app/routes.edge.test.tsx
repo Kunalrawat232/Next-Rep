@@ -8,6 +8,7 @@ import { createFakeAuthService } from '../test/fakeAuth';
 import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { tapTogether } from '../test/doubleTap';
 import { appRoutes } from './routes';
+import { UnitsForTest } from '../test/UnitsForTest';
 
 const ada = { id: 'u1', email: 'ada@example.com' };
 
@@ -15,9 +16,11 @@ function renderAt(path: string, fake = createFakeAuthService()) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   render(
     <AuthProvider service={fake.service}>
-      <SyncProvider remote={createFakeRemoteLog().remote} dexieDeps={{ indexedDB, IDBKeyRange }}>
-        <RouterProvider router={router} />
-      </SyncProvider>
+      <UnitsForTest gate={false}>
+        <SyncProvider remote={createFakeRemoteLog().remote} dexieDeps={{ indexedDB, IDBKeyRange }}>
+          <RouterProvider router={router} />
+        </SyncProvider>
+      </UnitsForTest>
     </AuthProvider>,
   );
   return { fake, router };

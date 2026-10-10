@@ -12,6 +12,7 @@ import { GymServiceProvider } from '../features/gyms';
 import { SyncProvider } from '../features/sync';
 import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { appRoutes } from './routes';
+import { UnitsForTest } from '../test/UnitsForTest';
 
 function renderAt(
   path: string,
@@ -21,16 +22,18 @@ function renderAt(
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   render(
     <AuthProvider service={fake.service}>
-      <GymServiceProvider service={gyms.service}>
-        <ExerciseServiceProvider service={createFakeExerciseService().service}>
-          <SyncProvider
-            remote={createFakeRemoteLog().remote}
-            dexieDeps={{ indexedDB, IDBKeyRange }}
-          >
-            <RouterProvider router={router} />
-          </SyncProvider>
-        </ExerciseServiceProvider>
-      </GymServiceProvider>
+      <UnitsForTest gate={false}>
+        <GymServiceProvider service={gyms.service}>
+          <ExerciseServiceProvider service={createFakeExerciseService().service}>
+            <SyncProvider
+              remote={createFakeRemoteLog().remote}
+              dexieDeps={{ indexedDB, IDBKeyRange }}
+            >
+              <RouterProvider router={router} />
+            </SyncProvider>
+          </ExerciseServiceProvider>
+        </GymServiceProvider>
+      </UnitsForTest>
     </AuthProvider>,
   );
   return { fake, router, user: userEvent.setup() };

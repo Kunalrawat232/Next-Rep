@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -7,6 +7,9 @@ import { createFakeGymService, sampleGym } from '../../test/fakeGyms';
 import { GymServiceProvider } from './GymServiceContext';
 import { GymsPage } from './GymsPage';
 import type { GymResult } from './types';
+import { UnitsForTest } from '../../test/UnitsForTest';
+import { createFakeAuthService } from '../../test/fakeAuth';
+import { AuthProvider } from '../auth';
 
 function renderPage(fake = createFakeGymService()) {
   const router = createMemoryRouter(
@@ -19,9 +22,13 @@ function renderPage(fake = createFakeGymService()) {
     { initialEntries: ['/gyms'] },
   );
   const view = render(
-    <GymServiceProvider service={fake.service}>
-      <RouterProvider router={router} />
-    </GymServiceProvider>,
+    <AuthProvider service={createFakeAuthService({ id: 'u1', email: 'a@b.co' }).service}>
+      <UnitsForTest>
+        <GymServiceProvider service={fake.service}>
+          <RouterProvider router={router} />
+        </GymServiceProvider>
+      </UnitsForTest>
+    </AuthProvider>,
   );
   return { fake, router, view, user: userEvent.setup() };
 }
@@ -116,7 +123,7 @@ describe('GymsPage: failures and retries', () => {
     );
     renderPage(fake);
     // The first call is still pending, so the page is loading and has no retry button yet.
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(await screen.findByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
     releaseFirst({ status: 'ok', value: [sampleGym({ name: 'Late answer' })] });
     expect(await screen.findByText('Late answer')).toBeInTheDocument();
@@ -148,6 +155,8 @@ describe('GymsPage: failures and retries', () => {
       }),
     );
     const { view } = renderPage(fake);
+    // The page mounts once the user is known; the request has to be under way before it is gone.
+    await waitFor(() => expect(fake.service.list).toHaveBeenCalled());
     view.unmount();
     fail(new Error('late'));
     await Promise.resolve();

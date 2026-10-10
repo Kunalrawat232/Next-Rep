@@ -206,4 +206,15 @@ describe('the weight unit', () => {
       vi.useRealTimers();
     }
   });
+
+  it('does not flip a screen that is open when another device changes the unit later', async () => {
+    const profile = createFakeProfileService('kg');
+    setup(profile);
+    expect(await unit()).toHaveTextContent('kg');
+    await waitFor(() => expect(profile.service.getUnit).toHaveBeenCalledTimes(1));
+    profile.setSaved('lb');
+    act(() => void window.dispatchEvent(new Event('online')));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(await unit()).toHaveTextContent('kg');
+  });
 });

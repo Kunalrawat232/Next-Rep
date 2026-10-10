@@ -1,6 +1,6 @@
-import { BAR_KG_RANGE, type EquipmentType } from '../schemas';
+import { BAR_KG_RANGE, type EquipmentType, type Unit } from '../schemas';
 import { cleanName, nameKey } from '../text';
-import { roundKg } from '../weight';
+import { formatWeight, kgFromField, maxDisplay, unitLabel, withUnit } from '../units';
 
 export const GYM_NAME_MAX = 80;
 export const BAR_NAME_MAX = 60;
@@ -24,7 +24,9 @@ export type Gym = {
 export type GymForm = {
   name: string;
   barbellKg: string;
-  bars: { id?: string; name: string; weightKg: string; kind: BarKind }[];
+  /** The stored kg the barbell field started from, so saving it untouched changes nothing (see `WeightField`). */
+  barbellOrigin?: number | null;
+  bars: { id?: string; name: string; weightKg: string; origin?: number | null; kind: BarKind }[];
 };
 
 export type GymInput = {
@@ -41,30 +43,25 @@ export type GymFormErrors = {
 
 export type GymFormResult = { ok: true; value: GymInput } | { ok: false; errors: GymFormErrors };
 
-const PLAIN_NUMBER = /^(\d+\.?\d*|\.\d+)$/;
-// A comma is a decimal point only in the form "7,5" or "20,25". "1,000" is a thousands separator
-// and would otherwise be stored as 1 kg, so it is refused.
-const COMMA_DECIMAL = /^\d*,\d{1,2}$/;
-
-/** Reads a typed weight into kg rounded to 2 decimals. */
-function readKg(text: string): number | string {
-  const typed = text.trim();
-  if (typed === '') return 'Enter a weight in kg.';
-  const trimmed = COMMA_DECIMAL.test(typed) ? typed.replace(',', '.') : typed;
-  if (!PLAIN_NUMBER.test(trimmed)) return 'Use numbers only, for example 7.5.';
-  const kg = roundKg(Number(trimmed));
-  if (kg < BAR_KG_RANGE.min || kg > BAR_KG_RANGE.max)
-    return `Use a weight between ${BAR_KG_RANGE.min} and ${BAR_KG_RANGE.max} kg.`;
-  return kg;
+/** Reads a weight typed in the user's unit into kg (2 decimals), or says what is wrong with it, in that unit. */
+function readWeight(text: string, origin: number | null | undefined, unit: Unit): number | string {
+  if (text.trim() === '') return `Enter a weight in ${unitLabel(unit)}.`;
+  const outOfRange = `Use a weight between ${formatWeight(BAR_KG_RANGE.min, unit)} and ${maxDisplay(BAR_KG_RANGE.max, unit)} ${unitLabel(unit)}.`;
+  const kg = kgFromField({ text, origin: origin ?? null }, unit);
+  // Digits so many that the number is too big to hold are still a number: it is just out of range.
+  if (kg === null)
+    return /^\d+\.?\d*$/.test(text.trim()) ? outOfRange : 'Use numbers only, for example 7.5.';
+  return kg < BAR_KG_RANGE.min || kg > BAR_KG_RANGE.max ? outOfRange : kg;
 }
 
-export function validateGymForm(form: GymForm): GymFormResult {
+/** Checks the form. Weights are typed in `unit` and come back as kg. */
+export function validateGymForm(form: GymForm, unit: Unit): GymFormResult {
   const errors: GymFormErrors = { bars: {} };
   const name = cleanName(form.name);
   if (name === '') errors.name = 'Give the gym a name.';
   else if (name.length > GYM_NAME_MAX) errors.name = `Use ${GYM_NAME_MAX} characters or fewer.`;
 
-  const barbell = readKg(form.barbellKg);
+  const barbell = readWeight(form.barbellKg, form.barbellOrigin, unit);
   if (typeof barbell === 'string') errors.barbellKg = barbell;
 
   const bars: GymInput['bars'] = [];
@@ -86,7 +83,7 @@ export function validateGymForm(form: GymForm): GymFormResult {
       seenKinds.add(entry.kind);
     }
 
-    const weight = readKg(entry.weightKg);
+    const weight = readWeight(entry.weightKg, entry.origin, unit);
     if (typeof weight === 'string') problems.weightKg = weight;
 
     if (problems.name || problems.weightKg) errors.bars[index] = problems;
@@ -99,14 +96,9 @@ export function validateGymForm(form: GymForm): GymFormResult {
   return { ok: true, value: { name, barbellKg: barbell, bars } };
 }
 
-/** 15 -> "15", 7.5 -> "7.5": no trailing zeros. */
-export function formatKg(kg: number): string {
-  return String(roundKg(kg));
-}
-
-export function summarizeBars(gym: Gym): string {
-  return [`Barbell ${formatKg(gym.barbellKg)} kg`]
-    .concat(gym.bars.map((bar) => `${bar.name} ${formatKg(bar.weightKg)} kg`))
+export function summarizeBars(gym: Gym, unit: Unit): string {
+  return [`Barbell ${withUnit(gym.barbellKg, unit)}`]
+    .concat(gym.bars.map((bar) => `${bar.name} ${withUnit(bar.weightKg, unit)}`))
     .join(' · ');
 }
 

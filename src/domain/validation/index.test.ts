@@ -24,7 +24,7 @@ const codes = (r: ValidationResult) => r.issues.map((i) => i.code);
 describe('config', () => {
   it('keeps every threshold in one place', () => {
     expect(VALIDATION_CONFIG.jumpFraction).toBe(0.4);
-    expect(VALIDATION_CONFIG.plateStepKg).toBe(1.25);
+    expect(VALIDATION_CONFIG.plateStep).toEqual({ kg: 1.25, lb: 2.5 });
     expect(VALIDATION_CONFIG.ranges.reps).toEqual({ min: 1, max: 100 });
     expect(VALIDATION_CONFIG.ranges.totalKg).toEqual({ min: 0, max: 500 });
     expect(VALIDATION_CONFIG.ranges.perSideKg).toEqual({ min: 0, max: 250 });

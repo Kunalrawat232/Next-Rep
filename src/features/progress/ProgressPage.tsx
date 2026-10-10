@@ -2,13 +2,15 @@ import { Link } from 'react-router';
 import { Button, buttonClasses } from '../../components';
 import { dayLabel, groupByExercise } from '../../domain/history';
 import { currentRecords } from '../../domain/records';
-import { formatKg } from '../../domain/gyms';
+import { withUnit } from '../../domain/units';
 import { useExerciseService, useExercises } from '../exercises';
 import { useSyncStatus } from '../sync';
 import { useExerciseSets } from './useExerciseSets';
+import { useUnit } from '../settings/UnitProvider';
 
 /** The exercises logged on this device, most recently done first, each with its heaviest set. */
 export function ProgressPage() {
+  const { unit } = useUnit();
   const { state, retry } = useExerciseSets();
   const { pulling } = useSyncStatus();
   const { state: exercises } = useExercises(useExerciseService());
@@ -71,7 +73,7 @@ export function ProgressPage() {
                 <span className="text-headline font-semibold">{nameOf(row.id)}</span>
                 <span className="text-callout text-ink-muted">
                   {row.heaviest &&
-                    `Heaviest ${formatKg(row.heaviest.totalKg)} kg × ${row.heaviest.reps} · `}
+                    `Heaviest ${withUnit(row.heaviest.totalKg, unit)} × ${row.heaviest.reps} · `}
                   Last {dayLabel(row.last, now)}
                 </span>
               </Link>

@@ -47,6 +47,8 @@ type Options = {
   userId?: string;
   /** The unit the server already has for this user. */
   savedUnit?: Unit | null;
+  /** The unit already chosen on this device, as when the user picked it in Settings earlier. */
+  unit?: Unit;
   /** A server made earlier, to set it up (offline, held) before the app starts talking to it. */
   server?: ReturnType<typeof createFakeRemoteLog>;
 };
@@ -60,7 +62,8 @@ export function renderApp(path: string, options: Options = {}) {
   if (options.gymsFail) gyms.failNext('list', options.gymsFail);
   const exercises = createFakeExerciseService(options.customExercises ?? []);
   const server = options.server ?? createFakeRemoteLog();
-  const profile = createFakeProfileService(options.savedUnit ?? null);
+  const profile = createFakeProfileService(options.savedUnit ?? options.unit ?? null);
+  if (options.unit) localStorage.setItem(`next-rep-unit-${userId}`, options.unit);
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   const view = render(
     <AuthProvider service={auth.service}>

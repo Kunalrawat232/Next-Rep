@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   barFor,
-  formatKg,
   pickDefaultGym,
-  summarizeBars,
-  validateGymForm,
+  summarizeBars as summarizeBarsUnit,
+  validateGymForm as validateGymFormUnit,
   type Gym,
   type GymForm,
 } from '.';
+
+// These tests were written for kg, which is still the default unit.
+const validateGymForm = (form: Parameters<typeof validateGymFormUnit>[0]) =>
+  validateGymFormUnit(form, 'kg');
+const summarizeBars = (gym: Parameters<typeof summarizeBarsUnit>[0]) =>
+  summarizeBarsUnit(gym, 'kg');
 
 const form = (over: Partial<GymForm> = {}): GymForm => ({
   name: 'Home gym',
@@ -297,30 +302,6 @@ describe('validateGymForm: seeded property checks (fast-check is not a dependenc
       const text = kg.toFixed(2);
       expect(barbellOutcome(text)).toBe(kg);
       expect(barbellOutcome(text.replace('.', ','))).toBe(kg);
-    }
-  });
-});
-
-describe('formatKg', () => {
-  it.each<[number, string]>([
-    [0, '0'],
-    [-0, '0'],
-    [20, '20'],
-    [7.5, '7.5'],
-    [7.25, '7.25'],
-    [0.1 + 0.2, '0.3'],
-    [7.504, '7.5'],
-    [7.506, '7.51'],
-    [100, '100'],
-    [1e-7, '0'],
-    [123456.789, '123456.79'],
-  ])('formats %s as %s', (kg, text) => {
-    expect(formatKg(kg)).toBe(text);
-  });
-
-  it('is idempotent through Number()', () => {
-    for (const kg of [0.3, 7.5, 12.34, 99.99, 0.01]) {
-      expect(formatKg(Number(formatKg(kg)))).toBe(formatKg(kg));
     }
   });
 });

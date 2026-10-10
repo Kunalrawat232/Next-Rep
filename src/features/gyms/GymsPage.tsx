@@ -4,8 +4,10 @@ import { pickDefaultGym, summarizeBars } from '../../domain/gyms';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import { useGyms } from './useGyms';
+import { useUnit } from '../settings/UnitProvider';
 
 export function GymsPage() {
+  const { unit } = useUnit();
   const { state, reload } = useGyms(useGymService());
   const defaultId = state.status === 'ready' ? pickDefaultGym(state.gyms)?.id : undefined;
 
@@ -61,7 +63,7 @@ export function GymsPage() {
                       </span>
                     )}
                   </span>
-                  <span className="text-callout text-ink-muted">{summarizeBars(gym)}</span>
+                  <span className="text-callout text-ink-muted">{summarizeBars(gym, unit)}</span>
                 </Link>
               </li>
             ))}

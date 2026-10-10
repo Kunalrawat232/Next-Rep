@@ -2,14 +2,30 @@
 import { describe, expect, it } from 'vitest';
 import type { EquipmentType } from '../schemas';
 import {
-  breakdownFor,
-  initialEntry,
-  nextValue,
+  breakdownFor as breakdownForUnit,
+  initialEntry as initialEntryUnit,
+  nextValue as nextValueUnit,
   parseWeight,
-  setSummary,
-  stepFor,
+  setSummary as setSummaryUnit,
+  stepFor as stepForUnit,
   weightHint,
 } from '.';
+import { kgFromField } from '../units';
+
+// These tests were written for kg, which is still the default unit: the helpers below pass it.
+const breakdownFor = (w: Parameters<typeof breakdownForUnit>[0]) => breakdownForUnit(w, 'kg');
+const setSummary = (s: Parameters<typeof setSummaryUnit>[0]) => setSummaryUnit(s, 'kg');
+const stepFor = (e: Parameters<typeof stepForUnit>[0], m: Parameters<typeof stepForUnit>[1]) =>
+  stepForUnit(e, m, 'kg');
+const nextValue = (c: number, s: number, d: 1 | -1, m: 'total' | 'per_side') =>
+  nextValueUnit(c, s, d, m, 'kg');
+const initialEntry = (
+  e: Parameters<typeof initialEntryUnit>[0],
+  l: Parameters<typeof initialEntryUnit>[1],
+) => {
+  const r = initialEntryUnit(e, l, 'kg');
+  return { mode: r.mode, weight: kgFromField(r.weight, 'kg') ?? 0, reps: r.reps };
+};
 
 describe('parseWeight, typed by people on a phone', () => {
   it.each([

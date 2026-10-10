@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   barFor,
-  formatKg,
   pickDefaultGym,
-  summarizeBars,
-  validateGymForm,
+  summarizeBars as summarizeBarsUnit,
+  validateGymForm as validateGymFormUnit,
   type Gym,
   type GymForm,
 } from '.';
+
+// These tests were written for kg, which is still the default unit.
+const validateGymForm = (form: Parameters<typeof validateGymFormUnit>[0]) =>
+  validateGymFormUnit(form, 'kg');
+const summarizeBars = (gym: Parameters<typeof summarizeBarsUnit>[0]) =>
+  summarizeBarsUnit(gym, 'kg');
 
 const form = (over: Partial<GymForm> = {}): GymForm => ({
   name: 'Home gym',
@@ -130,16 +135,6 @@ describe('validateGymForm', () => {
     const bars = Array.from({ length: 12 }, (_, i) => bar(`Bar ${i}`, '10'));
     expect(validateGymForm(form({ bars })).ok).toBe(true);
   });
-});
-
-describe('formatKg', () => {
-  it.each([
-    [15, '15'],
-    [7.5, '7.5'],
-    [7.25, '7.25'],
-    [0, '0'],
-    [20.0, '20'],
-  ])('formats %d as %s', (kg, text) => expect(formatKg(kg)).toBe(text));
 });
 
 describe('summarizeBars', () => {

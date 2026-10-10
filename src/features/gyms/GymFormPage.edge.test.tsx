@@ -9,6 +9,7 @@ import { GymFormPage } from './GymFormPage';
 import { GymServiceProvider } from './GymServiceContext';
 import type { GymResult } from './types';
 import { tapTogether } from '../../test/doubleTap';
+import { UnitsForTest } from '../../test/UnitsForTest';
 
 function renderForm(path: string, fake = createFakeGymService(), signedIn = true) {
   const auth = createFakeAuthService(signedIn ? { id: 'u1', email: 'a@b.co' } : null);
@@ -23,9 +24,11 @@ function renderForm(path: string, fake = createFakeGymService(), signedIn = true
   );
   const view = render(
     <AuthProvider service={auth.service}>
-      <GymServiceProvider service={fake.service}>
-        <RouterProvider router={router} />
-      </GymServiceProvider>
+      <UnitsForTest>
+        <GymServiceProvider service={fake.service}>
+          <RouterProvider router={router} />
+        </GymServiceProvider>
+      </UnitsForTest>
     </AuthProvider>,
   );
   return { fake, router, view, user: userEvent.setup() };

@@ -1,18 +1,20 @@
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
 import { BackLink, Button, buttonClasses } from '../../components';
-import { formatKg } from '../../domain/gyms';
+import { withUnit } from '../../domain/units';
 import { dayLabel } from '../../domain/history';
 import { currentRecords, recordMarks, sessionBests } from '../../domain/records';
 import { useExerciseService, useExercises } from '../exercises';
 import { PrBadge } from './PrBadge';
 import { ProgressChart } from './ProgressChart';
 import { useExerciseSets } from './useExerciseSets';
+import { useUnit } from '../settings/UnitProvider';
 
 const IdSchema = z.uuid();
 
 /** One exercise over time: a chart of the top set per session, the records, and the sessions as a table. */
 export function ExerciseProgressPage() {
+  const { unit } = useUnit();
   const id = IdSchema.safeParse(useParams().exerciseId);
   const exerciseId = id.success ? id.data : undefined;
   const { state, retry } = useExerciseSets(exerciseId ?? null);
@@ -79,7 +81,7 @@ export function ExerciseProgressPage() {
                   <PrBadge kind={marks.get(records.heaviest.setId)!} />
                 )}
                 <span>
-                  Heaviest: {formatKg(records.heaviest.totalKg)} kg × {records.heaviest.reps},{' '}
+                  Heaviest: {withUnit(records.heaviest.totalKg, unit)} × {records.heaviest.reps},{' '}
                   {dayLabel(records.heaviest.loggedAt, now)}
                 </span>
               </p>
@@ -89,7 +91,7 @@ export function ExerciseProgressPage() {
                 <li key={r.totalKg}>
                   {r.totalKg === 0
                     ? 'Most reps with body weight'
-                    : `Most reps at ${formatKg(r.totalKg)} kg`}
+                    : `Most reps at ${withUnit(r.totalKg, unit)}`}
                   : {r.reps}
                 </li>
               ))}
@@ -99,7 +101,7 @@ export function ExerciseProgressPage() {
           {points.length === 1 ? (
             <p className="text-callout text-ink-muted">Log another session to see a trend.</p>
           ) : (
-            <ProgressChart points={points} />
+            <ProgressChart points={points} unit={unit} />
           )}
 
           <section aria-label="Sessions" className="flex flex-col gap-2">
@@ -127,7 +129,7 @@ export function ExerciseProgressPage() {
                     <tr key={p.workoutId} className="border-t border-line">
                       <td className="py-2">{dayLabel(p.at, now)}</td>
                       <td className="py-2 tabular-nums">
-                        {formatKg(p.totalKg)} kg × {p.reps}
+                        {withUnit(p.totalKg, unit)} × {p.reps}
                       </td>
                       <td className="py-2">{kind && <PrBadge kind={kind} />}</td>
                     </tr>

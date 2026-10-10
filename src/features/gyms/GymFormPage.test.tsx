@@ -7,6 +7,7 @@ import { createFakeAuthService } from '../../test/fakeAuth';
 import { AuthProvider } from '../auth';
 import { GymFormPage } from './GymFormPage';
 import { GymServiceProvider } from './GymServiceContext';
+import { UnitsForTest } from '../../test/UnitsForTest';
 
 function renderForm(path: string, fake = createFakeGymService()) {
   const auth = createFakeAuthService({ id: 'u1', email: 'a@b.co' });
@@ -20,9 +21,11 @@ function renderForm(path: string, fake = createFakeGymService()) {
   );
   render(
     <AuthProvider service={auth.service}>
-      <GymServiceProvider service={fake.service}>
-        <RouterProvider router={router} />
-      </GymServiceProvider>
+      <UnitsForTest>
+        <GymServiceProvider service={fake.service}>
+          <RouterProvider router={router} />
+        </GymServiceProvider>
+      </UnitsForTest>
     </AuthProvider>,
   );
   return { fake, router, user: userEvent.setup() };

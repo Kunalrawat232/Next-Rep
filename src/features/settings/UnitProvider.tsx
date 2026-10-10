@@ -89,6 +89,8 @@ function UnitSession({
   const dirty = useRef(isUnitPending(storage, userId));
   const working = useRef<Promise<void>>(Promise.resolve());
   const scheduled = useRef(false);
+  /** The server's unit is taken only on the first pass after the app opens: a later change from another device must not flip a screen (and reset a form) that is open. */
+  const adoptServer = useRef(true);
 
   const markSent = useCallback(() => {
     dirty.current = false;
@@ -102,6 +104,8 @@ function UnitSession({
     scheduled.current = true;
     working.current = working.current.then(async () => {
       scheduled.current = false;
+      const adopt = adoptServer.current;
+      adoptServer.current = false;
       try {
         if (dirty.current) {
           const sent = version.current;
@@ -116,6 +120,7 @@ function UnitSession({
         const saved = await withTimeout(service.getUnit(userId));
         const stale = version.current !== asked || dirty.current;
         if (
+          adopt &&
           saved.status === 'ok' &&
           saved.value !== null &&
           !stale &&

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { BackLink, Button, buttonClasses } from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
-import { formatKg, pickDefaultGym } from '../../domain/gyms';
+import { pickDefaultGym } from '../../domain/gyms';
 import { useOnline } from '../../lib/useOnline';
 import { useExerciseService, useExercises } from '../exercises';
 import { SyncBadge, useLogStore, useSyncControls } from '../sync';
@@ -15,6 +15,8 @@ import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { useGymCatalog } from './useGymCatalog';
 import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
+import { useUnit } from '../settings/UnitProvider';
+import { withUnit } from '../../domain/units';
 
 export function WorkoutPage() {
   const { state, reload } = useWorkout();
@@ -29,6 +31,7 @@ export function WorkoutPage() {
 }
 
 function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
+  const { unit } = useUnit();
   const { catalog, reload } = useGymCatalog();
   const store = useLogStore();
   const { notify } = useSyncControls();
@@ -117,7 +120,7 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
                   <span>
                     <span className="block text-body font-semibold">{gym.name}</span>
                     <span className="block text-callout text-ink-muted">
-                      Barbell {formatKg(gym.barbellKg)} kg
+                      Barbell {withUnit(gym.barbellKg, unit)}
                     </span>
                   </span>
                 </label>
@@ -144,6 +147,7 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
 type ActiveProps = { workout: StoredWorkout; sets: StoredSet[]; reload: () => Promise<void> };
 
 function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
+  const { unit } = useUnit();
   const navigate = useNavigate();
   const exerciseId = useExerciseParam();
   const exercises = useExercises(useExerciseService());
@@ -223,7 +227,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         <div className="flex flex-wrap items-center gap-2">
           {gym && (
             <p className="inline-flex h-8 items-center rounded-full border border-line bg-surface-200 px-3 text-caption font-medium">
-              {gym.name} · {formatKg(gym.barbellKg)} kg bar
+              {gym.name} · {withUnit(gym.barbellKg, unit)} bar
             </p>
           )}
           <SyncBadge />
@@ -257,7 +261,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         >
           <PrBadge kind={marks.get(last.id)!} />
           <span>
-            New personal record: {nameOf(last.exerciseId)}, {setSummary(last).headline}
+            New personal record: {nameOf(last.exerciseId)}, {setSummary(last, unit).headline}
           </span>
         </p>
       )}

@@ -2,6 +2,7 @@ import type { StoredSet } from '../../data/local';
 import type { RecordKind } from '../../domain/records';
 import { setSummary } from '../../domain/workout';
 import { PrBadge } from '../progress';
+import { useUnit } from '../settings/UnitProvider';
 
 /** The sets of one exercise, numbered, with the bar breakdown when there is one. */
 export function SetList({
@@ -16,6 +17,7 @@ export function SetList({
   /** Sets that were personal records when logged. */
   marks?: ReadonlyMap<string, RecordKind>;
 }) {
+  const { unit } = useUnit();
   return (
     <section aria-label={title} className="flex flex-col gap-2">
       <h2 className="text-headline font-semibold">{title}</h2>
@@ -24,7 +26,7 @@ export function SetList({
       ) : (
         <ol className="flex flex-col gap-2">
           {sets.map((set, index) => {
-            const { headline, detail } = setSummary(set);
+            const { headline, detail } = setSummary(set, unit);
             return (
               <li
                 key={set.id}

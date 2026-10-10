@@ -3,21 +3,24 @@ import { Link, useNavigate } from 'react-router';
 import { BackLink, Button, buttonClasses, Chip } from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import { EQUIPMENT_LABEL, type Exercise } from '../../domain/exercises';
-import { barFor, formatKg } from '../../domain/gyms';
-import { usesBar } from '../../domain/schemas';
+import { barFor } from '../../domain/gyms';
+import { usesBar, type Unit } from '../../domain/schemas';
+import { fieldFromText, kgFromField, withUnit, type WeightField } from '../../domain/units';
 import { validateSet, type Option, type ResolvedWeight } from '../../domain/validation';
 import {
   breakdownFor,
+  convertEntry,
   initialEntry,
   nextValue,
   parseWeight,
   stepFor,
   usesModeToggle,
+  weightForValidation,
   weightHint,
   type EntryMode,
 } from '../../domain/workout';
-import { roundKg } from '../../domain/weight';
 import { useExerciseService, useExercises } from '../exercises';
+import { useUnit } from '../settings/UnitProvider';
 import { useLogStore, useSyncControls } from '../sync';
 import { AmbiguityPrompt } from './AmbiguityPrompt';
 import { BreakdownCard } from './BreakdownCard';
@@ -28,6 +31,7 @@ import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
 
 export function LogSetPage() {
+  const { unit } = useUnit();
   const exerciseId = useExerciseParam();
   const { state: workoutState, reload } = useWorkout();
   const { state: exercises } = useExercises(useExerciseService());
@@ -81,7 +85,9 @@ export function LogSetPage() {
     <>
       <FreshGym workout={workoutState.workout} reload={reload} />
       <LogSetForm
-        key={exercise.id}
+        // A new unit starts a new form, so text typed in one unit is never read in the other.
+        key={`${exercise.id}-${unit}`}
+        unit={unit}
         workout={workoutState.workout}
         exercise={exercise}
         last={last === 'loading' ? undefined : last}
@@ -97,13 +103,14 @@ function FreshGym({ workout, reload }: { workout: StoredWorkout; reload: () => P
 }
 
 type FormProps = {
+  unit: Unit;
   workout: StoredWorkout;
   exercise: Exercise;
   last: StoredSet | undefined;
   back: string;
 };
 
-function LogSetForm({ workout, exercise, last, back }: FormProps) {
+function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
   const navigate = useNavigate();
   const store = useLogStore();
   const { notify, ensurePersistence } = useSyncControls();
@@ -111,18 +118,22 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
   const gym = workout.gymSnapshot;
   const bar = gym ? barFor(gym, equipment) : undefined;
   const hasBar = usesBar(equipment);
-  const initial = initialEntry(equipment, last);
+  const initial = initialEntry(equipment, last, unit);
 
   const [mode, setMode] = useState<EntryMode>(initial.mode);
-  const [weightText, setWeightText] = useState(last ? String(initial.weight) : '');
+  const [field, setField] = useState<WeightField>(initial.weight);
   const [repsText, setRepsText] = useState(String(initial.reps));
   const [asking, setAsking] = useState(false);
   const { pending: saving, begin, end } = usePending();
   const [problem, setProblem] = useState<string | null>(null);
-  // The total that a weight per side was worked out from, so switching back gives exactly that total.
-  const converted = useRef<{ total: string; perSide: string } | null>(null);
+  // The field a weight per side was worked out from, so switching back gives exactly that weight.
+  const converted = useRef<{ total: WeightField; perSide: string } | null>(null);
 
+  const weightText = field.text;
+  /** What is typed, in the unit shown. */
   const weight = parseWeight(weightText);
+  /** What it means in kg: the stored value the field started from while the text is unchanged, else the typed text converted. */
+  const valueKg = kgFromField(field, unit);
   const reps = /^\d+$/.test(repsText.trim()) ? Number(repsText.trim()) : null;
   const gymName = gym?.name ?? 'this gym';
 
@@ -149,18 +160,34 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
       </div>
     );
 
+  // As it was at the start (same text, same way of entering it), the weight is the stored total.
+  const untouched =
+    last !== undefined && field.text === initial.weight.text && mode === initial.mode;
+  const given =
+    valueKg === null || weight === null
+      ? null
+      : weightForValidation(
+          {
+            mode: hasBar ? mode : 'total',
+            valueKg,
+            valueShown: weight,
+            barKg: bar ?? null,
+            untouchedTotalKg: untouched && hasBar ? last.totalKg : undefined,
+          },
+          unit,
+        );
   const result =
-    weight === null || reps === null
+    given === null || reps === null
       ? null
       : validateSet(
           {
             equipment,
-            weight: { value: weight, unit: 'kg', mode: hasBar ? mode : 'total' },
+            weight: { value: given.kg, unit: 'kg', mode: given.mode },
             reps,
             barKg: bar ?? null,
             source: 'tap',
           },
-          { lastTotalKg: last?.totalKg },
+          { lastTotalKg: last?.totalKg, displayUnit: unit },
         );
 
   const weightLabel = !hasBar
@@ -174,23 +201,31 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
     // Keep the real weight the same: a total and a weight per side describe one bar.
     if (next === 'total') {
       const back = converted.current;
-      if (back && back.perSide === weightText) setWeightText(back.total);
-      else
-        setWeightText(
-          weight !== null && bar !== undefined ? String(roundKg(weight * 2 + bar)) : '',
-        );
-    } else if (weight !== null && bar !== undefined && weight >= bar) {
-      const perSide = String(roundKg((weight - bar) / 2));
-      converted.current = { total: weightText, perSide };
-      setWeightText(perSide);
-    } else setWeightText(''); // less than the bar has no weight per side
+      if (back && back.perSide === weightText) setField(back.total);
+      else {
+        const total =
+          weight !== null && bar !== undefined ? convertEntry(weight, 'per_side', bar, unit) : null;
+        setField(fieldFromText(total === null ? '' : String(total)));
+      }
+    } else {
+      const side =
+        weight !== null && bar !== undefined ? convertEntry(weight, 'total', bar, unit) : null;
+      // Less than the bar has no weight per side.
+      if (side !== null) converted.current = { total: field, perSide: String(side) };
+      setField(fieldFromText(side === null ? '' : String(side)));
+    }
     setMode(next);
   }
 
   function step(direction: 1 | -1) {
-    setWeightText(
-      String(nextValue(weight ?? 0, stepFor(equipment, mode), direction, hasBar ? mode : 'total')),
+    const next = nextValue(
+      weight ?? 0,
+      stepFor(equipment, mode, unit),
+      direction,
+      hasBar ? mode : 'total',
+      unit,
     );
+    setField(fieldFromText(String(next)));
   }
 
   async function save(resolved: ResolvedWeight) {
@@ -251,8 +286,8 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
       <Stepper
         label={weightLabel}
         value={weightText}
-        unit="kg"
-        onChange={setWeightText}
+        unit={unit}
+        onChange={(text) => setField({ text, origin: field.origin })}
         onStep={step}
         error={
           weight === null && weightText.trim() !== ''
@@ -278,7 +313,7 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
       {hasBar && (
         <BreakdownCard
           gymName={gymName}
-          breakdown={resolved ? breakdownFor(resolved) : undefined}
+          breakdown={resolved ? breakdownFor(resolved, unit) : undefined}
           message={
             !result
               ? 'Enter a weight and reps to see the breakdown.'
@@ -316,7 +351,7 @@ function LogSetForm({ workout, exercise, last, back }: FormProps) {
           message={result.issues[0]?.message ?? 'Choose how to read this weight.'}
           options={result.options.map((option: Option) => ({
             label: option.label,
-            hint: `${formatKg(option.resolved.totalKg)} kg in total`,
+            hint: `${withUnit(option.resolved.totalKg, unit)} in total`,
           }))}
           onChoose={(index) => {
             setAsking(false);

@@ -9,16 +9,21 @@ import {
   type GymFormErrors,
   type GymInput,
 } from '../../domain/gyms';
+import { formatWeight } from '../../domain/units';
+import type { Unit } from '../../domain/schemas';
 import { useAuth } from '../auth';
+import { useUnit } from '../settings/UnitProvider';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import type { GymFailure, GymService } from './types';
 import { useGyms } from './useGyms';
 import { usePending } from '../../lib/usePending';
 
-type FormBar = { id: string; name: string; weightKg: string; kind: BarKind };
+/** `origin` is the stored kg the field started from, so saving it untouched changes nothing. */
+type FormBar = { id: string; name: string; weightKg: string; origin: number | null; kind: BarKind };
 
-const BARBELL_PRESETS = ['20', '15'];
+/** Common barbells to tap: 20 and 15 kg, or 45 and 35 lb. */
+const BARBELL_PRESETS: Record<Unit, string[]> = { kg: ['20', '15'], lb: ['45', '35'] };
 const KIND_LABEL: Record<BarKind, string> = {
   ez_bar: 'EZ bar',
   smith: 'Smith bar',
@@ -34,6 +39,7 @@ const failureMessage = (reason: GymFailure, action: string) =>
       : `Could not ${action}. Please try again.`;
 
 export function GymFormPage() {
+  const { unit } = useUnit();
   const { gymId } = useParams();
   const { state: auth } = useAuth();
   const service = useGymService();
@@ -61,7 +67,9 @@ export function GymFormPage() {
 
   return (
     <GymForm
-      key={existing?.id ?? 'new'}
+      // A new unit starts a new form, so text typed in one unit is never read in the other.
+      key={`${existing?.id ?? 'new'}-${unit}`}
+      unit={unit}
       service={service}
       userId={auth.user.id}
       existing={existing}
@@ -73,6 +81,7 @@ export function GymFormPage() {
 }
 
 type FormProps = {
+  unit: Unit;
   service: GymService;
   userId: string;
   existing: Gym | undefined;
@@ -80,7 +89,7 @@ type FormProps = {
   isFirstGym: boolean;
 };
 
-function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps) {
+function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: FormProps) {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   // Minted once per form, so a retry after a half-done save finishes the job instead of duplicating it.
@@ -94,9 +103,17 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
   }, []);
 
   const [name, setName] = useState(existing?.name ?? '');
-  const [barbellKg, setBarbellKg] = useState(String(existing?.barbellKg ?? 20));
+  const [barbellKg, setBarbellKg] = useState(
+    existing ? formatWeight(existing.barbellKg, unit) : BARBELL_PRESETS[unit][0]!,
+  );
+  const barbellOrigin = existing?.barbellKg ?? null;
   const [bars, setBars] = useState<FormBar[]>(
-    () => existing?.bars.map((bar) => ({ ...bar, weightKg: String(bar.weightKg) })) ?? [],
+    () =>
+      existing?.bars.map((bar) => ({
+        ...bar,
+        weightKg: formatWeight(bar.weightKg, unit),
+        origin: bar.weightKg,
+      })) ?? [],
   );
   const [errors, setErrors] = useState<GymFormErrors>({ bars: {} });
   const [focusTick, setFocusTick] = useState(0);
@@ -136,9 +153,13 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
       id: crypto.randomUUID(),
       name: draftName,
       weightKg: draftWeight,
+      origin: null,
       kind: draftKind,
     };
-    const result = validateGymForm({ name, barbellKg, bars: [...bars, draft] });
+    const result = validateGymForm(
+      { name, barbellKg, barbellOrigin, bars: [...bars, draft] },
+      unit,
+    );
     const own = result.ok ? undefined : result.errors.bars[bars.length];
     if (own) {
       setDraftErrors(own);
@@ -155,7 +176,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
     event.preventDefault();
     if (pending) return;
     setProblem(null);
-    const checked = validateGymForm({ name, barbellKg, bars });
+    const checked = validateGymForm({ name, barbellKg, barbellOrigin, bars }, unit);
     // A bar that was typed but never added would be lost, so ask instead of dropping it.
     const draftTyped =
       draftWeight.trim() !== '' || (draftName.trim() !== '' && !PRESET_NAMES.includes(draftName));
@@ -247,7 +268,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
 
         <div className="flex flex-col gap-2">
           <TextField
-            label="Barbell weight (kg)"
+            label={`Barbell weight (${unit})`}
             inputMode="decimal"
             value={barbellKg}
             onChange={(e) => {
@@ -256,17 +277,21 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
             }}
             disabled={pending}
             error={errors.barbellKg}
-            hint={existing ? undefined : 'Not sure? Most gyms use a 20 kg barbell.'}
+            hint={
+              existing
+                ? undefined
+                : `Not sure? Most gyms use a ${BARBELL_PRESETS[unit][0]} ${unit} barbell.`
+            }
           />
           <div role="group" aria-label="Barbell presets" className="flex gap-2">
-            {BARBELL_PRESETS.map((kg) => (
+            {BARBELL_PRESETS[unit].map((preset) => (
               <Chip
-                key={kg}
-                selected={barbellKg.trim() === kg}
+                key={preset}
+                selected={barbellKg.trim() === preset}
                 disabled={pending}
-                onClick={() => setBarbellKg(kg)}
+                onClick={() => setBarbellKg(preset)}
               >
-                {kg} kg
+                {preset} {unit}
               </Chip>
             ))}
           </div>
@@ -287,7 +312,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
               >
                 <div className="flex-1">
                   <TextField
-                    label={`${bar.name} weight (kg)`}
+                    label={`${bar.name} weight (${unit})`}
                     inputMode="decimal"
                     value={bar.weightKg}
                     onChange={(e) => {
@@ -348,7 +373,7 @@ function GymForm({ service, userId, existing, defaultId, isFirstGym }: FormProps
               error={draftErrors.name}
             />
             <TextField
-              label="Bar weight (kg)"
+              label={`Bar weight (${unit})`}
               inputMode="decimal"
               value={draftWeight}
               onChange={(e) => {

@@ -26,3 +26,11 @@
 - One number for all analytics; the breakdown is kept for display.
 - The parser and UI must resolve "total or per side?" before saving, using bar settings from the gym profile or an exercise override.
 - Dumbbell semantics are an explicit exception that every consumer of `total_kg` must respect.
+
+## Addendum (2026-10-10): the weight unit is a display and entry choice
+
+Storage stays kg. The user's unit (kg or lb, Settings) decides how every weight is **shown and typed**; the only place that converts is `src/domain/units`. Consequences that came with it:
+
+- A weight shown in lb is rounded to 1 decimal and one typed in lb is stored as kg to 2 decimals, so any lb value typed to 0.1 shows again as typed. The other way is not exact (60 kg shows as 132.3 lb, which is 60.01 kg), so a field that starts from a stored weight (the last set, a gym's bar) remembers the stored value and uses it while the text is unchanged. Without that, accepting a prefilled weight would store a different number and show a false record.
+- A weight typed per side in lb is added up in lb first (bar + 2 × side) and converted once, so the same weight typed as a total or per side is the same kg. Adding the converted parts in kg can differ by 0.01 kg, which would count as a record.
+- Records and charts compare stored kg and are the same in both units.

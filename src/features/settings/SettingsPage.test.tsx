@@ -75,7 +75,7 @@ describe('the weight unit', () => {
 
   it('says that weights are saved in kg', async () => {
     renderApp('/settings');
-    expect(await section('Units')).toHaveTextContent('Weights are always saved in kg');
+    expect(await section('Units')).toHaveTextContent('always saved in kg');
   });
 });
 

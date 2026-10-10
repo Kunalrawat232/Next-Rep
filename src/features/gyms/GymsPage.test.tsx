@@ -5,6 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { createFakeGymService, sampleGym } from '../../test/fakeGyms';
 import { GymServiceProvider } from './GymServiceContext';
 import { GymsPage } from './GymsPage';
+import { UnitsForTest } from '../../test/UnitsForTest';
+import { createFakeAuthService } from '../../test/fakeAuth';
+import { AuthProvider } from '../auth';
 
 function renderPage(fake = createFakeGymService()) {
   const router = createMemoryRouter(
@@ -17,17 +20,21 @@ function renderPage(fake = createFakeGymService()) {
     { initialEntries: ['/gyms'] },
   );
   render(
-    <GymServiceProvider service={fake.service}>
-      <RouterProvider router={router} />
-    </GymServiceProvider>,
+    <AuthProvider service={createFakeAuthService({ id: 'u1', email: 'a@b.co' }).service}>
+      <UnitsForTest>
+        <GymServiceProvider service={fake.service}>
+          <RouterProvider router={router} />
+        </GymServiceProvider>
+      </UnitsForTest>
+    </AuthProvider>,
   );
   return { fake, router, user: userEvent.setup() };
 }
 
 describe('GymsPage', () => {
-  it('shows a loading status first', () => {
+  it('shows a loading status first', async () => {
     renderPage();
-    expect(screen.getByRole('status')).toHaveTextContent(/loading/i);
+    expect(await screen.findByRole('status')).toHaveTextContent(/loading/i);
   });
 
   it('lists each gym with its bars, and marks the default one', async () => {

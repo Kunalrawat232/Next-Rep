@@ -13,6 +13,7 @@
 | Ambiguity prompt          | The `AmbiguityPrompt` with big tap buttons used when weight mode or a number is unclear.                                                                                   |
 | Confusable                | A pair of numbers speech recognition mixes up: 13/30, 14/40, ... 19/90.                                                                                                    |
 | Working set               | A set counted toward progression (excludes warm-ups).                                                                                                                      |
+| Unit                      | The weight unit the user chose (kg or lb). It only decides how weights are shown and typed; storage is always kg. See [weight rules](weight-rules.md).                     |
 | PR                        | Personal record: a set heavier than any earlier set of the exercise, or with more reps than any earlier set at that exact weight. See [weight rules](weight-rules.md).     |
 | Sync queue                | Pending local sets waiting to be pushed to Supabase.                                                                                                                       |
 | Idempotent upsert         | Insert-or-update keyed on the client UUID so retries create no duplicates.                                                                                                 |

@@ -3,7 +3,7 @@
 ## Convention ([ADR-002](../architecture/decisions/002-total-weight-convention.md))
 
 - **The logged weight is always the TOTAL weight lifted, including the bar.** This matches the convention used by established lifting apps.
-- All weights are **stored in kg** (numeric, up to 2 decimals). Display can convert to lb later (1 lb = 0.45359237 kg).
+- All weights are **stored in kg** (numeric, up to 2 decimals). The user's unit (kg or lb) only decides how weights are shown and typed, see Units below (1 lb = 0.45359237 kg).
 - Per-side input is converted on entry: `total = bar_kg + 2 × per_side_kg`.
 - Store alongside the total: `bar_kg` (nullable), `per_side_kg` (nullable) and `input_mode` so the breakdown can be shown later.
 - Charts, PRs and suggestions use `total_kg` only.
@@ -24,6 +24,21 @@ Dumbbells are the one case where `total_kg` is not literally everything lifted; 
 - A user can have multiple gyms (for example "Home", "Office gym").
 - Each gym has a default barbell weight (common: 20 kg, 15 kg) and optional extra bars (EZ bar, Smith machine, custom values). Any custom bar weight must be allowed.
 - A workout is linked to one gym; the bar used for each barbell exercise defaults from the gym and can be overridden per exercise.
+
+## Units (kg and lb, `src/domain/units`)
+
+Weights are stored in kg only ([ADR-002](../architecture/decisions/002-total-weight-convention.md) addendum). The unit in Settings decides how they are shown and typed:
+
+- **Rounding:** kg is shown to 2 decimals and lb to 1, with trailing zeros dropped (a weight per side worked out in lb, such as 46.25, can show 2). Typed weights are stored as kg to 2 decimals.
+- **Steps:** one tap on + or - moves a total by 2.5 kg or 5 lb, a weight per side by 1.25 kg or 2.5 lb, and weight without a bar by 2.5 kg or 5 lb.
+- **Plates:** the plate warning measures the weight per side as shown, against the unit's own plate pair (1.25 kg, 2.5 lb). 135, 185 and 225 lb on a 45 lb bar never warn; 137.5 lb does.
+- **Per side on screen:** in kg it is the stored per-side weight (present only when the kg maths is exact at 2 decimals). In lb it is worked out from the shown total and bar, because totals in lb are mostly multiples of 5, which in kg are rarely exact.
+- **Typed per side in lb** is added up in lb (bar + 2 × side), then converted once and stored as a total.
+- **A field that starts from a stored weight** (the last set, a bar in the gym form) keeps that stored value while its text is unchanged, so saving without touching it cannot change the kg.
+- **Limits** (500 kg total, 250 kg per side, 100 kg bar) are enforced on the kg value and shown in lb rounded down (1102.3, 551.1 and 220.4 lb), so a shown limit is never over the real one.
+- **The bar as shown is the bar:** 7.5 kg shows as 16.5 lb, which converts to 7.48 kg. A weight that shows the same as the bar is taken as the bar, so an empty bar is never "below the bar".
+- **Untouched is the stored total:** if the weight and the way of entering it are as they were at the start (the last set), the stored total is used, whichever way it was entered.
+- **Bars in lb:** the barbell presets are 45 and 35 lb (stored as 20.41 and 15.88 kg).
 
 ## Plausibility checks (validators)
 
@@ -81,5 +96,5 @@ Behaviours worth knowing:
 - **`as_said`** (what the user literally said) is always the last option on a large jump, so the user can confirm an intentional jump.
 - **Equipment without a bar** (dumbbell, machine, cable, bodyweight) skips bar and plate rules. A per-side phrase is reinterpreted as the per-implement weight, with a `PER_SIDE_IGNORED` warning that is kept when the result becomes a question.
 - **Bar weight** must be 0 to 100 kg and is rounded to 2 decimals; a missing bar with "per side" on bar equipment is rejected.
-- **Plates** are checked on the exact per-side weight, not on the stored breakdown. Pound input is converted to kg first, so standard pound plates will often show the soft warning. That is accepted until lb display ships (storage is kg only).
+- **Plates** are checked on the per-side weight as shown, in the unit's own plate pair (1.25 kg, 2.5 lb), not on the stored breakdown. See Units below.
 - Sub-cent noise is rounded away (500.004 kg is accepted as 500).

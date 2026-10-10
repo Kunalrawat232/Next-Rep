@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { buttonClasses, Chip, Switch } from '../../components';
-import { formatKg, pickDefaultGym } from '../../domain/gyms';
+import { pickDefaultGym } from '../../domain/gyms';
+import { withUnit } from '../../domain/units';
 import { useAuth } from '../auth';
 import { useGymCatalog } from '../workout';
 import { SignOutPanel } from './SignOutPanel';
@@ -27,7 +28,9 @@ export function SettingsPage() {
         <h2 id="units-heading" className="text-headline font-semibold">
           Units
         </h2>
-        <p className="text-callout text-ink-muted">Weight unit. Weights are always saved in kg.</p>
+        <p className="text-callout text-ink-muted">
+          Weights are shown and typed in this unit. They are always saved in kg.
+        </p>
         <div role="group" aria-label="Weight unit" className="flex gap-2">
           <Chip selected={unit === 'kg'} onClick={() => setUnit('kg')}>
             kg
@@ -59,7 +62,7 @@ export function SettingsPage() {
           <>
             <p className="text-body font-semibold">{gym.name}</p>
             <p className="text-callout text-ink-muted">
-              {formatKg(gym.barbellKg)} kg barbell, used when you start a workout
+              {withUnit(gym.barbellKg, unit)} barbell, used when you start a workout
             </p>
             <Link to="/gyms" className={buttonClasses('secondary', 'self-start')}>
               Manage gyms
