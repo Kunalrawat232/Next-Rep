@@ -292,6 +292,8 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
             exerciseId={exerciseId ?? null}
             exercises={exercises.state.exercises}
             rest={rest}
+            sets={sets}
+            onUndo={undo}
             onLogged={reload}
           />
         )}

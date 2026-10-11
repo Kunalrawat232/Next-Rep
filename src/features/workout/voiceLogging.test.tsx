@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
 import { BENCH, HOME_GYM, offlineServer, renderApp } from '../../test/appHarness';
 import { tapTogether } from '../../test/doubleTap';
-import { aWorkout } from '../../test/localDb';
+import { aSet, aWorkout } from '../../test/localDb';
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
 
@@ -40,7 +40,7 @@ afterEach(() => {
   FakeMic.all = [];
 });
 
-async function openWorkout(options: { mic?: boolean } = {}) {
+async function openWorkout(options: { mic?: boolean; withSet?: boolean } = {}) {
   if (options.mic !== false) vi.stubGlobal('webkitSpeechRecognition', FakeMic);
   const userId = `voice-${Math.random()}`;
   const first = renderApp('/workout', { userId, server: offlineServer() });
@@ -50,6 +50,17 @@ async function openWorkout(options: { mic?: boolean } = {}) {
     gymId: HOME_GYM.id,
     gymSnapshot: HOME,
   });
+  if (options.withSet)
+    await first.store.logSet(
+      aSet(workout.id, {
+        exerciseId: BENCH,
+        totalKg: 60,
+        barKg: 15,
+        perSideKg: 22.5,
+        reps: 8,
+        loggedAt: '2026-10-10T10:00:00.000Z',
+      }),
+    );
   first.unmount();
   const app = renderApp(`/workout?exercise=${BENCH}`, { userId, server: offlineServer() });
   const speak = async (text: string) => {
@@ -180,5 +191,60 @@ describe('voice logging on the workout page', () => {
     await openWorkout({ mic: false });
     expect(await screen.findByText(/not supported in this browser/i)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /tap to speak/i })).not.toBeInTheDocument();
+  });
+
+  describe('commands', () => {
+    it('repeats the last set after a tap on Log set', async () => {
+      const { speak, user, store, workout } = await openWorkout({ withSet: true });
+      await speak('same again');
+      expect(await store.listSets(workout.id)).toHaveLength(1);
+      await user.click(await screen.findByRole('button', { name: 'Log set' }));
+      await waitFor(async () => expect(await store.listSets(workout.id)).toHaveLength(2));
+      expect((await store.listSets(workout.id))[1]).toMatchObject({
+        exerciseId: BENCH,
+        totalKg: 60,
+        reps: 8,
+        source: 'voice',
+      });
+    });
+
+    it('repeats with new reps', async () => {
+      const { speak, user, store, workout } = await openWorkout({ withSet: true });
+      await speak('same weight 10 reps');
+      await user.click(await screen.findByRole('button', { name: 'Log set' }));
+      await waitFor(async () => expect(await store.listSets(workout.id)).toHaveLength(2));
+      expect((await store.listSets(workout.id))[1]).toMatchObject({ totalKg: 60, reps: 10 });
+    });
+
+    it('has nothing to repeat or undo on an empty workout', async () => {
+      const { speak } = await openWorkout();
+      await speak('same again');
+      expect(await screen.findByText(/no set to repeat/i)).toBeInTheDocument();
+      await speak('undo');
+      expect(await screen.findByText(/no set to undo/i)).toBeInTheDocument();
+    });
+
+    it('asks before removing the last set, and Keep it keeps it', async () => {
+      const { speak, user, store, workout } = await openWorkout({ withSet: true });
+      await speak('undo');
+      const card = await screen.findByRole('group', { name: 'Confirm undo' });
+      expect(card).toHaveTextContent(/60 kg × 8/);
+      await user.click(within(card).getByRole('button', { name: 'Keep it' }));
+      expect(await store.listSets(workout.id)).toHaveLength(1);
+    });
+
+    it('removes the last set once confirmed', async () => {
+      const { speak, user, store, workout } = await openWorkout({ withSet: true });
+      await speak('undo');
+      await user.click(await screen.findByRole('button', { name: 'Remove it' }));
+      await waitFor(async () => expect(await store.listSets(workout.id)).toHaveLength(0));
+    });
+
+    it('says an edit is not available yet and changes nothing', async () => {
+      const { speak, store, workout } = await openWorkout({ withSet: true });
+      await speak('change that to 10 reps');
+      expect(await screen.findByText(/editing a set is not available/i)).toBeInTheDocument();
+      expect((await store.listSets(workout.id))[0]?.reps).toBe(8);
+    });
   });
 });

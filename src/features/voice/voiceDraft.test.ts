@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Exercise } from '../../domain/exercises';
 import { parseTranscript } from '../../domain/parser';
 import { validateSet } from '../../domain/validation';
-import { draftFromParse, UNCLEAR_MESSAGE, type VoiceContext } from './voiceDraft';
+import { draftFromParse, repeatDraft, UNCLEAR_MESSAGE, type VoiceContext } from './voiceDraft';
 
 const ex = (id: string, name: string, equipmentType: Exercise['equipmentType']): Exercise => ({
   id,
@@ -121,5 +121,40 @@ describe('draftFromParse', () => {
 
   it('has a message for every reason', () => {
     for (const message of Object.values(UNCLEAR_MESSAGE)) expect(message.length).toBeGreaterThan(5);
+  });
+});
+
+describe('repeatDraft', () => {
+  const source = { exerciseId: BENCH.id, totalKg: 60, reps: 8 };
+  const repeat = (text: string) => {
+    const result = draft(text);
+    if (result.kind !== 'repeat') throw new Error('expected a repeat');
+    return repeatDraft(result, source, context);
+  };
+
+  it('copies the stored total and reps as a total', () => {
+    expect(repeat('same again')).toMatchObject({
+      kind: 'set',
+      exercise: { id: BENCH.id },
+      reps: 8,
+      candidate: { weight: { value: 60, unit: 'kg', mode: 'total' }, barKg: 20, source: 'voice' },
+    });
+  });
+
+  it('uses what was said instead of the copied reps or weight', () => {
+    expect(repeat('same weight 10 reps')).toMatchObject({
+      reps: 10,
+      candidate: { weight: { value: 60 } },
+    });
+    expect(repeat('same 100 kilo 5 reps')).toMatchObject({
+      reps: 5,
+      candidate: { weight: { value: 100, mode: 'unspecified' } },
+    });
+  });
+
+  it('gives nothing for an exercise that is no longer in the list', () => {
+    const result = draft('same again');
+    if (result.kind !== 'repeat') throw new Error('expected a repeat');
+    expect(repeatDraft(result, { ...source, exerciseId: 'gone' }, context)).toBeNull();
   });
 });

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, ErrorMessage } from '../../components';
-import { ignoreClosed, type StoredWorkout } from '../../data/local';
+import { Button, Card, ErrorMessage } from '../../components';
+import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import type { Exercise } from '../../domain/exercises';
 import { parseTranscript } from '../../domain/parser';
+import { setSummary } from '../../domain/workout';
 import { REST_MAX, REST_MIN_CUSTOM, formatRest } from '../../domain/rest';
 import type { ResolvedWeight } from '../../domain/validation';
 import { usePending } from '../../lib/usePending';
@@ -11,6 +12,7 @@ import { useUnit } from '../settings/UnitProvider';
 import { useLogStore, useSyncControls } from '../sync';
 import {
   draftFromParse,
+  repeatDraft,
   UNCLEAR_MESSAGE,
   useSpeech,
   type SpeechError,
@@ -24,6 +26,10 @@ type Props = {
   exerciseId: string | null;
   exercises: readonly Exercise[];
   rest: RestTimer;
+  /** The sets of this workout, oldest first: "same again" copies the last one. */
+  sets: readonly StoredSet[];
+  /** Removes the last set, the same way the Undo last button does. */
+  onUndo(): Promise<void>;
   /** Called after a set is stored, so the list shows it. */
   onLogged(): Promise<void>;
 };
@@ -42,7 +48,15 @@ const SPEECH_MESSAGE: Record<SpeechError, string> = {
 };
 
 /** The mic: tap, speak a set, check it, tap Log set. What was said is only ever a proposal. */
-export function VoiceLogger({ workout, exerciseId, exercises, rest, onLogged }: Props) {
+export function VoiceLogger({
+  workout,
+  exerciseId,
+  exercises,
+  rest,
+  sets,
+  onUndo,
+  onLogged,
+}: Props) {
   const { unit } = useUnit();
   const online = useOnline();
   const store = useLogStore();
@@ -51,10 +65,11 @@ export function VoiceLogger({ workout, exerciseId, exercises, rest, onLogged }: 
   const [pending, setPending] = useState<Pending | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<StoredSet | null>(null);
   const { pending: saving, begin, end } = usePending();
-  const latest = useRef({ exercises, exerciseId, unit, workout, rest });
+  const latest = useRef({ exercises, exerciseId, unit, workout, rest, sets });
   useEffect(() => {
-    latest.current = { exercises, exerciseId, unit, workout, rest };
+    latest.current = { exercises, exerciseId, unit, workout, rest, sets };
   });
 
   // Clearing the transcript re-runs the effect above, so only leaving the screen may drop a late answer.
@@ -87,31 +102,64 @@ export function VoiceLogger({ workout, exerciseId, exercises, rest, onLogged }: 
       gym: open.gymSnapshot ?? undefined,
       unit: said,
     });
-    if (draft.kind === 'unclear') setNotice(UNCLEAR_MESSAGE[draft.reason]);
-    else if (draft.kind === 'rest') {
-      if (draft.seconds < REST_MIN_CUSTOM || draft.seconds > REST_MAX)
-        setNotice(`Rest can be ${formatRest(REST_MIN_CUSTOM)} to ${formatRest(REST_MAX)}.`);
-      else {
-        timer.start(draft.seconds);
-        setNotice(`Rest started: ${formatRest(draft.seconds)}.`);
-      }
-    } else if (draft.kind === 'set') {
+    const propose = (proposal: Extract<VoiceDraft, { kind: 'set' }>) => {
       // The last total of this exercise lets the validator spot a number that is far off.
       store
-        .lastSetFor(draft.exercise.id)
+        .lastSetFor(proposal.exercise.id)
         .then((last) => last?.totalKg)
         .catch((error: unknown) => {
           ignoreClosed(error);
           return undefined;
         })
         .then((lastTotalKg) => {
-          if (mounted.current) setPending({ transcript, draft, lastTotalKg });
+          if (mounted.current) setPending({ transcript, draft: proposal, lastTotalKg });
         });
-    } else setNotice('That command is not available yet.');
+    };
+    switch (draft.kind) {
+      case 'unclear':
+        setNotice(UNCLEAR_MESSAGE[draft.reason]);
+        break;
+      case 'rest':
+        if (draft.seconds < REST_MIN_CUSTOM || draft.seconds > REST_MAX)
+          setNotice(`Rest can be ${formatRest(REST_MIN_CUSTOM)} to ${formatRest(REST_MAX)}.`);
+        else {
+          timer.start(draft.seconds);
+          setNotice(`Rest started: ${formatRest(draft.seconds)}.`);
+        }
+        break;
+      case 'set':
+        propose(draft);
+        break;
+      case 'repeat': {
+        const { sets: done } = latest.current;
+        const source =
+          done.filter((set) => set.exerciseId === currentExerciseId).at(-1) ?? done.at(-1);
+        const proposal =
+          source &&
+          repeatDraft(draft, source, {
+            exercises: list,
+            gym: open.gymSnapshot ?? undefined,
+            unit: said,
+          });
+        if (proposal) propose(proposal);
+        else setNotice('There is no set to repeat yet.');
+        break;
+      }
+      case 'undo': {
+        const target = latest.current.sets.at(-1);
+        if (target) setRemoving(target);
+        else setNotice('There is no set to undo.');
+        break;
+      }
+      case 'edit':
+        setNotice('Editing a set is not available yet. Say undo, then say it again.');
+        break;
+    }
   }, [transcript, clear, store]);
 
   function listen() {
     setPending(null);
+    setRemoving(null);
     setNotice(null);
     setProblem(null);
     speech.start();
@@ -146,6 +194,8 @@ export function VoiceLogger({ workout, exerciseId, exercises, rest, onLogged }: 
     }
   }
 
+  const exerciseName = (id: string) => exercises.find((e) => e.id === id)?.name ?? 'Exercise';
+
   if (!speech.supported)
     return (
       <p className="text-caption text-ink-muted">
@@ -172,6 +222,28 @@ export function VoiceLogger({ workout, exerciseId, exercises, rest, onLogged }: 
           : (statusText ?? 'Say a set, like “bench 60 kilo 8 reps”.')}
       </p>
       {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
+      {removing && (
+        <Card role="group" aria-label="Confirm undo" className="flex flex-col gap-4">
+          <p>
+            Remove the last set? {exerciseName(removing.exerciseId)},{' '}
+            {setSummary(removing, unit).headline}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="danger"
+              onClick={() => {
+                setRemoving(null);
+                void onUndo();
+              }}
+            >
+              Remove it
+            </Button>
+            <Button variant="secondary" onClick={() => setRemoving(null)}>
+              Keep it
+            </Button>
+          </div>
+        </Card>
+      )}
       {pending && (
         <VoiceConfirmCard
           transcript={pending.transcript}

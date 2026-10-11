@@ -21,7 +21,7 @@ export type UnclearReason =
  */
 export type VoiceDraft =
   | { kind: 'set'; exercise: Exercise; reps: number; candidate: SetCandidate }
-  | { kind: 'repeat' }
+  | { kind: 'repeat'; reps?: number; weight?: NonNullable<ParseResult['weight']> }
   | { kind: 'undo' }
   | { kind: 'edit'; reps?: number; weight?: NonNullable<ParseResult['weight']> }
   | { kind: 'rest'; seconds: number }
@@ -53,7 +53,7 @@ export function draftFromParse(result: ParseResult, context: VoiceContext): Voic
     case 'undo_last':
       return { kind: 'undo' };
     case 'repeat_last':
-      return { kind: 'repeat' };
+      return { kind: 'repeat', reps: result.reps, weight: result.weight };
     case 'edit_last':
       return result.reps === undefined && result.weight === undefined
         ? { kind: 'unclear', reason: 'not_understood' }
@@ -86,6 +86,40 @@ function setDraft(result: ParseResult, { exercises, gym, unit }: VoiceContext): 
       equipment: exercise.equipmentType,
       weight,
       reps: result.reps,
+      barKg: gym ? (barFor(gym, exercise.equipmentType) ?? null) : null,
+      source: 'voice',
+    },
+  };
+}
+
+/** The part of a stored set that "same again" copies. */
+export type RepeatSource = { exerciseId: string; totalKg: number; reps: number };
+
+/**
+ * "Same again", "same weight 8 reps": the last set with whatever was said instead. The copied weight is the
+ * stored total, so it is read as a total; a spoken weight is reported as spoken like any other set.
+ */
+export function repeatDraft(
+  repeat: Extract<VoiceDraft, { kind: 'repeat' }>,
+  source: RepeatSource,
+  { exercises, gym }: VoiceContext,
+): Extract<VoiceDraft, { kind: 'set' }> | null {
+  const exercise = exercises.find((e) => e.id === source.exerciseId);
+  if (!exercise) return null;
+  const reps = repeat.reps ?? source.reps;
+  const weight = repeat.weight ?? {
+    value: source.totalKg,
+    unit: 'kg' as const,
+    mode: 'total' as const,
+  };
+  return {
+    kind: 'set',
+    exercise,
+    reps,
+    candidate: {
+      equipment: exercise.equipmentType,
+      weight,
+      reps,
       barKg: gym ? (barFor(gym, exercise.equipmentType) ?? null) : null,
       source: 'voice',
     },
