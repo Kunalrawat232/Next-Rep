@@ -1,6 +1,6 @@
 # Voice grammar and parser specification
 
-Status: the English parser is built (`src/domain/parser/`). Not built yet: Hindi number words (stage 2), the mic and confirm screens, and the Gemini fallback.
+Status: the parser is built (`src/domain/parser/`), English and Hindi number words. Not built yet: the mic and confirm screens, and the Gemini fallback.
 
 ## Intents (small, fixed set)
 
@@ -35,10 +35,10 @@ Issue codes: `NO_EXERCISE`, `NO_WEIGHT`, `NO_REPS`, `AMBIGUOUS_WEIGHT_MODE`, `LO
 
 Confidence starts at 1 and is capped or scaled: no exercise 0.4; no weight (not bodyweight) or no reps 0.5; times the exercise score; extra numbers or more than 2 unexplained words times 0.7. `needsFallback(result)` is true under **0.8** (`PARSER_CONFIG` in `config.ts`) unless the issues include `SUSPICIOUS_INPUT`, `TOO_LONG` or `NO_SPEECH` (nothing worth sending, and each call spends free-tier quota). Any other `unknown` has confidence 0, so it goes to the fallback when online. The injection word list is best effort and is **not** a security boundary: Gemini's output and every number still pass the validators.
 
-## Planned: Hindi number words (stage 2)
+## Hindi number words
 
-Hindi numbers 1 to 20: ek, do, teen, chaar, paanch, chhe, saat, aath, nau, das, gyaarah, baarah, terah, chaudah, pandrah, solah, satrah, athaarah, unnees, bees; "kilo ke 8" already works. The 26 stage 2 rows in the fixtures cover them.
+Hindi numbers 1 to 20 are read as one word each: ek, do, teen, chaar, paanch, chhe, saat, aath, nau, das, gyaarah, baarah, terah, chaudah, pandrah, solah, satrah, athaarah, unnees, bees, plus common spellings (char, panch, chhah, ath, dus, gyarah, barah, atharah, unnis). They work as reps ("60 kilo paanch baar") and as weights ("das kilo", "bees kilo har side"), and in "rest do minute". Hindi numbers do not combine with each other or with English words. "do" is also an English word, so "do bench press 60 kilo 8 reps" reads it as an extra number and is flagged (`EXTRA_NUMBER`, low confidence) instead of trusted. Tens above 20 ("pachaas", "saath") are not built.
 
 ## Tests
 
-`tests/fixtures/voice-phrases.json` holds 307 phrases in 12 groups, written by a separate agent from this specification before the parser existed (281 are stage 1, 26 are stage 2). `src/domain/parser/phrases.test.ts` runs the stage 1 rows; edge, number and seeded random tests sit beside the code. Recognition language defaults to `en-IN`.
+`tests/fixtures/voice-phrases.json` holds 307 phrases in 12 groups, written by a separate agent from this specification before the parser existed (281 are stage 1, English and Hinglish markers; 26 are stage 2, Hindi number words). `src/domain/parser/phrases.test.ts` runs all of them; edge, number and seeded random tests sit beside the code. Recognition language defaults to `en-IN`.

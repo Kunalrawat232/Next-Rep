@@ -321,3 +321,27 @@ describe('parser: the exercise list', () => {
     expect(result.intent).toBe('log_set');
   });
 });
+
+describe('parser: Hindi numbers', () => {
+  it('reads Hindi reps and weights together with English words', () => {
+    expect(parse('bench press 60 kilo ek baar').reps).toBe(1);
+    expect(parse('bench press das kilo aath baar').weight?.value).toBe(10);
+    expect(parse('squat bees kilo har side paanch baar').weight).toEqual({
+      value: 20,
+      unit: 'kg',
+      mode: 'per_side',
+    });
+  });
+
+  it('a Hindi word with an English number still counts as an extra number, not a silent guess', () => {
+    const result = parse('bench 60 kilo 8 reps do');
+    expect(result.reps).toBe(8);
+    expect(result.issues).toContain('EXTRA_NUMBER');
+  });
+
+  it('"do" before an exercise is read as a number, so the set is flagged rather than trusted', () => {
+    const result = parse('do bench press 60 kilo 8 reps');
+    expect(result.exerciseId).toBe(BENCH);
+    expect(needsFallback(result)).toBe(true);
+  });
+});

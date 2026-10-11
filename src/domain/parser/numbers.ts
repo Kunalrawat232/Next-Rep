@@ -34,6 +34,39 @@ const TENS: Record<string, number> = {
   eighty: 80,
   ninety: 90,
 };
+/** Hindi (Hinglish) number words 1 to 20, with the spellings speech recognition commonly gives. */
+const HINDI: Record<string, number> = {
+  ek: 1,
+  do: 2,
+  teen: 3,
+  chaar: 4,
+  char: 4,
+  paanch: 5,
+  panch: 5,
+  chhe: 6,
+  chhah: 6,
+  chheh: 6,
+  saat: 7,
+  aath: 8,
+  ath: 8,
+  nau: 9,
+  das: 10,
+  dus: 10,
+  gyaarah: 11,
+  gyarah: 11,
+  baarah: 12,
+  barah: 12,
+  terah: 13,
+  chaudah: 14,
+  pandrah: 15,
+  solah: 16,
+  satrah: 17,
+  athaarah: 18,
+  atharah: 18,
+  unnees: 19,
+  unnis: 19,
+  bees: 20,
+};
 const DIGIT_WORD = /^\d+(\.\d+)?$/;
 
 /** Own keys only: a spoken "constructor" must not find anything on Object. */
@@ -43,6 +76,7 @@ const own = (table: Record<string, number>, word: string): number | undefined =>
 export const isNumberWord = (word: string): boolean =>
   own(ONES, word) !== undefined ||
   own(TENS, word) !== undefined ||
+  own(HINDI, word) !== undefined ||
   word === 'hundred' ||
   DIGIT_WORD.test(word);
 
@@ -107,6 +141,8 @@ function fractionAt(
 export function numberAt(tokens: readonly string[], start: number): Found | null {
   const first = tokens[start] ?? '';
   let found: Found | null;
+  const hindi = own(HINDI, first);
+  if (hindi !== undefined) return { value: hindi, end: start + 1 };
   if (DIGIT_WORD.test(first)) {
     found = first.length <= MAX_DIGITS ? { value: Number(first), end: start + 1 } : null;
   } else {

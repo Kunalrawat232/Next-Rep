@@ -293,3 +293,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: 10 of 282 stage 1 phrases failed the first time, and each pointed at a rule the spec had left open: "two twenty five" as 225, a bare exercise name, "rest" with no duration, "same old story", a greeting before the command, and a number that was only an HTML tag. I decided each one (see `docs/domain/voice-grammar.md`) rather than edit the fixtures. A scripted edit to the filler list silently did nothing because Prettier had re-wrapped it, and a floating-point error (`1 - 0.8` is 0.19999999999999996) stopped "squad" matching "squat" until the edit limit was rounded.
 - How validated: _(developer to fill)_ Evidence: 282 of 282 stage 1 phrases and 366 parser tests pass (26 stage 2 rows are listed as skipped); 18 of 18 deliberate breakages across two rounds turned tests red (one survived the first time and led to a stronger test); the slowest input (25 unknown long words against 1000 exercises) takes about 100 ms. Not yet done: Hindi number words, the mic and confirm screens, the Gemini fallback.
 - Lesson: let a separate agent write the expected answers from the spec; the failures then show where the spec is silent, and the developer decides instead of the parser's author quietly bending the test.
+
+## 2026-10-11: Hindi number words in the parser
+
+- Tool: Claude Code.
+- Asked: stage 2 of the parser, the Hindi number words 1 to 20 from the specification.
+- AI produced: a word table in `src/domain/parser/numbers.ts` (the 20 words plus common spellings), tests for each word and for "do" (Hindi two, also an English word), and the 26 stage 2 phrases switched on.
+- Problems found: none in the fixtures; the one design risk is "do", which is flagged as an extra number in an English sentence instead of being guessed.
+- How validated: _(developer to fill)_ Evidence: all 307 fixture phrases and 419 parser tests pass; 4 of 4 deliberate breakages (table lookup, number-word check, two values) turned tests red. Not built: Hindi tens above 20 and combining Hindi numbers.

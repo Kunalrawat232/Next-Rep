@@ -44,6 +44,39 @@ describe('numberAt', () => {
     expect(read(text)).toBe(value);
   });
 
+  it.each([
+    ['ek', 1],
+    ['do', 2],
+    ['teen', 3],
+    ['chaar', 4],
+    ['paanch', 5],
+    ['chhe', 6],
+    ['saat', 7],
+    ['aath', 8],
+    ['nau', 9],
+    ['das', 10],
+    ['gyaarah', 11],
+    ['baarah', 12],
+    ['terah', 13],
+    ['chaudah', 14],
+    ['pandrah', 15],
+    ['solah', 16],
+    ['satrah', 17],
+    ['athaarah', 18],
+    ['unnees', 19],
+    ['bees', 20],
+    ['panch', 5],
+    ['dus', 10],
+    ['unnis', 19],
+  ])('Hindi %s is %s', (text, value) => {
+    expect(read(text)).toBe(value);
+  });
+
+  it('reads a Hindi number as one word, not as part of an English number', () => {
+    expect(numberAt(['sixty', 'do'], 0)).toEqual({ value: 60, end: 1 });
+    expect(numberAt(['do', 'point', 'five'], 0)).toEqual({ value: 2, end: 1 });
+  });
+
   it('stops where the number ends', () => {
     expect(numberAt(['sixty', 'two', 'kg'], 0)).toEqual({ value: 62, end: 2 });
     expect(numberAt(['sixty', 'sixty'], 0)).toEqual({ value: 60, end: 1 });

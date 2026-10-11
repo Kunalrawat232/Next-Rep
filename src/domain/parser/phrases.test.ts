@@ -30,15 +30,9 @@ const idOf = (name: string): string => {
   return found.id;
 };
 
-const rows = (fixtures as Row[]).filter((row) => row.stage === 1);
-const hindiRows = (fixtures as Row[]).filter((row) => row.stage === 2);
+const rows = fixtures as Row[];
 
-// Stage 2 (Hindi number words) is not built yet; the rows are listed here so the gap shows in every test run.
-describe.skip('voice phrase fixtures (stage 2: Hindi number words, not built yet)', () => {
-  it.each(hindiRows.map((row) => [row.id, row.transcript] as const))('%s: %s', () => {});
-});
-
-describe('voice phrase fixtures (stage 1)', () => {
+describe('voice phrase fixtures (English, Hinglish markers and Hindi numbers)', () => {
   it('has the expected size', () => {
     expect(rows.length).toBeGreaterThanOrEqual(150);
   });
