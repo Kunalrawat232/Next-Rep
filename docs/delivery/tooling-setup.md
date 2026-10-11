@@ -36,7 +36,6 @@ Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin comman
 ## Hooks (`.claude/settings.json`)
 
 - After `Edit`/`Write` on TypeScript under `src/`, `api/` or `tests/`: run eslint on the file and the project typecheck (`.claude/hooks/check-changed.sh`). Failures are fed back to Claude.
-- When a turn ends: run the unit tests and show failures (`.claude/hooks/run-tests.sh`), without blocking.
 - Deny reading the common local `.env` files (`.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`).
 - Git pre-commit: gitleaks (`.githooks/pre-commit`, activated by `npm install` through the `prepare` script).
 
