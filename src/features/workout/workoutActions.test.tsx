@@ -171,7 +171,7 @@ describe('the offline banner', () => {
     await openWith([]);
     expect(await screen.findByText(/you are offline/i)).toBeInTheDocument();
     expect(screen.getAllByText(/tap logging works/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /tap to speak/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /tap to speak/i })).toBeDisabled();
   });
 });
 
