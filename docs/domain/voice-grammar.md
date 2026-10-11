@@ -1,6 +1,6 @@
 # Voice grammar and parser specification
 
-Status: the parser is built (`src/domain/parser/`), English and Hindi number words. Not built yet: the mic and confirm screens, and the Gemini fallback.
+Status: the parser is built (`src/domain/parser/`), English and Hindi number words, and the mic and confirm card are on the workout page (`src/features/voice`, `src/features/workout/VoiceLogger.tsx`). Not built yet: the Gemini fallback and editing a set by voice.
 
 ## Intents (small, fixed set)
 
@@ -16,7 +16,7 @@ Status: the parser is built (`src/domain/parser/`), English and Hindi number wor
 ## Rules (decided with the developer)
 
 - **The weight is reported as spoken**: `value` and the spoken unit, with no conversion. Converting to kg happens later, in the units code. No unit spoken means the user's unit (Settings).
-- **Mode:** "each side", "per side", "a side", "every side", "har side", "both sides" give `per_side`; "total" gives `total`; a weight with neither gives `unspecified` plus the issue `AMBIGUOUS_WEIGHT_MODE`, which the app answers with a "total or per side?" question. This does **not** lower confidence. Saying both leaves it `unspecified`.
+- **Mode:** "each side", "per side", "a side", "every side", "har side", "both sides" give `per_side`; "total" gives `total`; a weight with neither gives `unspecified` plus the issue `AMBIGUOUS_WEIGHT_MODE`, which the app answers on the confirm card: the validator reads a bar weight as a total and shows a Total / Per side toggle (it asks a question only for a number below the bar or a big jump from last time). This does **not** lower confidence. Saying both leaves it `unspecified`.
 - **Numbers:** digits, decimals ("62.5"), and English words: "sixty", "sixty two point five", "sixty two and a half", "a hundred and five", "one fifty" (150), "two twenty five" (225). Digit strings longer than 9 are not read, and ".5" is 0.5.
 - **Reps:** "8 reps", "8 rep", "8 times", "8 baar", "for 8", "x 8", "x8", "into 8", "reps 8". A number with no marker is the weight if no weight has been said, then the reps ("deadlift 120 kg 3", "bench 60 8"). A bodyweight exercise with one bare number reads it as reps.
 - **Units:** kg, kgs, kilo, kilos, kilogram(s), lb, lbs, pound(s).

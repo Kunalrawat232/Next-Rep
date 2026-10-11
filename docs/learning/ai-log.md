@@ -301,3 +301,13 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: a word table in `src/domain/parser/numbers.ts` (the 20 words plus common spellings), tests for each word and for "do" (Hindi two, also an English word), and the 26 stage 2 phrases switched on.
 - Problems found: none in the fixtures; the one design risk is "do", which is flagged as an extra number in an English sentence instead of being guessed.
 - How validated: _(developer to fill)_ Evidence: all 307 fixture phrases and 419 parser tests pass; 4 of 4 deliberate breakages (table lookup, number-word check, two values) turned tests red. Not built: Hindi tens above 20 and combining Hindi numbers.
+
+## 2026-10-11: Voice screens (mic, confirm card, commands)
+
+- Tool: Claude Code.
+- Asked: the mic on the workout page: tap, speak, see what was heard with the weight breakdown, confirm, log; plus rest, repeat and undo by voice, and the offline and error states.
+- AI produced: a `useSpeech` hook over the browser's SpeechRecognition (injectable for tests), a pure `draftFromParse` / `repeatDraft`, a `VoiceLogger` and `VoiceConfirmCard` on the workout page, and tests that drive the whole page with a fake microphone.
+- Decisions: nothing is stored until the user taps Log set. A spoken set goes through `validateSet` like a tapped one. The validator reads a bar weight with no "per side" or "total" word as a total, so the planned separate "total or per side?" prompt became a Total / Per side toggle on the card (the validator still asks below the bar or after a big jump). The mic is disabled offline, because Chrome sends the audio to Google. "Edit last set" says it is not available: the app has no way to edit a set, and building one would change the data layer.
+- Problems found: the first version dropped the result because clearing the transcript re-ran the effect and cancelled the lookup; the lint rule on refs forced the mounted flag to be declared before it is used; one old test expected the "coming soon" button, and one offline test read the mic button before the exercise list had loaded (flaky once).
+- How validated: _(developer to fill)_ Evidence: 3979 tests passing at the last full run. Not done: the microphone in a real browser on a phone (accuracy, permission prompt, en-IN with Hinglish), which only the developer can check.
+- Lesson: an effect that clears its own trigger re-runs its cleanup; keep a mounted flag for late answers instead of a per-run flag.
