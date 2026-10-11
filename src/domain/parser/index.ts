@@ -35,3 +35,4 @@ export function parseTranscript(transcript: string, context: ParseContext): Pars
 export const needsFallback = (result: ParseResult): boolean =>
   result.confidence < PARSER_CONFIG.confidenceThreshold &&
   !NEVER_SENT.some((issue) => result.issues.includes(issue));
+export { ISSUE } from './issues';
