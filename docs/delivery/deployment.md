@@ -68,7 +68,7 @@ The same credentials let you run `npm run test:integration` (profile access rule
 **Hosted checks: what ran and what has not** (single statement; as recorded in the AI log, 2026-10-10):
 
 - Ran, 2026-10-08, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
-- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull; and migrations 0002 and 0003 plus the re-seed on the hosted project were not recorded as applied. The profile upsert used by Settings has no integration test yet.
+- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). Checked on 2026-10-11 through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
 
 ## 2. Gemini API key (free tier, no billing)
 
@@ -132,7 +132,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 
 - [x] Supabase project created (free); URL and publishable key saved (in use since 2026-10-08)
 - [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase` (2026-10-08)
-- [ ] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, about 890 global exercises). The AI log says this was not yet confirmed on the hosted project
+- [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises; checked 2026-10-11)
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in, 2026-10-08)
 - [ ] Site URL set (needs the Vercel production URL)
