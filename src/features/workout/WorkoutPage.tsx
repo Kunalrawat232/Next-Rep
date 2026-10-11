@@ -22,6 +22,7 @@ import { PrBadge, useRecordMarks } from '../progress';
 import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { RestTimer } from './RestTimer';
+import { VoiceLogger } from './VoiceLogger';
 import { useGymCatalog } from './useGymCatalog';
 import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
@@ -285,14 +286,15 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
       <div className="flex flex-col gap-3">
-        <Button disabled aria-describedby="voice-note" className="w-full">
-          {online ? 'Voice logging coming soon' : 'Voice logging unavailable offline'}
-        </Button>
-        <p id="voice-note" className="text-caption text-ink-muted">
-          {online
-            ? 'Say a set, and it is logged for you.'
-            : 'Voice needs internet. Tap logging works.'}
-        </p>
+        {exercises.state.status === 'ready' && (
+          <VoiceLogger
+            workout={workout}
+            exerciseId={exerciseId ?? null}
+            exercises={exercises.state.exercises}
+            rest={rest}
+            onLogged={reload}
+          />
+        )}
         {exerciseId ? (
           <Link to={`/workout/log${query}`} className={buttonClasses('primary', 'w-full')}>
             Tap instead

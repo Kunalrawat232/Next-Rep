@@ -6,7 +6,10 @@ import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 import { tapTogether } from '../../test/doubleTap';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
 
@@ -159,15 +162,16 @@ describe('the sync badge', () => {
 
 describe('the offline banner', () => {
   it('shows that tap logging works and voice needs internet, only when offline', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', class {});
     const { unmount } = await openWith([]);
-    expect(await screen.findByRole('button', { name: /voice logging/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /tap to speak/i })).toBeEnabled();
     expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
     unmount();
     goOffline();
     await openWith([]);
     expect(await screen.findByText(/you are offline/i)).toBeInTheDocument();
     expect(screen.getAllByText(/tap logging works/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /unavailable offline/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /tap to speak/i })).toBeDisabled();
   });
 });
 
