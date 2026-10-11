@@ -11,7 +11,7 @@ Status as of 2026-10-10. `[x]` = in place, `[ ]` = to do (with the phase that de
 - [x] All user input validated client-side AND enforced by DB constraints (shared Zod schemas, check constraints in the migrations, `tests/db`).
 - [x] No `dangerouslySetInnerHTML`; React escaping only. _(Enforced by review and the coding standards.)_
 - [ ] Dependencies kept minimal and pinned; run `npm audit` before submission and document known issues. _(Clean at scaffold: 0 vulnerabilities. Re-run in Phase 5.)_
-- [ ] Documented AI-related risks: wrong transcription, hallucinated Gemini output, prompt injection via transcript (mitigated by JSON schema + validators + user confirmation), free-tier data usage. _(See [threat model](threat-model.md).)_
+- [ ] Documented AI-related risks: wrong transcription, hallucinated Gemini output, prompt injection via transcript (mitigated by JSON schema + validators + user confirmation; the parser's injection word list, which turns such text into `unknown` and keeps it from Gemini, is best effort and not a security boundary), free-tier data usage. _(See [threat model](threat-model.md).)_
 
 ## Added with the auth work (2026-10-08)
 
