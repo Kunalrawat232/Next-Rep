@@ -1,6 +1,6 @@
 # Threat model: voice → Gemini → database
 
-Status: voice, the parser and the Gemini fallback (`/api/parse`) are built, with fake-Gemini tests (not yet run against the live API), so T1 to T4 and T8 apply now. Applies now: T5 to T7 and T9 to T16 (T7 and T16 are controls in process and key handling rather than tested code).
+Status: voice, the parser and the Gemini fallback (`/api/parse`) are built, with fake-Gemini tests (checked once against the live API), so T1 to T4 and T8 apply now. Applies now: T5 to T7 and T9 to T16 (T7 and T16 are controls in process and key handling rather than tested code).
 
 Scope: the data path from the microphone to Postgres, plus auth and dependencies. Drafted with AI assistance and reviewed by the developer; update as the system is built.
 
