@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GEMINI_UNKNOWN, ParseResponseSchema } from '../../src/domain/parser/gemini';
-import { handleParse, LIMITS, type ParseDeps } from './parse';
+import { handleParse, LIMITS, type ParseDeps } from './parse.js';
 
 const GOOD = {
   intent: 'log_set',

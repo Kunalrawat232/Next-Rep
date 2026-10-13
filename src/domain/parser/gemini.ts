@@ -2,8 +2,8 @@
 // Shared by the client, the function and the tests. Gemini's answer is untrusted: it is only ever
 // read through GeminiOutputSchema, mapped by fromGemini and then validated like any other set.
 import { z } from 'zod';
-import { UnitSchema } from '../schemas';
-import { INTENTS, WEIGHT_MODES } from './schema';
+import { UnitSchema } from '../schemas.js';
+import { INTENTS, WEIGHT_MODES } from './schema.js';
 
 /** Longest transcript the function accepts: the same limit the parser has (PARSER_CONFIG.maxChars). */
 export const GEMINI_MAX_TRANSCRIPT = 300;

@@ -1,7 +1,7 @@
 // ParseResult: the single shape produced by the local parser and by the Gemini fallback.
 // Defined once here and shared by the client, /api/parse and tests (see docs/architecture/api-contracts.md).
 import { z } from 'zod';
-import { UnitSchema } from '../schemas';
+import { UnitSchema } from '../schemas.js';
 
 export const INTENTS = [
   'log_set',

@@ -5,8 +5,8 @@ import {
   ParseRequestSchema,
   readGeminiText,
   type ParseResponse,
-} from '../../src/domain/parser/gemini';
-import { SYSTEM_PROMPT } from './prompt';
+} from '../../src/domain/parser/gemini.js';
+import { SYSTEM_PROMPT } from './prompt.js';
 
 export const LIMITS = { perMinute: 10, perHour: 60 } as const;
 export const GEMINI_TIMEOUT_MS = 8000;

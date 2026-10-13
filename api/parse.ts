@@ -3,8 +3,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { GeminiOutputSchema } from '../src/domain/parser/gemini';
-import { handleParse, type ParseDeps } from './_lib/parse';
+import { GeminiOutputSchema } from '../src/domain/parser/gemini.js';
+import { handleParse, type ParseDeps } from './_lib/parse.js';
 
 function supabaseFor(token: string) {
   const url = process.env.SUPABASE_URL;
