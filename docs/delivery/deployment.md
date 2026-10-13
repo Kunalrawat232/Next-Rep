@@ -101,7 +101,7 @@ Free-tier prompts may be used by Google to improve its products, which is why on
 ### 3.1 Verify the deploy
 
 - The production URL shows the **Next Rep** heading.
-- Function check (a stub; the real function is planned for Phase 3), expected status 501 and `{"status":"unavailable"}`:
+- Function check with no token, expected status 401 and `{"status":"unauthorized"}` (a 200 HTML page means the SPA rewrite is swallowing `/api`):
 
 ```bash
 curl -i -X POST https://<your-app>.vercel.app/api/parse
@@ -139,7 +139,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [ ] Gemini key created with **no billing**; `GEMINI_MODEL` chosen
 - [x] Repo pushed (GitHub, `main` up to PR #11)
 - [ ] Vercel project imported; env vars set; deployed (no deployment exists yet)
-- [ ] Production page loads; `POST /api/parse` returns 501 JSON
+- [ ] Production page loads; `POST /api/parse` with no token returns 401 JSON
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, 2026-10-08, before migrations 0002 and 0003)
 - [ ] A phone opens the preview URL over HTTPS
 

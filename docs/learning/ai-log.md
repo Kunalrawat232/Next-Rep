@@ -311,3 +311,13 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: the first version dropped the result because clearing the transcript re-ran the effect and cancelled the lookup; the lint rule on refs forced the mounted flag to be declared before it is used; one old test expected the "coming soon" button, and one offline test read the mic button before the exercise list had loaded (flaky once).
 - How validated: _(developer to fill)_ Evidence: 3979 tests passing at the last full run. Not done: the microphone in a real browser on a phone (accuracy, permission prompt, en-IN with Hinglish), which only the developer can check.
 - Lesson: an effect that clears its own trigger re-runs its cleanup; keep a mounted flag for late answers instead of a per-run flag.
+
+## 2026-10-13: Gemini fallback (`/api/parse`)
+
+- Tool: Claude Code.
+- Asked: when the local parser is unsure and the phone is online, ask Gemini (free tier only), check its answer like any other, and show it for confirmation.
+- AI produced: a handler with injected dependencies (`api/_lib/parse.ts`: token check with `getClaims`, Zod request, per-minute and per-hour limits through the existing `consume_rate_limit`, Gemini in JSON mode with a schema, 8 s timeout, every failure becomes `unavailable`), the prompt, shared schemas, `fromGemini` (maps the exercise name with the parser's own matcher and scores it with the parser's own rules; Gemini's confidence can only lower the score), a `ParseService`, and the mic integration (Checking state, "Read by AI" note, source `gemini`).
+- Decisions: the function never sees exercise ids; the app matches names. A name we do not have is never replaced by the current exercise. Model `gemini-3.5-flash-lite` (free tier, cheap model for one-sentence extraction), set by the `GEMINI_MODEL` variable. The limit is per hour, not per day, because the database function allows windows up to one hour. `getClaims` instead of `jose`.
+- Problems found: a test list of tools for the `bootstrap` test had to learn the new service; one chained command committed while a test was failing earlier in the session, so commits now wait for a green run.
+- How validated: _(developer to fill)_ Evidence: 4039 tests passing with Gemini faked; a deliberate break (using Gemini's confidence alone) turned 3 tests red. Not done: a call to the live Gemini API and to the deployed function.
+- Lesson: pass the network clients into the handler so every failure path can be tested without a key.

@@ -1,6 +1,6 @@
 # Gemini prompts
 
-Status: planned (Phase 3), not built yet: `/api/parse` returns 501 and no prompt is in code. This file is the draft the function will mirror; change both together once it exists. Model name comes from `GEMINI_MODEL`, never hardcoded.
+Status: built. The prompt is in `api/_lib/prompt.ts`; this file mirrors it, so change both together. The user message is a JSON object, so the transcript reaches Gemini as a string value, and the call asks for JSON with a response schema at temperature 0. Model name comes from `GEMINI_MODEL`, never hardcoded.
 
 ## Requirements
 

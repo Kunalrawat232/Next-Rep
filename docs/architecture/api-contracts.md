@@ -1,6 +1,6 @@
 # API contracts
 
-Status: planned (Phase 3), not built yet. `api/parse.ts` is a stub that answers 501; `src/domain/parser/` holds only the `ParseResult` schema; there are no `/api/parse` tests. Everything below is the intended contract.
+Status: built (2026-10-13), not yet tested against the live Gemini API. `api/parse.ts` wires the real clients into the handler in `api/_lib/parse.ts` (tests in `api/_lib/parse.test.ts` use fakes). The shapes live in `src/domain/parser/gemini.ts`; the app maps Gemini's answer to a `ParseResult` with `fromGemini`.
 
 ## `POST /api/parse` (Gemini fallback)
 
@@ -25,15 +25,15 @@ Send **no personal data** (no email, name or user id).
 
 ### Auth
 
-The function requires the user's Supabase access token (`Authorization: Bearer ...`) and verifies it, so the endpoint cannot be abused anonymously. Verification uses the project's JWKS (`https://<project>.supabase.co/auth/v1/.well-known/jwks.json`) with `jose`, the method the Supabase docs recommend for asymmetric signing keys, or `supabase.auth.getClaims()`. No JWT shared secret is needed in env.
+The function requires the user's Supabase access token (`Authorization: Bearer ...`) and verifies it, so the endpoint cannot be abused anonymously. Verification uses the project's JWKS (`https://<project>.supabase.co/auth/v1/.well-known/jwks.json`) with `supabase.auth.getClaims()`, which works for asymmetric and legacy keys alike (`jose` is not used). No JWT shared secret is needed in env.
 
 ### Response
 
-A `ParseResult` (below), or `{ status: 'unavailable' }`.
+`{ status: 'ok', result }`, where `result` is Gemini's output as the schema `GeminiOutputSchema` allows it (`intent`, `exerciseName`, `weight`, `reps`, `restSeconds`, `confidence`, `issues`; anything that does not fit becomes `intent: 'unknown'`), or `{ status: 'unavailable' }`. The function does not know the user's exercise ids: the app matches `exerciseName` against its own list with the parser's matcher and builds the `ParseResult` (`source: 'gemini'`), and Gemini's `confidence` can only lower the app's own score. HTTP codes: 200 ok, 400 invalid request, 401 no or bad token, 413 body over 2000 characters, 429 rate limited, 503 Gemini or Supabase unavailable; the app treats every non-200 as "no answer".
 
 - Strip code fences, parse JSON, validate with Zod. Invalid output is treated as `unknown`.
 - Timeout about 8 s. On HTTP 429 or any error return `{ status: 'unavailable' }` and the UI falls back to manual confirmation. Logging is never blocked.
-- Per-user rate limit (a few calls per minute) backed by the `api_rate_limits` table.
+- Per-user rate limit through `consume_rate_limit`: 10 per minute and 60 per hour (the database function allows windows up to one hour, so there is no daily window). Over the limit answers 429 and the app keeps tap logging.
 - Never log full transcripts together with user identifiers.
 
 ### Env vars (server only, never prefixed with `VITE_`)

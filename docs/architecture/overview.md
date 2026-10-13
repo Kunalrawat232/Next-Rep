@@ -1,6 +1,6 @@
 # Architecture overview
 
-Status: planned (Phase 3), not built yet: voice input, the parser and `/api/parse` (the Gemini fallback). Built: auth, gyms, exercises, tap logging, offline log and sync, history, progress, Home and Settings. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
+Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, not yet run against the live API). Also built: auth, gyms, exercises, tap logging, offline log and sync, history, progress, Home and Settings. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
 
 ## Components
 
