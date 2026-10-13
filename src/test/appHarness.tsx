@@ -12,6 +12,7 @@ import { ExerciseServiceProvider } from '../features/exercises';
 import { GymServiceProvider } from '../features/gyms';
 import { ProfileServiceProvider, UnitProvider } from '../features/settings';
 import { SyncProvider } from '../features/sync';
+import { ParseServiceProvider, type ParseService } from '../features/voice';
 import { createFakeAuthService } from './fakeAuth';
 import { createFakeExerciseService } from './fakeExercises';
 import { createFakeGymService, sampleGym } from './fakeGyms';
@@ -51,6 +52,8 @@ type Options = {
   unit?: Unit;
   /** A server made earlier, to set it up (offline, held) before the app starts talking to it. */
   server?: ReturnType<typeof createFakeRemoteLog>;
+  /** The Gemini fallback. Without one, nothing is sent anywhere. */
+  parse?: ParseService;
 };
 
 /** The whole app on a fake server and a fake IndexedDB, at a path, for a signed-in user. */
@@ -72,7 +75,9 @@ export function renderApp(path: string, options: Options = {}) {
           <GymServiceProvider service={gyms.service}>
             <ExerciseServiceProvider service={exercises.service}>
               <SyncProvider remote={server.remote} dexieDeps={deps}>
-                <RouterProvider router={router} />
+                <ParseServiceProvider service={options.parse ?? { parse: async () => null }}>
+                  <RouterProvider router={router} />
+                </ParseServiceProvider>
               </SyncProvider>
             </ExerciseServiceProvider>
           </GymServiceProvider>

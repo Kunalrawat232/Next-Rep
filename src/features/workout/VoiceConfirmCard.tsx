@@ -16,6 +16,8 @@ import { BreakdownCard } from './BreakdownCard';
 
 type Props = {
   transcript: string;
+  /** Gemini read this phrase, not the local parser: say so, and ask for a closer look. */
+  readByAi: boolean;
   exercise: Exercise;
   reps: number;
   candidate: SetCandidate;
@@ -37,6 +39,7 @@ function promptTitle(code: string | undefined): string {
 /** What was heard, as a set the user must confirm. Nothing is stored until Log set is tapped. */
 export function VoiceConfirmCard({
   transcript,
+  readByAi,
   exercise,
   reps,
   candidate,
@@ -68,6 +71,11 @@ export function VoiceConfirmCard({
   return (
     <Card role="group" aria-label="Confirm voice set" className="flex flex-col gap-4">
       <p className="text-caption text-ink-muted">Heard: “{transcript}”</p>
+      {readByAi && (
+        <p role="note" className="text-callout text-warning">
+          Read by AI. Check the exercise and numbers before you log.
+        </p>
+      )}
       <p className="text-headline font-semibold">
         {exercise.name} · {reps} {reps === 1 ? 'rep' : 'reps'}
       </p>
