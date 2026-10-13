@@ -3,6 +3,7 @@ import { createBrowserRouter, type RouterProvider } from 'react-router';
 import {
   AUTH_STORAGE_KEY,
   createSupabase,
+  createFetchParseService,
   createSupabaseAuthService,
   createSupabaseExerciseService,
   createSupabaseLogRemote,
@@ -17,6 +18,7 @@ import type { RemoteLog } from '../data/sync';
 import type { ExerciseService } from '../features/exercises';
 import type { GymService } from '../features/gyms';
 import type { ProfileService } from '../features/settings';
+import type { ParseService } from '../features/voice';
 import { App } from './App';
 import { ConfigError } from './ConfigError';
 import { appRoutes } from './routes';
@@ -30,6 +32,7 @@ export type BootstrapDeps = {
   createExerciseService: (client: SupabaseClient) => ExerciseService;
   createLogRemote: (client: SupabaseClient) => RemoteLog;
   createProfileService: (client: SupabaseClient) => ProfileService;
+  createParseService: (client: SupabaseClient) => ParseService;
   createRouter: () => ComponentProps<typeof RouterProvider>['router'];
   ensureProfile: (client: SupabaseClient, userId: string) => Promise<void>;
 };
@@ -48,6 +51,7 @@ const defaultDeps: BootstrapDeps = {
   createExerciseService: createSupabaseExerciseService,
   createLogRemote: createSupabaseLogRemote,
   createProfileService: createSupabaseProfileService,
+  createParseService: (client) => createFetchParseService(client),
   createRouter: () => createBrowserRouter(appRoutes),
   ensureProfile,
 };
@@ -69,6 +73,7 @@ export function bootstrap(
       gymService={deps.createGymService(client)}
       exerciseService={deps.createExerciseService(client)}
       logRemote={deps.createLogRemote(client)}
+      parseService={deps.createParseService(client)}
       profileService={deps.createProfileService(client)}
       router={deps.createRouter()}
       ensureProfile={(userId) => deps.ensureProfile(client, userId)}

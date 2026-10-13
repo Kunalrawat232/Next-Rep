@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { RouterProvider } from 'react-router';
 import { AuthProvider, type AuthService } from '../features/auth';
 import { ExerciseServiceProvider, type ExerciseService } from '../features/exercises';
@@ -6,6 +6,7 @@ import { GymServiceProvider, type GymService } from '../features/gyms';
 import type { RemoteLog } from '../data/sync';
 import { ProfileServiceProvider, UnitProvider, type ProfileService } from '../features/settings';
 import { SyncProvider } from '../features/sync';
+import { ParseServiceProvider, type ParseService } from '../features/voice';
 
 type Props = {
   service: AuthService;
@@ -13,6 +14,8 @@ type Props = {
   exerciseService: ExerciseService;
   profileService: ProfileService;
   logRemote: RemoteLog;
+  /** The Gemini fallback; without it, phrases the parser is unsure of are not sent anywhere. */
+  parseService?: ParseService;
   router: ComponentProps<typeof RouterProvider>['router'];
   ensureProfile?: (userId: string) => Promise<void>;
 };
@@ -23,6 +26,7 @@ export function App({
   exerciseService,
   profileService,
   logRemote,
+  parseService,
   router,
   ensureProfile,
 }: Props) {
@@ -33,12 +37,22 @@ export function App({
           <GymServiceProvider service={gymService}>
             <ExerciseServiceProvider service={exerciseService}>
               <SyncProvider remote={logRemote}>
-                <RouterProvider router={router} />
+                <Fallback service={parseService}>
+                  <RouterProvider router={router} />
+                </Fallback>
               </SyncProvider>
             </ExerciseServiceProvider>
           </GymServiceProvider>
         </UnitProvider>
       </ProfileServiceProvider>
     </AuthProvider>
+  );
+}
+
+function Fallback({ service, children }: { service?: ParseService; children: ReactNode }) {
+  return service ? (
+    <ParseServiceProvider service={service}>{children}</ParseServiceProvider>
+  ) : (
+    children
   );
 }

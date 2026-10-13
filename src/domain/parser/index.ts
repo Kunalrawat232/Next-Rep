@@ -36,3 +36,12 @@ export const needsFallback = (result: ParseResult): boolean =>
   result.confidence < PARSER_CONFIG.confidenceThreshold &&
   !NEVER_SENT.some((issue) => result.issues.includes(issue));
 export { ISSUE } from './issues';
+export { fromGemini } from './fromGemini';
+export {
+  GEMINI_MAX_TRANSCRIPT,
+  GeminiOutputSchema,
+  ParseRequestSchema,
+  ParseResponseSchema,
+  type GeminiOutput,
+  type ParseRequest,
+} from './gemini';

@@ -24,6 +24,7 @@ function deps() {
     createExerciseService: vi.fn(() => createFakeExerciseService().service),
     createLogRemote: vi.fn(() => createFakeRemoteLog().remote),
     createProfileService: vi.fn(() => createFakeProfileService().service),
+    createParseService: vi.fn(() => ({ parse: async () => null })),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
     ensureProfile: vi.fn(async () => undefined),
   };

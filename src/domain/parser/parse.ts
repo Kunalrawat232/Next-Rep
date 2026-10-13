@@ -32,8 +32,8 @@ const isReserved = (word: string): boolean =>
   FILLER.has(word) ||
   PER_SIDE_PHRASES.some((pair) => pair.includes(word));
 
-const round = (value: number): number => Math.round(value * 100) / 100;
-const clamp = (value: number): number => round(Math.min(1, Math.max(0, value)));
+export const round = (value: number): number => Math.round(value * 100) / 100;
+export const clamp = (value: number): number => round(Math.min(1, Math.max(0, value)));
 
 /** Words nobody explained: not filler, not used. Many of them means the transcript is mostly something else. */
 function unexplained(
@@ -129,7 +129,7 @@ function parseCommand(command: Command, context: ParseContext): Parsed {
   return result;
 }
 
-type Evidence = {
+export type Evidence = {
   exercise: ExerciseMatch | null;
   hasExercise: boolean;
   bodyweight: boolean;
@@ -141,7 +141,7 @@ type Evidence = {
 };
 
 /** How sure we are, and why not: the issues are the reasons, the confidence only ever goes down. */
-function scoreSet(e: Evidence, issues: string[]): number {
+export function scoreSet(e: Evidence, issues: string[]): number {
   let confidence = 1;
   if (!e.hasExercise) {
     issues.push(ISSUE.NO_EXERCISE);
