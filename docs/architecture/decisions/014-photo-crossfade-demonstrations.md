@@ -1,6 +1,6 @@
 # ADR-014: Photo crossfade demonstrations for the popular exercises
 
-- **Status:** proposed (2026-10-16), on branch `feat/exercise-photos`. Supplements [ADR-013](013-hotlinked-exercise-demonstrations.md). To revert, delete the branch.
+- **Status:** accepted (2026-10-16): tried on a branch, the developer liked it and kept it. Supplements [ADR-013](013-hotlinked-exercise-demonstrations.md).
 
 ## Context
 
@@ -23,6 +23,6 @@ The Gym visual animations (ADR-013) are 180×180 pixels with 12 frames at about 
 
 ## Consequences
 
-- If the crossfade is not liked, delete the branch: `feat/home` keeps ADR-013's behaviour (with the 180 px fix).
+- To go back to animations only, set `PHOTO_MEDIA.enabled` to `false` in `demoMedia.ts`.
 - Photos are 38 KB each, loaded only on the exercise page, and only when the page is opened.
 - The photo dataset's licence is stated as Unlicense; its README does not separately state one for the images, so the credit says so and the claim is worth rechecking before a commercial release.
