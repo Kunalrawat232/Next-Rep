@@ -12,7 +12,7 @@ type Props = {
 };
 
 const button =
-  'flex size-14 shrink-0 items-center justify-center rounded-full border border-line bg-surface-200 text-ink disabled:opacity-60';
+  'flex size-14 shrink-0 items-center justify-center rounded-full border border-glass-line glass-flat text-ink disabled:opacity-60';
 
 function Icon({ plus }: { plus: boolean }) {
   return (

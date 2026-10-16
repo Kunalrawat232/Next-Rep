@@ -45,7 +45,7 @@ describe('AppShell', () => {
     expect(within(nav).getByRole('link', { name: 'Workout' })).toHaveAttribute('href', '/workout');
   });
 
-  it('offers a floating mic button as the phone entry to Workout', () => {
+  it('offers a floating Workout button as the phone entry to Workout', () => {
     renderShell();
     const mic = screen
       .getAllByRole('link', { name: 'Workout' })

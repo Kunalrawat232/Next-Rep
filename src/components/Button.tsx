@@ -9,8 +9,8 @@ const base =
 
 const variants = {
   primary: 'bg-accent text-on-accent',
-  secondary: 'border border-line bg-surface-200 text-ink',
-  danger: 'border border-danger bg-surface-200 text-danger',
+  secondary: 'border border-glass-line glass-flat text-ink',
+  danger: 'border border-danger glass-flat text-danger',
 };
 
 /** The button look for something that is not a `<button>`, such as a router link. */

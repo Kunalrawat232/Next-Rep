@@ -137,7 +137,7 @@ describe('QA Section, Card and messages', () => {
       render(<Card tone={tone}>t</Card>);
       const classes = screen.getByText('t').className.split(' ');
       expect(
-        classes.filter((c) => /^border-(line|danger|warning|success|accent)$/.test(c)),
+        classes.filter((c) => /^border-(glass-line|danger|warning|success|accent)$/.test(c)),
       ).toHaveLength(1);
     },
   );

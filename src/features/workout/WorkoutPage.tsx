@@ -229,7 +229,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {gym && (
-            <p className="inline-flex h-8 items-center rounded-full border border-line bg-surface-200 px-3 text-caption font-medium">
+            <p className="inline-flex h-8 items-center rounded-full border border-glass-line glass-flat px-3 text-caption font-medium">
               {withUnit(gym.barbellKg, unit)} bar
             </p>
           )}

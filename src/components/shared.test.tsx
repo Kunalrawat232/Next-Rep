@@ -23,8 +23,8 @@ describe('Card', () => {
     expect(box).toHaveClass(
       'rounded-md',
       'border',
-      'border-line',
-      'bg-surface-200',
+      'border-glass-line',
+      'glass-flat',
       'p-4',
       'flex',
       'gap-3',
@@ -45,7 +45,7 @@ describe('Card', () => {
     render(<Card tone="danger">inside</Card>);
     const box = screen.getByText('inside');
     expect(box).toHaveClass('border-danger');
-    expect(box).not.toHaveClass('border-line');
+    expect(box).not.toHaveClass('border-glass-line');
   });
 
   it.each(['warning', 'success', 'accent'] as const)(
@@ -54,14 +54,14 @@ describe('Card', () => {
       render(<Card tone={tone}>inside</Card>);
       const box = screen.getByText('inside');
       expect(box).toHaveClass(`border-${tone}`);
-      expect(box).not.toHaveClass('border-line');
+      expect(box).not.toHaveClass('border-glass-line');
     },
   );
 
   it('gives the same classes as a function, for links and list items', () => {
-    expect(cardClasses()).toBe('rounded-md border border-line bg-surface-200 p-4');
+    expect(cardClasses()).toBe('rounded-md border border-glass-line glass-flat p-4');
     expect(cardClasses('flex gap-2')).toBe(
-      'rounded-md border border-line bg-surface-200 p-4 flex gap-2',
+      'rounded-md border border-glass-line glass-flat p-4 flex gap-2',
     );
     expect(cardClasses('', 'danger')).toContain('border-danger');
   });

@@ -14,11 +14,11 @@ describe('the screens use the shared components', () => {
   });
 
   it.each([
-    ['the card box', 'rounded-md border border-line bg-surface-200'],
+    ['the card box', 'rounded-md border border-glass-line glass-flat'],
     ['the red card box', 'rounded-md border border-danger'],
-    ['a warning, success or accent card box', 'rounded-md border border-warning bg'],
-    ['a success card box', 'rounded-md border border-success bg'],
-    ['an accent card box', 'rounded-md border border-accent bg'],
+    ['a warning, success or accent card box', 'rounded-md border border-warning glass'],
+    ['a success card box', 'rounded-md border border-success glass'],
+    ['an accent card box', 'rounded-md border border-accent glass'],
     ['the page title', '<h1 className="text-title font-semibold">Loading'],
   ])('does not copy %s (use Card, ErrorMessage, EmptyState, Section)', (_name, text) => {
     const copies = Object.entries(screens)

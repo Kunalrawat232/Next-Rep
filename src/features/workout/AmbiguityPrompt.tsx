@@ -43,7 +43,7 @@ export function AmbiguityPrompt({ title, message, options, onChoose, onCancel, e
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex w-full max-w-md flex-col gap-4 rounded-t-md border border-line bg-surface-200 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:rounded-md"
+        className="flex w-full max-w-md flex-col gap-4 rounded-t-md border border-glass-line glass p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:rounded-md"
       >
         <h2 id={titleId} className="text-headline font-semibold">
           {title}

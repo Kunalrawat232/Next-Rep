@@ -39,9 +39,7 @@ const ITEMS: Item[] = [
     desktopOnly: true,
     icon: (
       <Icon>
-        <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" />
-        <path d="M19 11a7 7 0 0 1-14 0" />
-        <path d="M12 18v3" />
+        <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
       </Icon>
     ),
   },
@@ -84,8 +82,10 @@ const itemBase =
 /** Bottom tab bar on phones, sidebar from 1024 px up. One nav element, laid out by CSS. */
 export function AppShell() {
   return (
-    <div className="min-h-dvh lg:flex">
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface-100 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:pl-6 lg:pr-6 lg:static lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:gap-6 lg:border-t-0 lg:border-r lg:p-6 lg:pb-6">
+    <div className="relative isolate min-h-dvh lg:flex">
+      {/* The colour behind the app, for the glass to show. Decoration only. */}
+      <div id="ambient" aria-hidden="true" className="fixed inset-0 -z-10" />
+      <div className="glass fixed inset-x-0 bottom-0 z-10 border-t border-glass-line pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:pl-6 lg:pr-6 lg:static lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:gap-6 lg:border-t-0 lg:border-r lg:p-6 lg:pb-6">
         <div className="hidden px-2 lg:block">
           <Logo width={150} />
         </div>
@@ -115,7 +115,7 @@ export function AppShell() {
       <Link
         to="/workout"
         aria-label="Workout"
-        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent lg:hidden"
+        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent shadow-[0_8px_24px_-8px_var(--glass-shadow)] lg:hidden"
       >
         <svg
           width="28"
@@ -128,9 +128,7 @@ export function AppShell() {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" />
-          <path d="M19 11a7 7 0 0 1-14 0" />
-          <path d="M12 18v3" />
+          <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
         </svg>
       </Link>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-28 lg:px-8 lg:pb-8">

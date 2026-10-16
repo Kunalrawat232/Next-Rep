@@ -3,11 +3,11 @@ import type { ComponentProps } from 'react';
 type Tone = 'normal' | 'danger' | 'warning' | 'success' | 'accent';
 
 const base: Record<Tone, string> = {
-  normal: 'rounded-md border border-line bg-surface-200 p-4',
-  danger: 'rounded-md border border-danger bg-surface-200 p-4',
-  warning: 'rounded-md border border-warning bg-surface-200 p-4',
-  success: 'rounded-md border border-success bg-surface-200 p-4',
-  accent: 'rounded-md border border-accent bg-surface-200 p-4',
+  normal: 'rounded-md border border-glass-line glass-flat p-4',
+  danger: 'rounded-md border border-danger glass-flat p-4',
+  warning: 'rounded-md border border-warning glass-flat p-4',
+  success: 'rounded-md border border-success glass-flat p-4',
+  accent: 'rounded-md border border-accent glass-flat p-4',
 };
 
 /** The look of a card, for things that are not a plain box (a link, a list item). Add only layout classes. */
