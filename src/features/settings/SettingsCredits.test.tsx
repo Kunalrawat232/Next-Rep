@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DEMO_MEDIA } from '../../domain/exercises/demoMedia';
+import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { renderApp } from '../../test/appHarness';
 
 describe('credits in Settings', () => {
@@ -12,6 +12,9 @@ describe('credits in Settings', () => {
     expect(owner).toHaveAttribute('href', DEMO_MEDIA.credit.ownerUrl);
     const dataset = within(credits).getByRole('link', { name: DEMO_MEDIA.credit.dataset });
     expect(dataset).toHaveAttribute('href', DEMO_MEDIA.credit.datasetUrl);
+    const photos = within(credits).getByRole('link', { name: PHOTO_MEDIA.credit.dataset });
+    expect(photos).toHaveAttribute('href', PHOTO_MEDIA.credit.datasetUrl);
+    expect(credits).toHaveTextContent(/unlicense/i);
   });
 
   it('opens the links safely in a new tab', async () => {

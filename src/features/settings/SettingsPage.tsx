@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { buttonClasses, Chip, Section, Switch } from '../../components';
-import { DEMO_MEDIA } from '../../domain/exercises/demoMedia';
+import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { pickDefaultGym } from '../../domain/gyms';
 import { withUnit } from '../../domain/units';
 import { useAuth } from '../auth';
@@ -109,7 +109,16 @@ export function SettingsPage() {
           >
             {DEMO_MEDIA.credit.dataset}
           </a>{' '}
-          (MIT licence).
+          (MIT licence). {PHOTO_MEDIA.credit.note} See{' '}
+          <a
+            href={PHOTO_MEDIA.credit.datasetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-accent"
+          >
+            {PHOTO_MEDIA.credit.dataset}
+          </a>
+          .
         </p>
       </Section>
 

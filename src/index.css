@@ -80,3 +80,30 @@ input[type='search']::-webkit-search-cancel-button {
   appearance: none;
   display: none;
 }
+
+/* The end pose of an exercise photo fades in over the start pose and back: a smooth up-and-down, not video. */
+@keyframes demo-fade {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  42%,
+  58% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.demo-fade {
+  animation: demo-fade 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-fade {
+    animation: none;
+    opacity: 0;
+  }
+}

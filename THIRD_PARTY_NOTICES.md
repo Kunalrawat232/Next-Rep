@@ -1,5 +1,14 @@
 # Third-party notices
 
+## Exercise photos: yuhonas/free-exercise-db
+
+Photos of the popular exercises (a start and an end pose, crossfaded by the app) are loaded at run time
+from [free-exercise-db](https://github.com/yuhonas/free-exercise-db), which is released under the
+Unlicense (public domain). They are hotlinked through jsDelivr, pinned to one commit, and are not
+stored, bundled or cached by Next Rep. The repository's page names the licence as Unlicense without
+a separate statement for the images. See
+[ADR-014](docs/architecture/decisions/014-photo-crossfade-demonstrations.md).
+
 ## Exercise data: hasaneyldrm/exercises-dataset
 
 About 835 of the exercises in `src/domain/exercises.extended.json` (names, equipment, body parts and

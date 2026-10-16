@@ -1,16 +1,27 @@
 import { useEffect, useState } from 'react';
-import { DemoMapSchema, type DemoEntry, type DemoMap } from '../../domain/exercises/demoMedia';
+import {
+  DemoMapSchema,
+  PhotoMapSchema,
+  type DemoEntry,
+  type DemoMap,
+  type PhotoMap,
+} from '../../domain/exercises/demoMedia';
 
-let loading: Promise<DemoMap> | null = null;
+type Maps = { demos: DemoMap; photos: PhotoMap };
+
+let loading: Promise<Maps> | null = null;
 
 /**
- * The demo map (about 150 KB), loaded the first time it is needed and kept. It is a separate chunk that is
- * only fetched and parsed on the exercise page (the service worker still precaches it, like other app code),
- * and it is checked against its schema like any other data.
+ * The demo maps (about 150 KB for the animations, 9 KB for the photos), loaded the first time they are needed
+ * and kept. They are separate chunks that are only fetched and parsed on the exercise page (the service
+ * worker still precaches them, like other app code), and each is checked against its schema.
  */
-export function loadDemoMap(): Promise<DemoMap> {
-  loading ??= import('../../domain/exercises.demo.json')
-    .then((module) => DemoMapSchema.parse(module.default))
+export function loadDemoMaps(): Promise<Maps> {
+  loading ??= Promise.all([
+    import('../../domain/exercises.demo.json').then((m) => DemoMapSchema.parse(m.default)),
+    import('../../domain/exercises.photos.json').then((m) => PhotoMapSchema.parse(m.default)),
+  ])
+    .then(([demos, photos]) => ({ demos, photos }))
     .catch((error: unknown) => {
       loading = null; // a failed load is tried again next time
       throw error;
@@ -18,22 +29,24 @@ export function loadDemoMap(): Promise<DemoMap> {
   return loading;
 }
 
-export type DemoEntryState =
-  { status: 'loading' } | { status: 'ready'; entry: DemoEntry | undefined };
+export type DemoSourcesState =
+  | { status: 'loading' }
+  | { status: 'ready'; entry: DemoEntry | undefined; photoDir: string | undefined };
 
-/** The demo entry of one exercise. If the map cannot be loaded the exercise simply has no demo. */
-export function useDemoEntry(exerciseId: string | undefined): DemoEntryState {
-  const [loaded, setLoaded] = useState<DemoMap | null | 'failed'>(null);
+/** The demo sources of one exercise. If the maps cannot be loaded the exercise simply has no demo. */
+export function useDemoSources(exerciseId: string | undefined): DemoSourcesState {
+  const [loaded, setLoaded] = useState<Maps | null | 'failed'>(null);
   useEffect(() => {
     let current = true;
-    loadDemoMap()
-      .then((map) => current && setLoaded(map))
+    loadDemoMaps()
+      .then((maps) => current && setLoaded(maps))
       .catch(() => current && setLoaded('failed'));
     return () => {
       current = false;
     };
   }, []);
   if (loaded === null) return { status: 'loading' };
-  if (loaded === 'failed' || exerciseId === undefined) return { status: 'ready', entry: undefined };
-  return { status: 'ready', entry: loaded[exerciseId] };
+  if (loaded === 'failed' || exerciseId === undefined)
+    return { status: 'ready', entry: undefined, photoDir: undefined };
+  return { status: 'ready', entry: loaded.demos[exerciseId], photoDir: loaded.photos[exerciseId] };
 }

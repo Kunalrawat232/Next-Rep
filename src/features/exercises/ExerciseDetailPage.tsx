@@ -7,7 +7,7 @@ import {
   type Exercise,
 } from '../../domain/exercises';
 import { demoMediaFor } from '../../domain/exercises/demoMedia';
-import { useDemoEntry } from './demoMap';
+import { useDemoSources } from './demoMap';
 import { useExerciseService } from './ExerciseServiceContext';
 import { DemoSkeleton, ExerciseDemo } from './ExerciseDemo';
 import { useExercises } from './useExercises';
@@ -33,8 +33,9 @@ export function ExerciseDetailPage() {
 }
 
 function Detail({ exercise }: { exercise: Exercise }) {
-  const demo = useDemoEntry(exercise.id);
+  const demo = useDemoSources(exercise.id);
   const entry = demo.status === 'ready' ? demo.entry : undefined;
+  const photoDir = demo.status === 'ready' ? demo.photoDir : undefined;
   const secondary = entry?.secondary ?? [];
 
   return (
@@ -69,7 +70,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
           {demo.status === 'loading' ? (
             <DemoSkeleton />
           ) : (
-            <ExerciseDemo exerciseName={exercise.name} media={demoMediaFor(entry)} />
+            <ExerciseDemo exerciseName={exercise.name} media={demoMediaFor({ entry, photoDir })} />
           )}
         </div>
       </div>

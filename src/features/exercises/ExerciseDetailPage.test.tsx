@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEMO_MEDIA } from '../../domain/exercises/demoMedia';
+import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { BENCH, renderApp } from '../../test/appHarness';
 
 afterEach(() => vi.restoreAllMocks());
@@ -20,6 +20,16 @@ describe('the exercise page', () => {
     expect(within(details).getByText('Primary muscle').nextSibling).toHaveTextContent('Chest');
     expect(within(details).getByText('Secondary muscles')).toBeInTheDocument();
     const img = await screen.findByRole('img', { name: 'Demonstration of Barbell Bench Press' });
+    expect(img.getAttribute('src')).toMatch(
+      new RegExp(`^${PHOTO_MEDIA.baseUrl.replaceAll('.', '\\.')}/.+/0\\.jpg$`),
+    );
+  });
+
+  it('falls back to the animation for an exercise that has no photos', async () => {
+    renderApp('/exercises/0096c850-8b6a-5e6a-845f-c3caf797ef08');
+    const img = await screen.findByRole('img', {
+      name: /^Demonstration of Single Leg Platform Slide/,
+    });
     expect(img.getAttribute('src')).toMatch(
       new RegExp(`^${DEMO_MEDIA.baseUrl.replaceAll('.', '\\.')}/videos/.+\\.gif$`),
     );

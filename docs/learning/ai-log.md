@@ -331,3 +331,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Problems found: two names that normalise to nothing matched each other (fixed with a test); the first idea of "same GIF means same exercise" was wrong because the catalogue has the same exercise twice (curated and imported).
 - How validated: _(developer to fill)_ Evidence: 4086 tests passing at the last full run; one Playwright spec for the page (not run: needs the hosted test user). Not done: a look at the page on a phone, and a licence from Gym visual.
 - Lesson: when a brief and the project's own decision records disagree, say so first and record the new decision in an ADR.
+
+## 2026-10-16: Photo crossfade (branch `feat/exercise-photos`)
+
+- Tool: Claude Code.
+- Asked: the Gym visual GIFs were choppy and blurry; the developer wanted smooth up-and-down motion. Do the cheap fix on the main branch, and try a second source on a branch that can be thrown away.
+- Findings: the GIFs hold 12 frames at about 10 fps at 180×180, so the roughness is in the file, and we were stretching them. free-exercise-db (Unlicense) has two 750×500 photos per exercise; crossfading start and end gives a smooth movement but only between two poses. Real smooth video has no free source we found.
+- AI produced: on `feat/home`, the animation at its own size; on `feat/exercise-photos`, a second matching script and map (136 exercises, 53 of the 56 popular ones, 32 by a reviewed override list), a crossfade component (CSS only, still under "reduce motion"), the photos-first fallback logic, credits for the second dataset, and ADR-014.
+- How validated: _(developer to fill)_ Evidence: full test run green on both branches. Not done: a look at the crossfade on a phone, and a licence check of the images in free-exercise-db.
+- Lesson: when the quality limit is in the source file, say so before building anything.

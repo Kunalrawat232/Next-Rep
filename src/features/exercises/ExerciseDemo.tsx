@@ -6,18 +6,15 @@ import { usePrefersReducedMotion } from '../../lib/usePrefersReducedMotion';
 
 type Props = {
   exerciseName: string;
-  /** The addresses to show; null when this exercise has no demonstration or demonstrations are off. */
+  /** What to show; null when this exercise has no demonstration or demonstrations are off. */
   media: DemoMedia | null;
 };
 
-/**
- * The same square whatever is inside, so nothing on the page moves when the picture arrives or fails. It is
- * never wider than the pictures themselves (180 px): stretching them only blurs them.
- */
+/** The same landscape box whatever is inside, so nothing on the page moves when the picture arrives or fails. */
 const FRAME =
-  'relative mx-auto aspect-square w-full max-w-[180px] overflow-hidden rounded-sm bg-surface-300';
+  'relative mx-auto aspect-[3/2] w-full max-w-sm overflow-hidden rounded-sm bg-surface-300';
 
-/** The empty square shown while the animation or the exercise's data is on its way. */
+/** The empty box shown while the animation or the exercise's data is on its way. */
 export function DemoSkeleton() {
   return (
     <Card aria-hidden="true" className="w-full">
@@ -45,18 +42,24 @@ function Placeholder({ message }: { message: string }) {
   );
 }
 
-/** One picture, with its own loading and failure state; a new address starts over (it is keyed by it). */
-function Picture({ src, alt }: { src: string; alt: string }) {
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>('loading');
+type Status = 'loading' | 'loaded' | 'failed';
+
+function Skeleton() {
+  return (
+    <div
+      data-testid="demo-skeleton"
+      className="absolute inset-0 bg-surface-300 motion-safe:animate-pulse"
+    />
+  );
+}
+
+/** The animation, at its own 180 px: stretching it only blurs it. Starts over for a new address (it is keyed). */
+function GifPicture({ src, alt }: { src: string; alt: string }) {
+  const [status, setStatus] = useState<Status>('loading');
   if (status === 'failed') return <Placeholder message="Demonstration unavailable" />;
   return (
     <div className={FRAME}>
-      {status === 'loading' && (
-        <div
-          data-testid="demo-skeleton"
-          className="absolute inset-0 bg-surface-300 motion-safe:animate-pulse"
-        />
-      )}
+      {status === 'loading' && <Skeleton />}
       <img
         src={src}
         alt={alt}
@@ -67,16 +70,68 @@ function Picture({ src, alt }: { src: string; alt: string }) {
         referrerPolicy="no-referrer"
         onLoad={() => setStatus('loaded')}
         onError={() => setStatus('failed')}
-        className={`size-full object-contain ${status === 'loaded' ? '' : 'opacity-0'}`}
+        className={`absolute inset-0 m-auto size-[180px] max-h-full max-w-full object-contain ${status === 'loaded' ? '' : 'opacity-0'}`}
       />
     </div>
   );
 }
 
 /**
+ * Two photos, the start pose and the end pose. The end pose fades in over the start pose and back, which
+ * reads as the movement (up and down) without being video. With "reduce motion" only the start pose shows.
+ * If the end photo fails the start photo stays; if the start photo fails the placeholder shows.
+ */
+function PhotoPair({
+  startUrl,
+  endUrl,
+  alt,
+  still,
+}: {
+  startUrl: string;
+  endUrl: string;
+  alt: string;
+  still: boolean;
+}) {
+  const [status, setStatus] = useState<Status>('loading');
+  const [endFailed, setEndFailed] = useState(false);
+  if (status === 'failed') return <Placeholder message="Demonstration unavailable" />;
+  const common = {
+    width: 750,
+    height: 500,
+    decoding: 'async' as const,
+    referrerPolicy: 'no-referrer' as const,
+    className: 'absolute inset-0 size-full object-contain',
+  };
+  return (
+    <div className={FRAME}>
+      {status === 'loading' && <Skeleton />}
+      <img
+        {...common}
+        src={startUrl}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setStatus('loaded')}
+        onError={() => setStatus('failed')}
+        className={`${common.className} ${status === 'loaded' ? '' : 'opacity-0'}`}
+      />
+      {!still && !endFailed && status === 'loaded' && (
+        <img
+          {...common}
+          src={endUrl}
+          alt=""
+          aria-hidden="true"
+          data-testid="demo-end-pose"
+          onError={() => setEndFailed(true)}
+          className={`${common.className} demo-fade`}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * A demonstration of how to do the exercise. Never an error: with no picture, no connection, or a broken
- * address it shows a quiet placeholder in the same space. With "reduce motion" on it shows the still
- * thumbnail instead of the animation.
+ * address it shows a quiet placeholder in the same space. With "reduce motion" on it shows a still picture.
  */
 export function ExerciseDemo({ exerciseName, media }: Props) {
   const online = useOnline();
@@ -86,9 +141,19 @@ export function ExerciseDemo({ exerciseName, media }: Props) {
   let body;
   if (!media) body = <Placeholder message="No demonstration for this exercise" />;
   else if (!online) body = <Placeholder message="Demonstrations need an internet connection" />;
+  else if (media.kind === 'photos')
+    body = (
+      <PhotoPair
+        key={media.startUrl}
+        startUrl={media.startUrl}
+        endUrl={media.endUrl}
+        alt={alt}
+        still={stillOnly}
+      />
+    );
   else {
     const src = stillOnly ? media.thumbUrl : media.gifUrl;
-    body = <Picture key={src} src={src} alt={alt} />;
+    body = <GifPicture key={src} src={src} alt={alt} />;
   }
 
   return (

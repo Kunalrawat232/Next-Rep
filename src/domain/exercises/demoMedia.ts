@@ -33,16 +33,61 @@ export type DemoEntry = z.infer<typeof DemoEntrySchema>;
 export const DemoMapSchema = z.record(z.uuid(), DemoEntrySchema);
 export type DemoMap = z.infer<typeof DemoMapSchema>;
 
-export type DemoMedia = { gifUrl: string; thumbUrl: string };
+/**
+ * Sharper photos for the popular exercises: a start pose and an end pose, which the app crossfades. They come
+ * from https://github.com/yuhonas/free-exercise-db (Unlicense) and are hotlinked the same way. An exercise
+ * with photos shows them; every other exercise falls back to the animation above.
+ */
+export const PHOTO_MEDIA = {
+  enabled: true,
+  /** Pinned to one commit, like the animations. */
+  baseUrl:
+    'https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises',
+  credit: {
+    dataset: 'yuhonas/free-exercise-db',
+    datasetUrl: 'https://github.com/yuhonas/free-exercise-db',
+    note: 'Exercise photos from free-exercise-db (Unlicense, public domain).',
+  },
+} as const;
 
-/** The addresses to show, or null when demonstrations are off or this exercise has none. */
+/** One folder of the photo dataset per exercise, such as "Barbell_Squat". Never a path or a URL. */
+export const PhotoDirSchema = z.string().regex(/^[\w-]+$/);
+export const PhotoMapSchema = z.record(z.uuid(), PhotoDirSchema);
+export type PhotoMap = z.infer<typeof PhotoMapSchema>;
+
+export type DemoMedia =
+  | { kind: 'photos'; startUrl: string; endUrl: string }
+  | { kind: 'gif'; gifUrl: string; thumbUrl: string };
+
+export type DemoSources = {
+  /** The animation entry (Gym visual), if this exercise has one. */
+  entry?: DemoEntry | undefined;
+  /** The photo folder (free-exercise-db), if this exercise has one. */
+  photoDir?: string | undefined;
+};
+
+/**
+ * What to show for an exercise: its photos if it has any, else its animation, else nothing (null). The two
+ * sources can be switched off independently, so a source can be dropped without touching a component.
+ */
 export function demoMediaFor(
-  entry: DemoEntry | undefined,
-  enabled: boolean = DEMO_MEDIA.enabled,
+  { entry, photoDir }: DemoSources,
+  enabled: { photos: boolean; gifs: boolean } = {
+    photos: PHOTO_MEDIA.enabled,
+    gifs: DEMO_MEDIA.enabled,
+  },
 ): DemoMedia | null {
-  if (!enabled || !entry) return null;
-  return {
-    gifUrl: `${DEMO_MEDIA.baseUrl}/${entry.gif}`,
-    thumbUrl: `${DEMO_MEDIA.baseUrl}/${entry.thumb}`,
-  };
+  if (enabled.photos && photoDir !== undefined)
+    return {
+      kind: 'photos',
+      startUrl: `${PHOTO_MEDIA.baseUrl}/${photoDir}/0.jpg`,
+      endUrl: `${PHOTO_MEDIA.baseUrl}/${photoDir}/1.jpg`,
+    };
+  if (enabled.gifs && entry)
+    return {
+      kind: 'gif',
+      gifUrl: `${DEMO_MEDIA.baseUrl}/${entry.gif}`,
+      thumbUrl: `${DEMO_MEDIA.baseUrl}/${entry.thumb}`,
+    };
+  return null;
 }
