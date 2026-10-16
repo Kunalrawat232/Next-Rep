@@ -21,9 +21,9 @@ Dumbbells are the one case where `total_kg` is not literally everything lifted; 
 
 ## Gym profiles and bars
 
-- A user can have multiple gyms (for example "Home", "Office gym").
-- Each gym has a default barbell weight (common: 20 kg, 15 kg) and optional extra bars (EZ bar, Smith machine, custom values). Any custom bar weight must be allowed.
-- A workout is linked to one gym; the bar used for each barbell exercise defaults from the gym; the user can choose a different bar of that gym.
+- A user has one gym: the bars that are added to their weights ([ADR-015](../architecture/decisions/015-one-gym-per-user.md)).
+- The gym has a barbell weight (common: 20 kg, 15 kg) and optional extra bars (EZ bar, Smith machine, custom values). Any custom bar weight must be allowed.
+- A workout is linked to the user's gym and keeps a copy of its bars; the bar used for each barbell exercise defaults from the gym; the user can choose a different bar of that gym.
 
 ## Units (kg and lb, `src/domain/units`)
 

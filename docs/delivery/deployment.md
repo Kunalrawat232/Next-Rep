@@ -19,7 +19,7 @@ Free projects pause after inactivity: check the project is awake before demos an
 
 ### 1.2 Apply the schema and seed
 
-**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
+**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`, `0003_exercise_muscle.sql` and `0004_one_gym_per_user.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
 
 **Option B: Supabase CLI** (installed, v2.120.0).
 
@@ -133,6 +133,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] Supabase project created (free); URL and publishable key saved (in use since 2026-10-08)
 - [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase` (2026-10-08)
 - [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises; checked 2026-10-11)
+- [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin on 2026-10-16 (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in, 2026-10-08)
 - [ ] Site URL set (needs the Vercel production URL)

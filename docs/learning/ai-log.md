@@ -341,3 +341,14 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decision by the developer: looked at both and kept the crossfade.
 - How validated: _(developer to fill)_ Evidence: full test run green on both branches. Not done: a look at the crossfade on a phone, and a licence check of the images in free-exercise-db.
 - Lesson: when the quality limit is in the source file, say so before building anything.
+
+## 2026-10-16: One gym per user
+
+- Tool: Claude Code, with two general-purpose agents for the mechanical test rewrites (remote service tests; domain and device-store tests) while I did the screens and the feature tests.
+- Asked: remove the idea of several gyms, because people have one.
+- Plan (approved before coding): enforce one gym in the database, drop the list, chooser, default flag, delete and the gym name; the first workout creates the gym with a standard barbell; the old `/gyms` addresses redirect.
+- AI produced: migration 0004 (keeps the default or oldest gym of a user who has several, drops `is_default`, adds a unique index, defaults the name), a `GymService` of `get` and `save`, one `GymPage`, a `useMyGym` hook, a one-row device cache that may say "no gym yet", the first-workout set-up, new tests for all of it (including a PGlite test of the migration on data with several gyms), and ADR-015.
+- Checked first: the hosted project had one user with one gym, so the migration deleted nothing there; it was applied through the Supabase plugin and the result read back.
+- Problems found: the first mechanical rewrite of test files left about 20 files with real behaviour to change (start-workout, Settings, Home, route and lb tests); my first retry test saved successfully before the failure was armed; an old `name` field was still in the local snapshot shape, so it is now dropped on read.
+- How validated: _(developer to fill)_ Evidence: 4000 unit tests and 107 database tests passing; typecheck and lint clean. Not run: the e2e spec (edited for the new first-workout flow) and the hosted integration test (rewritten for one gym), which need the hosted test user.
+- Lesson: when a concept is removed, enforce the new rule in the database and delete the old one outright; a hidden list would leave two models in the code.
