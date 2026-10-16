@@ -4,8 +4,9 @@ import { DemoMapSchema, type DemoEntry, type DemoMap } from '../../domain/exerci
 let loading: Promise<DemoMap> | null = null;
 
 /**
- * The demo map (about 150 KB), loaded the first time it is needed and kept. It is a separate chunk, so the
- * rest of the app never pays for it, and it is checked against its schema like any other data.
+ * The demo map (about 150 KB), loaded the first time it is needed and kept. It is a separate chunk that is
+ * only fetched and parsed on the exercise page (the service worker still precaches it, like other app code),
+ * and it is checked against its schema like any other data.
  */
 export function loadDemoMap(): Promise<DemoMap> {
   loading ??= import('../../domain/exercises.demo.json')

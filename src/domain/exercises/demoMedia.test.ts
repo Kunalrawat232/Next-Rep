@@ -15,6 +15,10 @@ describe('demo media', () => {
     });
   });
 
+  it('shows nothing at all when demonstrations are switched off', () => {
+    expect(demoMediaFor(entry, false)).toBeNull();
+  });
+
   it('has nothing for an exercise without an entry', () => {
     expect(demoMediaFor(undefined)).toBeNull();
   });

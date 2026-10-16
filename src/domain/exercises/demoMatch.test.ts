@@ -79,6 +79,34 @@ describe('matchDemos', () => {
     ).toHaveLength(1);
   });
 
+  it('does not trust a lone row that names a variant ours does not', () => {
+    const rows = [
+      row('1', 'standing calf raise (on a staircase)'),
+      row('2', 'bench press (with arm blaster)'),
+    ];
+    for (const name of ['Standing Calf Raise', 'Bench Press']) {
+      const report = matchDemos([{ id: 'a', name }], rows, { ourIdFor });
+      expect(report.matched).toEqual([]);
+      expect(report.ambiguous).toHaveLength(1);
+    }
+  });
+
+  it('accepts a lone row when the notes agree, or when only our name carries one', () => {
+    const rows = [row('1', 'barbell curl'), row('2', 'cable fly (low)')];
+    const report = matchDemos(
+      [
+        { id: 'a', name: 'Cable Fly (Low)' },
+        { id: 'b', name: 'Barbell Curl (Barbell)' },
+      ],
+      rows,
+      { ourIdFor },
+    );
+    expect(report.matched.map((m) => [m.ours.id, m.row.id])).toEqual([
+      ['a', '2'],
+      ['b', '1'],
+    ]);
+  });
+
   it('lets a person decline a match, and the exercise gets no demo', () => {
     const report = matchDemos([{ id: 'a', name: 'Barbell Curl' }], dataset, {
       ourIdFor,

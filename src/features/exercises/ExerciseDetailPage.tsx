@@ -9,7 +9,7 @@ import {
 import { demoMediaFor } from '../../domain/exercises/demoMedia';
 import { useDemoEntry } from './demoMap';
 import { useExerciseService } from './ExerciseServiceContext';
-import { ExerciseDemo } from './ExerciseDemo';
+import { DemoSkeleton, ExerciseDemo } from './ExerciseDemo';
 import { useExercises } from './useExercises';
 
 export function ExerciseDetailPage() {
@@ -67,9 +67,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
         </Card>
         <div className="order-first md:order-last">
           {demo.status === 'loading' ? (
-            <Card as="section" aria-label="Demonstration" className="w-full">
-              <div className="aspect-square w-full rounded-sm bg-surface-300 motion-safe:animate-pulse" />
-            </Card>
+            <DemoSkeleton />
           ) : (
             <ExerciseDemo exerciseName={exercise.name} media={demoMediaFor(entry)} />
           )}

@@ -13,6 +13,15 @@ type Props = {
 /** The same square whatever is inside, so nothing on the page moves when the picture arrives or fails. */
 const FRAME = 'relative aspect-square w-full overflow-hidden rounded-sm bg-surface-300';
 
+/** The empty square shown while the animation or the exercise's data is on its way. */
+export function DemoSkeleton() {
+  return (
+    <Card aria-hidden="true" className="w-full">
+      <div className={`${FRAME} motion-safe:animate-pulse`} />
+    </Card>
+  );
+}
+
 function Placeholder({ message }: { message: string }) {
   return (
     <div className={`${FRAME} flex flex-col items-center justify-center gap-2 p-4 text-center`}>

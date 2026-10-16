@@ -36,8 +36,11 @@ export type DemoMap = z.infer<typeof DemoMapSchema>;
 export type DemoMedia = { gifUrl: string; thumbUrl: string };
 
 /** The addresses to show, or null when demonstrations are off or this exercise has none. */
-export function demoMediaFor(entry: DemoEntry | undefined): DemoMedia | null {
-  if (!DEMO_MEDIA.enabled || !entry) return null;
+export function demoMediaFor(
+  entry: DemoEntry | undefined,
+  enabled: boolean = DEMO_MEDIA.enabled,
+): DemoMedia | null {
+  if (!enabled || !entry) return null;
   return {
     gifUrl: `${DEMO_MEDIA.baseUrl}/${entry.gif}`,
     thumbUrl: `${DEMO_MEDIA.baseUrl}/${entry.thumb}`,

@@ -100,5 +100,7 @@ if (process.argv.includes('--write')) {
     new URL('../src/domain/exercises.demo.json', import.meta.url),
     JSON.stringify(sorted, null, 2) + '\n',
   );
-  console.log(`\nWrote ${Object.keys(sorted).length} entries to src/domain/exercises.demo.json.`);
+  console.log(
+    `\nWrote ${Object.keys(sorted).length} entries to src/domain/exercises.demo.json. Run \`npx prettier --write src/domain/exercises.demo.json\` so the diff only shows real changes.`,
+  );
 }

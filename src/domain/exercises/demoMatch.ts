@@ -14,6 +14,13 @@ export function normalizeName(name: string): string {
     .trim();
 }
 
+/** The notes in brackets, if any: "(on a staircase)". A note on the dataset's side names a variant, so it must agree with ours. */
+function qualifier(name: string): string {
+  return (name.match(/\(([^)]*)\)/g) ?? [])
+    .map((note) => normalizeName(note.slice(1, -1)))
+    .join(' ');
+}
+
 export type Ours = { id: string; name: string };
 export type DatasetRow = { id: string; name: string };
 
@@ -75,9 +82,20 @@ export function matchDemos<Row extends DatasetRow>(
     const same = candidates.filter(
       (row) => row.name.trim().toLowerCase() === item.name.trim().toLowerCase(),
     );
-    const only = candidates.length === 1 ? candidates[0] : same.length === 1 ? same[0] : undefined;
+    // A row that names a variant ours does not ("(on a staircase)") is not the same exercise, even if alone.
+    const mine = qualifier(item.name);
+    const sameVariant = candidates.filter((row) => {
+      const theirs = qualifier(row.name);
+      return theirs === '' || theirs === mine;
+    });
+    const only =
+      candidates.length === 1 && sameVariant.length === 1
+        ? candidates[0]
+        : same.length === 1
+          ? same[0]
+          : undefined;
     if (only) report.matched.push({ ours: item, row: only, how: 'name' });
-    else if (candidates.length > 1) report.ambiguous.push({ ours: item, rows: candidates });
+    else if (candidates.length > 0) report.ambiguous.push({ ours: item, rows: candidates });
     else report.unmatched.push(item);
   }
   return report;

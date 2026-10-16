@@ -67,7 +67,7 @@ Once voice is built it will need HTTPS or localhost, so test on phones through a
 
 Exercise names and muscle data come from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (MIT licence). The exercise demonstrations are © [Gym visual](https://gymvisual.com/) and are shown for **non-commercial use only**: they are loaded from the dataset at run time and are never stored in this repository, the build or the offline cache. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [ADR-013](docs/architecture/decisions/013-hotlinked-exercise-demonstrations.md).
 
-To re-run the matching of exercises to demonstrations after the exercise list changes: download `data/exercises.json` from the dataset (do not commit it), then run `node scripts/match-exercise-demos.mjs path/to/exercises.json` to print the report of matched, ambiguous, declined and unmatched exercises, and add `--write` to update `src/domain/exercises.demo.json`. Decisions for names that do not match go in `scripts/exercise-demo-overrides.json`.
+To re-run the matching of exercises to demonstrations after the exercise list changes: download `data/exercises.json` from the dataset (do not commit it), then run `node scripts/match-exercise-demos.mjs path/to/exercises.json` to print the report of matched, ambiguous, declined and unmatched exercises, and add `--write` to update `src/domain/exercises.demo.json` (then run `npx prettier --write` on that file, so the diff only shows real changes). Decisions for names that do not match go in `scripts/exercise-demo-overrides.json`.
 
 ## Documentation map
 
