@@ -67,4 +67,8 @@ describe('exercise demonstrations and the offline cache', () => {
     expect(pictures('public')).toEqual([]);
     expect(pictures('src')).toEqual([]);
   });
+
+  it('does not precache the optional liquid glass library', () => {
+    expect(config).toMatch(/globIgnores:\s*\[[^\]]*liquidGL/);
+  });
 });

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
+import { useGlassEffect, useLiquidGlass } from '../lib/useGlassEffect';
 import { Logo } from './Logo';
 
 type Item = { label: string; to: string; icon: ReactNode; desktopOnly?: boolean };
@@ -81,6 +82,8 @@ const itemBase =
 
 /** Bottom tab bar on phones, sidebar from 1024 px up. One nav element, laid out by CSS. */
 export function AppShell() {
+  const { enabled } = useGlassEffect();
+  useLiquidGlass(enabled);
   return (
     <div className="relative isolate min-h-dvh lg:flex">
       {/* The colour behind the app, for the glass to show. Decoration only. */}
@@ -115,7 +118,7 @@ export function AppShell() {
       <Link
         to="/workout"
         aria-label="Workout"
-        className="fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full bg-accent text-on-accent shadow-[0_8px_24px_-8px_var(--glass-shadow)] lg:hidden"
+        className="liquidGL glass fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full border border-glass-line text-accent lg:hidden"
       >
         <svg
           width="28"

@@ -111,6 +111,30 @@ describe('appearance', () => {
   });
 });
 
+describe('the liquid glass effect', () => {
+  afterEach(() => localStorage.removeItem('next-rep-glass'));
+
+  it('is on to begin with, and the switch turns it off and on, kept on the device', async () => {
+    const { user } = renderApp('/settings');
+    const glass = await screen.findByRole('switch', { name: 'Liquid glass effect' });
+    expect(glass).toHaveAttribute('aria-checked', 'true');
+    await user.click(glass);
+    expect(glass).toHaveAttribute('aria-checked', 'false');
+    expect(localStorage.getItem('next-rep-glass')).toBe('off');
+    await user.click(glass);
+    expect(glass).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('starts off for a person who turned it off earlier', async () => {
+    localStorage.setItem('next-rep-glass', 'off');
+    renderApp('/settings');
+    expect(await screen.findByRole('switch', { name: 'Liquid glass effect' })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    );
+  });
+});
+
 describe('your bars', () => {
   it('shows your bars with a way to change them', async () => {
     renderApp('/settings');

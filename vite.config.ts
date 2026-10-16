@@ -32,6 +32,9 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         // The app shell, icons and the Latin font cut, so a cold start offline looks right.
         globPatterns: ['**/*.{js,css,html,svg,png}', '**/geist-latin-wght-normal*.woff2'],
+        // The liquid glass library (about 300 KB) is optional and loaded on demand where WebGL exists, so it is
+        // not stored for offline use: without it the CSS glass is already there.
+        globIgnores: ['**/liquidGL*.js'],
       },
     }),
   ],

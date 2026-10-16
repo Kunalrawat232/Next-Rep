@@ -26,6 +26,10 @@ The source of truth in code is `src/index.css` (`@theme` for dark, `[data-theme=
 
 Type: Geist (self-hosted, variable). Styles `display` 40/44, `title` 28/34, `headline` 20/26, `body` 17/24, `callout` 15/20, `caption` 13/18, `metric` 56/60. Spacing 8/16/24/32. Radii `sm` 8, `md` 14, `full` 999. Use them as Tailwind utilities (`bg-surface-200`, `text-ink-muted`, `border-line`, `text-title`, `rounded-md`).
 
+## Glass
+
+Surfaces are translucent glass over a soft colour layer (`#ambient`, fixed behind the app), set in the tokens block of `src/index.css` for both themes: `--glass-fill`, `--glass-fill-strong`, `--glass-line` (the `border-glass-line` colour), `--glass-highlight`, `--glass-shadow`, `--glass-blur`, `--ambient-a/b/c`. Use `glass-flat` for cards, buttons, chips and pills (no blur, so cheap in long lists) and `glass` for the few overlays that sit over scrolling content (bars, dialogs). `Card`, `Button` and `Chip` already do. Text colours must keep 4.5:1 on the glass over the brightest ambient glow; `tests/design/tokens.test.ts` checks it. The floating Workout button is also a liquid glass lens (liquid-gl, one config in `src/lib/liquidGlass.ts`, a Settings switch). See [ADR-016](../architecture/decisions/016-liquid-glass.md).
+
 ## Shared components
 
 Keep these names identical in code and in Claude Design.

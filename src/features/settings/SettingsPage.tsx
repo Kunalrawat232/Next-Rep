@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { buttonClasses, Chip, Section, Switch } from '../../components';
 import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { summarizeBars } from '../../domain/gyms';
+import { useGlassEffect } from '../../lib/useGlassEffect';
 import { useAuth } from '../auth';
 import { useMyGym } from '../workout';
 import { SignOutPanel } from './SignOutPanel';
@@ -13,6 +14,7 @@ export function SettingsPage() {
   const { state } = useAuth();
   const { unit, setUnit } = useUnit();
   const { theme, setTheme } = useTheme();
+  const glass = useGlassEffect();
   const { catalog, reload } = useMyGym();
   if (state.status !== 'signedIn') return null;
 
@@ -84,6 +86,15 @@ export function SettingsPage() {
             checked={theme === 'light'}
             onChange={(on) => setTheme(on ? 'light' : 'dark')}
           />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-body font-semibold">Liquid glass effect</span>
+            <span className="text-callout text-ink-muted">
+              A glass button that bends the light. Turn it off to save battery
+            </span>
+          </div>
+          <Switch label="Liquid glass effect" checked={glass.enabled} onChange={glass.setEnabled} />
         </div>
       </Section>
 
