@@ -36,6 +36,7 @@ export function ExercisesPage() {
           exercises={state.exercises}
           customProblem={state.customProblem}
           onRetryCustom={reload}
+          detailHref={(exercise) => `/exercises/${exercise.id}`}
         />
       )}
     </div>

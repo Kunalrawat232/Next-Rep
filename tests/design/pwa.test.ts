@@ -47,3 +47,24 @@ describe('offline font', () => {
     expect(files.some((f) => /^geist-latin-wght-normal.*\.woff2$/.test(f))).toBe(true);
   });
 });
+
+describe('exercise demonstrations and the offline cache', () => {
+  const config = readFileSync(new URL('vite.config.ts', root), 'utf8');
+
+  it('never precaches or runtime-caches pictures, so the hotlinked media is not stored by the app', () => {
+    const globs = /globPatterns:\s*\[([^\]]*)\]/.exec(config)?.[1] ?? '';
+    expect(globs).not.toMatch(/gif|jpe?g|webp|avif/);
+    expect(config).not.toContain('runtimeCaching');
+  });
+
+  it('keeps no copy of the dataset media in the repository', () => {
+    for (const dir of ['videos', 'images', 'public/videos', 'public/images'])
+      expect(existsSync(new URL(dir, root)), dir).toBe(false);
+    const pictures = (path: string) =>
+      readdirSync(new URL(path, root), { recursive: true })
+        .map(String)
+        .filter((file) => /\.(gif|jpe?g)$/i.test(file));
+    expect(pictures('public')).toEqual([]);
+    expect(pictures('src')).toEqual([]);
+  });
+});

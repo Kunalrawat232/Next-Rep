@@ -1,4 +1,5 @@
 export { CustomExercisePage } from './CustomExercisePage';
+export { ExerciseDetailPage } from './ExerciseDetailPage';
 export { ExercisePicker } from './ExercisePicker';
 export { ExerciseServiceProvider, useExerciseService } from './ExerciseServiceContext';
 export { ExercisesPage } from './ExercisesPage';

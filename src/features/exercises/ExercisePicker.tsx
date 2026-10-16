@@ -21,16 +21,20 @@ type Props = {
   onRetryCustom: () => void;
   /** Without it the rows are plain; the workout screen passes it to pick an exercise. */
   onSelect?: (exercise: Exercise) => void;
+  /** Where a plain row leads (the exercise's page). Ignored when `onSelect` is given. */
+  detailHref?: (exercise: Exercise) => string;
 };
 
 function Row({
   exercise,
   query,
   onSelect,
+  detailHref,
 }: {
   exercise: Exercise;
   query: string;
   onSelect?: Props['onSelect'];
+  detailHref?: Props['detailHref'];
 }) {
   const range = highlightRange(exercise.name, query);
   const body = (
@@ -56,6 +60,10 @@ function Row({
         <button type="button" className={box} onClick={() => onSelect(exercise)}>
           {body}
         </button>
+      ) : detailHref ? (
+        <Link to={detailHref(exercise)} className={box}>
+          {body}
+        </Link>
       ) : (
         <div className={box}>{body}</div>
       )}
@@ -67,21 +75,35 @@ function List({
   items,
   query,
   onSelect,
+  detailHref,
 }: {
   items: Exercise[];
   query: string;
   onSelect?: Props['onSelect'];
+  detailHref?: Props['detailHref'];
 }) {
   return (
     <ul className="flex flex-col gap-2">
       {items.map((exercise) => (
-        <Row key={exercise.id} exercise={exercise} query={query} onSelect={onSelect} />
+        <Row
+          key={exercise.id}
+          exercise={exercise}
+          query={query}
+          onSelect={onSelect}
+          detailHref={detailHref}
+        />
       ))}
     </ul>
   );
 }
 
-export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSelect }: Props) {
+export function ExercisePicker({
+  exercises,
+  customProblem,
+  onRetryCustom,
+  onSelect,
+  detailHref,
+}: Props) {
   const [query, setQuery] = useState('');
   const [equipment, setEquipment] = useState<EquipmentFilter>('all');
   const [shown, setShown] = useState(PAGE);
@@ -186,12 +208,12 @@ export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSele
           {custom.length > 0 && (
             <section className="flex flex-col gap-2">
               <h2 className="text-headline font-semibold">Your exercises</h2>
-              <List items={custom} query="" onSelect={onSelect} />
+              <List items={custom} query="" onSelect={onSelect} detailHref={detailHref} />
             </section>
           )}
           <section className="flex flex-col gap-2">
             <h2 className="text-headline font-semibold">Popular exercises</h2>
-            <List items={popular} query="" onSelect={onSelect} />
+            <List items={popular} query="" onSelect={onSelect} detailHref={detailHref} />
             <p className="text-callout text-ink-muted">Search to find {moreToFind} more.</p>
           </section>
         </>
@@ -221,7 +243,12 @@ export function ExercisePicker({ exercises, customProblem, onRetryCustom, onSele
         </EmptyState>
       ) : (
         <section className="flex flex-col gap-2">
-          <List items={results.slice(0, shown)} query={query} onSelect={onSelect} />
+          <List
+            items={results.slice(0, shown)}
+            query={query}
+            onSelect={onSelect}
+            detailHref={detailHref}
+          />
           {total > shown && (
             <Button variant="secondary" onClick={() => setShown(shown + PAGE)}>
               Show more
