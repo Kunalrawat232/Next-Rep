@@ -150,25 +150,18 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
   /** What it means in kg: the stored value the field started from while the text is unchanged, else the typed text converted. */
   const valueKg = kgFromField(field, unit);
   const reps = /^\d+$/.test(repsText.trim()) ? Number(repsText.trim()) : null;
-  const gymName = gym?.name ?? 'this gym';
 
   if (hasBar && bar === undefined)
     return (
       <div className="flex flex-col gap-6">
         <PageHeader back={back} title={exercise.name} />
         <EmptyState
-          title={
-            <>
-              No {EQUIPMENT_LABEL[equipment]} set for {gymName}
-            </>
-          }
+          title={<>No {EQUIPMENT_LABEL[equipment]} set up</>}
           message="The bar weight is added to every weight you log, so it has to be set first."
         >
-          {workout.gymId && (
-            <Link to={`/gyms/${workout.gymId}`} className={buttonClasses('primary')}>
-              Set the bar for this gym
-            </Link>
-          )}
+          <Link to="/gym" className={buttonClasses('primary')}>
+            Set up your bars
+          </Link>
         </EmptyState>
       </div>
     );
@@ -322,7 +315,6 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
 
       {hasBar && (
         <BreakdownCard
-          gymName={gymName}
           breakdown={resolved ? breakdownFor(resolved, unit) : undefined}
           message={
             !result
@@ -365,11 +357,8 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
           }}
           onCancel={() => setAsking(false)}
           extra={
-            workout.gymId && hasBar ? (
-              <Link
-                to={`/gyms/${workout.gymId}`}
-                className="flex min-h-touch items-center font-semibold text-accent"
-              >
+            hasBar ? (
+              <Link to="/gym" className="flex min-h-touch items-center font-semibold text-accent">
                 Change bar
               </Link>
             ) : undefined

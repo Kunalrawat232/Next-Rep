@@ -12,7 +12,7 @@ import {
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout, freshLocal, uuid } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type SetSeed = { exerciseId?: string; totalKg: number; reps: number };
 type WorkoutSeed = { daysAgo: number; sets: SetSeed[]; open?: boolean };

@@ -1,18 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
   Button,
-  Card,
   cardClasses,
   Chip,
   ErrorMessage,
   LoadingMessage,
-  NotFound,
   PageHeader,
   TextField,
 } from '../../components';
 import {
-  pickDefaultGym,
+  defaultBarbellKg,
   validateGymForm,
   type BarKind,
   type Gym,
@@ -26,7 +24,7 @@ import { useUnit } from '../settings/UnitProvider';
 import { useGymService } from './GymServiceContext';
 import { GymsLoadError } from './GymsLoadError';
 import type { GymFailure, GymService } from './types';
-import { useGyms } from './useGyms';
+import { useGym } from './useGym';
 import { usePending } from '../../lib/usePending';
 
 /** `origin` is the stored kg the field started from, so saving it untouched changes nothing. */
@@ -43,36 +41,29 @@ const PRESET_NAMES = [KIND_LABEL.ez_bar, KIND_LABEL.smith];
 
 const failureMessage = (reason: GymFailure, action: string) =>
   reason === 'offline'
-    ? `You're offline. Gym changes need a connection, so connect and try again.`
+    ? `You're offline. Changes to your gym need a connection, so connect and try again.`
     : reason === 'conflict'
-      ? 'This gym already has a bar with that name or of that kind. Change it and try again.'
+      ? 'You already have a bar with that name or of that kind, or your gym was just set up on another device. Check the bars, reload and try again.'
       : `Could not ${action}. Please try again.`;
 
-export function GymFormPage() {
+export function GymPage() {
   const { unit } = useUnit();
-  const { gymId } = useParams();
   const { state: auth } = useAuth();
   const service = useGymService();
-  const { state, reload } = useGyms(service);
+  const { state, reload } = useGym(service);
 
   if (auth.status !== 'signedIn') return null;
   if (state.status === 'loading') return <LoadingMessage />;
   if (state.status === 'error') return <GymsLoadError reason={state.reason} onRetry={reload} />;
 
-  const existing = gymId ? state.gyms.find((gym) => gym.id === gymId) : undefined;
-  if (gymId && !existing) return <NotFound title="Gym not found" to="/gyms" label="Back to gyms" />;
-
   return (
     <GymForm
       // A new unit starts a new form, so text typed in one unit is never read in the other.
-      key={`${existing?.id ?? 'new'}-${unit}`}
+      key={`${state.gym?.id ?? 'new'}-${unit}`}
       unit={unit}
       service={service}
       userId={auth.user.id}
-      existing={existing}
-      defaultId={pickDefaultGym(state.gyms)?.id}
-      // Only the very first gym claims the default; after that the user moves it on purpose.
-      isFirstGym={state.gyms.length === 0}
+      existing={state.gym ?? undefined}
     />
   );
 }
@@ -82,11 +73,9 @@ type FormProps = {
   service: GymService;
   userId: string;
   existing: Gym | undefined;
-  defaultId: string | undefined;
-  isFirstGym: boolean;
 };
 
-function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: FormProps) {
+function GymForm({ unit, service, userId, existing }: FormProps) {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   // Minted once per form, so a retry after a half-done save finishes the job instead of duplicating it.
@@ -99,9 +88,8 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
     };
   }, []);
 
-  const [name, setName] = useState(existing?.name ?? '');
   const [barbellKg, setBarbellKg] = useState(
-    existing ? formatWeight(existing.barbellKg, unit) : BARBELL_PRESETS[unit][0]!,
+    existing ? formatWeight(existing.barbellKg, unit) : formatWeight(defaultBarbellKg(unit), unit),
   );
   const barbellOrigin = existing?.barbellKg ?? null;
   const [bars, setBars] = useState<FormBar[]>(
@@ -121,9 +109,6 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
   const [draftName, setDraftName] = useState('');
   const [draftWeight, setDraftWeight] = useState('');
   const [draftErrors, setDraftErrors] = useState<{ name?: string; weightKg?: string }>({});
-
-  const [isDefault, setIsDefault] = useState(existing !== undefined && existing.id === defaultId);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
     if (focusTick > 0)
@@ -153,10 +138,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
       origin: null,
       kind: draftKind,
     };
-    const result = validateGymForm(
-      { name, barbellKg, barbellOrigin, bars: [...bars, draft] },
-      unit,
-    );
+    const result = validateGymForm({ barbellKg, barbellOrigin, bars: [...bars, draft] }, unit);
     const own = result.ok ? undefined : result.errors.bars[bars.length];
     if (own) {
       setDraftErrors(own);
@@ -173,7 +155,7 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
     event.preventDefault();
     if (pending) return;
     setProblem(null);
-    const checked = validateGymForm({ name, barbellKg, barbellOrigin, bars }, unit);
+    const checked = validateGymForm({ barbellKg, barbellOrigin, bars }, unit);
     // A bar that was typed but never added would be lost, so ask instead of dropping it.
     const draftTyped =
       draftWeight.trim() !== '' || (draftName.trim() !== '' && !PRESET_NAMES.includes(draftName));
@@ -192,74 +174,27 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
     if (!begin()) return;
     const input: GymInput = checked.value;
     try {
-      const result = existing
-        ? await service.update(userId, existing.id, input)
-        : await service.create(userId, newGymId, input, isFirstGym);
+      const result = await service.save(userId, existing?.id ?? newGymId, input);
       if (!mounted.current) return;
       if (result.status === 'ok') {
-        navigate('/gyms');
+        navigate('/settings');
         return;
       }
-      setProblem(failureMessage(result.reason, 'save the gym'));
+      setProblem(failureMessage(result.reason, 'save your gym'));
     } catch {
-      if (mounted.current) setProblem(failureMessage('unknown', 'save the gym'));
+      if (mounted.current) setProblem(failureMessage('unknown', 'save your gym'));
     }
     if (mounted.current) end();
-  }
-
-  async function makeThisDefault() {
-    if (!existing || pending) return;
-    setProblem(null);
-    if (!begin()) return;
-    try {
-      const result = await service.setDefault(existing.id);
-      if (!mounted.current) return;
-      if (result.status === 'ok') setIsDefault(true);
-      else setProblem(failureMessage(result.reason, 'change the default gym'));
-    } catch {
-      if (mounted.current) setProblem(failureMessage('unknown', 'change the default gym'));
-    }
-    if (mounted.current) end();
-  }
-
-  async function deleteGym() {
-    if (!existing || pending) return;
-    setProblem(null);
-    if (!begin()) return;
-    try {
-      const result = await service.remove(existing.id);
-      if (!mounted.current) return;
-      if (result.status === 'ok') {
-        navigate('/gyms');
-        return;
-      }
-      setProblem(failureMessage(result.reason, 'delete the gym'));
-    } catch {
-      if (mounted.current) setProblem(failureMessage('unknown', 'delete the gym'));
-    }
-    if (mounted.current) {
-      end();
-      setConfirmingDelete(false);
-    }
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader back="/gyms" title={existing ? 'Edit gym' : 'New gym'} />
+      <PageHeader back="/settings" title="Your gym" />
+      <p className="text-callout text-ink-muted">
+        Bar weights are added to every weight you log, so a bar set here is counted for you.
+      </p>
 
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
-        <TextField
-          label="Gym name"
-          placeholder="For example, Home gym"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setErrors((prev) => ({ ...prev, name: undefined }));
-          }}
-          disabled={pending}
-          error={errors.name}
-        />
-
         <div className="flex flex-col gap-2">
           <TextField
             label={`Barbell weight (${unit})`}
@@ -383,38 +318,9 @@ function GymForm({ unit, service, userId, existing, defaultId, isFirstGym }: For
         {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
         <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : existing ? 'Save changes' : 'Create gym'}
+          {pending ? 'Saving…' : existing ? 'Save changes' : 'Save'}
         </Button>
       </form>
-
-      {existing && (
-        <section aria-label="Gym actions" className="flex flex-col gap-4">
-          {isDefault ? (
-            <p className="text-callout text-ink-muted">This is your default gym.</p>
-          ) : (
-            <Button variant="secondary" disabled={pending} onClick={makeThisDefault}>
-              Make this my default gym
-            </Button>
-          )}
-          {confirmingDelete ? (
-            <Card tone="danger" className="flex flex-col gap-4">
-              <p>Delete {existing.name}? Its bars go with it.</p>
-              <div className="flex gap-2">
-                <Button variant="danger" disabled={pending} onClick={deleteGym}>
-                  Yes, delete
-                </Button>
-                <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
-              Delete gym
-            </Button>
-          )}
-        </section>
-      )}
     </div>
   );
 }

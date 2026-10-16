@@ -21,7 +21,7 @@ function renderAt(path: string, fake = createFakeAuthService()) {
   render(
     <AuthProvider service={fake.service}>
       <UnitsForTest gate={false}>
-        <GymServiceProvider service={createFakeGymService([sampleGym()]).service}>
+        <GymServiceProvider service={createFakeGymService(sampleGym()).service}>
           <ExerciseServiceProvider service={createFakeExerciseService().service}>
             <SyncProvider
               remote={createFakeRemoteLog().remote}

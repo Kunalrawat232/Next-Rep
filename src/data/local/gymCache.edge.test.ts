@@ -1,4 +1,4 @@
-// Edge and negative cases for the gym list saved on the device and the gym kept on a workout.
+// Edge and negative cases for the gym saved on the device and the gym kept on a workout.
 // A failing test here is a suspected bug: do not weaken it.
 import { describe, expect, it } from 'vitest';
 import type { Gym } from '../../domain/gyms';
@@ -7,64 +7,83 @@ import type { GymSnapshot } from './types';
 
 const gym = (over: Partial<Gym> = {}): Gym => ({
   id: '11111111-1111-4111-8111-111111111111',
-  name: 'Home gym',
   barbellKg: 15,
-  isDefault: true,
-  createdAt: '2026-10-01T10:00:00Z',
   bars: [],
   ...over,
 });
-const snapshot: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
+const snapshot: GymSnapshot = { barbellKg: 15, bars: [] };
 
-describe('the saved gym list', () => {
+describe('the saved gym', () => {
   it('is replaced as a whole by the next save, not merged', async () => {
     const { store } = freshLocal();
-    await store.saveGyms([gym({ id: 'a', name: 'A' }), gym({ id: 'b', name: 'B' })]);
-    await store.saveGyms([gym({ id: 'c', name: 'C' })]);
-    expect((await store.cachedGyms())?.map((g) => g.id)).toEqual(['c']);
+    await store.saveGym(
+      gym({ id: 'a', bars: [{ id: 'x', name: 'EZ', weightKg: 7, kind: 'ez_bar' }] }),
+    );
+    await store.saveGym(gym({ id: 'c' }));
+    expect(await store.cachedGym()).toEqual({ gym: gym({ id: 'c' }) });
+  });
+
+  it('can be saved as "no gym yet", which is different from nothing saved', async () => {
+    const { store } = freshLocal();
+    expect(await store.cachedGym()).toBeNull();
+    await store.saveGym(gym());
+    await store.saveGym(null);
+    expect(await store.cachedGym()).toEqual({ gym: null });
   });
 
   it('survives closing and reopening the database, as after an app restart', async () => {
     const { store, db, userId } = freshLocal();
-    await store.saveGyms([gym()]);
+    await store.saveGym(gym());
     db.close();
     const again = reopenLocal(userId);
-    expect(await again.store.cachedGyms()).toEqual([gym()]);
+    expect(await again.store.cachedGym()).toEqual({ gym: gym() });
   });
 
-  it('is a copy: changing the list after saving does not change what was saved', async () => {
+  it('is a copy: changing the gym after saving does not change what was saved', async () => {
     const { store } = freshLocal();
-    const list = [gym()];
-    await store.saveGyms(list);
-    list[0]!.name = 'Changed';
-    list.push(gym({ id: 'x' }));
-    expect(await store.cachedGyms()).toEqual([gym()]);
+    const saved = gym();
+    await store.saveGym(saved);
+    saved.barbellKg = 99;
+    saved.bars.push({ id: 'x', name: 'EZ', weightKg: 7, kind: 'ez_bar' });
+    expect(await store.cachedGym()).toEqual({ gym: gym() });
   });
 
   it('is cleared by purgeSynced but leaves an unsynced workout and its gym alone', async () => {
     const { store } = freshLocal();
-    await store.saveGyms([gym()]);
+    await store.saveGym(gym());
     const w = await store.startWorkout({ ...aWorkout(), gymSnapshot: snapshot });
     await store.logSet(aSet(w.id));
     await store.purgeSynced();
-    expect(await store.cachedGyms()).toBeNull();
+    expect(await store.cachedGym()).toBeNull();
     expect((await store.activeWorkout())?.gymSnapshot).toEqual(snapshot);
     expect(await store.listSets(w.id)).toHaveLength(1);
   });
 
-  it('keeps gyms with unusual names and many bars intact', async () => {
+  it('keeps a gym with many bars and unusual bar names intact', async () => {
     const { store } = freshLocal();
     const odd = gym({
-      name: '<b>Ananya\'s "gym"</b> 🏋️',
       bars: Array.from({ length: 20 }, (_, i) => ({
         id: `bar-${i}`,
-        name: `Bar ${i}`,
+        name: i === 0 ? '<b>Ananya\'s "bar"</b> 🏋️' : `Bar ${i}`,
         weightKg: i + 0.25,
         kind: i % 2 ? ('ez_bar' as const) : ('smith' as const),
       })),
     });
-    await store.saveGyms([odd]);
-    expect(await store.cachedGyms()).toEqual([odd]);
+    await store.saveGym(odd);
+    expect(await store.cachedGym()).toEqual({ gym: odd });
+  });
+
+  it('reads an old copy with a name, a default flag and a date, and drops those fields', async () => {
+    const { store, db } = freshLocal();
+    const old = { ...gym(), name: 'Old gym', isDefault: true, createdAt: '2026-10-01T00:00:00Z' };
+    await db.gymCache.put({ id: 'gym', gym: old as unknown as Gym, savedAt: 0 });
+    expect(await store.cachedGym()).toEqual({ gym: gym() });
+  });
+
+  it('does not trust a saved copy of the old list shape', async () => {
+    const { store, db } = freshLocal();
+    await db.gymCache.put({ id: 'gym', gyms: [gym()], savedAt: 0 } as never);
+    expect(await store.cachedGym()).toBeNull();
   });
 });
 
@@ -75,7 +94,7 @@ describe('the gym kept on a workout', () => {
     await store.startWorkout({ ...input, gymSnapshot: snapshot });
     const second = await store.startWorkout({
       ...input,
-      gymSnapshot: { name: 'Office', barbellKg: 20, bars: [] },
+      gymSnapshot: { barbellKg: 20, bars: [] },
     });
     expect(second.gymSnapshot).toEqual(snapshot);
   });
@@ -89,19 +108,18 @@ describe('the gym kept on a workout', () => {
   });
 
   it.each([
-    ['a negative bar', { name: 'G', barbellKg: -5, bars: [] }],
-    ['a bar over 100 kg', { name: 'G', barbellKg: 1000, bars: [] }],
-    ['a bar that is not a number', { name: 'G', barbellKg: Number.NaN, bars: [] }],
+    ['a negative bar', { barbellKg: -5, bars: [] }],
+    ['a bar over 100 kg', { barbellKg: 1000, bars: [] }],
+    ['a bar that is not a number', { barbellKg: Number.NaN, bars: [] }],
     [
       'an extra bar of negative weight',
-      { name: 'G', barbellKg: 20, bars: [{ id: 'b', name: 'EZ', weightKg: -7.5, kind: 'ez_bar' }] },
+      { barbellKg: 20, bars: [{ id: 'b', name: 'EZ', weightKg: -7.5, kind: 'ez_bar' }] },
     ],
     [
       'an extra bar over 100 kg',
-      { name: 'G', barbellKg: 20, bars: [{ id: 'b', name: 'EZ', weightKg: 700, kind: 'ez_bar' }] },
+      { barbellKg: 20, bars: [{ id: 'b', name: 'EZ', weightKg: 700, kind: 'ez_bar' }] },
     ],
-    ['bars that are not a list', { name: 'G', barbellKg: 20, bars: null }],
-    ['no name', { barbellKg: 20, bars: [] }],
+    ['bars that are not a list', { barbellKg: 20, bars: null }],
   ])('does not trust a stored snapshot with %s', async (_name, bad) => {
     const { store } = freshLocal();
     await store
@@ -113,10 +131,10 @@ describe('the gym kept on a workout', () => {
   it.each([
     ['a negative bar', -5],
     ['a bar over 100 kg', 1000],
-  ])('does not trust a saved gym list with %s', async (_name, barbellKg) => {
+  ])('does not trust a saved gym with %s', async (_name, barbellKg) => {
     const { store } = freshLocal();
-    await store.saveGyms([gym({ barbellKg })]);
-    expect(await store.cachedGyms()).toBeNull();
+    await store.saveGym(gym({ barbellKg }));
+    expect(await store.cachedGym()).toBeNull();
   });
 });
 

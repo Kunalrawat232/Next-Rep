@@ -92,8 +92,7 @@ function WorkoutRow({ workout, sets }: { workout: StoredWorkout; sets: StoredSet
         )}
       </span>
       <span className="text-callout text-ink-muted">
-        {workout.gymSnapshot?.name ?? 'No gym'} · {countLabel(sets.length, 'set')} ·{' '}
-        {countLabel(exercises, 'exercise')}
+        {countLabel(sets.length, 'set')} · {countLabel(exercises, 'exercise')}
       </span>
       {note && <span className="text-caption text-warning">{note}</span>}
     </Link>

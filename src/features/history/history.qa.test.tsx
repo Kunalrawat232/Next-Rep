@@ -12,7 +12,7 @@ import {
 import { aSet, aWorkout } from '../../test/localDb';
 import type { Unit } from '../../domain/schemas';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type SetSeed = { exerciseId?: string; totalKg: number; reps: number; bar?: boolean };
 type Seed = { start: Date; end?: Date | null; sets: SetSeed[] };

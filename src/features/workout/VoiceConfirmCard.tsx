@@ -23,7 +23,6 @@ type Props = {
   candidate: SetCandidate;
   lastTotalKg: number | undefined;
   unit: Unit;
-  gymName: string;
   saving: boolean;
   problem: string | null;
   onLog(resolved: ResolvedWeight): void;
@@ -45,7 +44,6 @@ export function VoiceConfirmCard({
   candidate,
   lastTotalKg,
   unit,
-  gymName,
   saving,
   problem,
   onLog,
@@ -91,7 +89,6 @@ export function VoiceConfirmCard({
       )}
       {hasBar ? (
         <BreakdownCard
-          gymName={gymName}
           breakdown={resolved ? breakdownFor(resolved, unit) : undefined}
           message={
             result.status === 'ask'

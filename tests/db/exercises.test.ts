@@ -49,7 +49,12 @@ beforeAll(async () => {
     grant execute on function auth.uid() to anon, authenticated;
     insert into auth.users values ('${A}'), ('${B}');
   `);
-  for (const file of ['0001_init', '0002_gym_bar_kind', '0003_exercise_muscle'])
+  for (const file of [
+    '0001_init',
+    '0002_gym_bar_kind',
+    '0003_exercise_muscle',
+    '0004_one_gym_per_user',
+  ])
     await db.exec(read(`supabase/migrations/${file}.sql`));
   await db.exec(read('supabase/seed.sql'));
 });

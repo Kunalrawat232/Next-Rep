@@ -3,4 +3,4 @@ export { LogSetPage } from './LogSetPage';
 export { WorkoutPage } from './WorkoutPage';
 export { SetList } from './SetList';
 export { useWorkout } from './useWorkout';
-export { useGymCatalog } from './useGymCatalog';
+export { useMyGym } from './useMyGym';

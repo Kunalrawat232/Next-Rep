@@ -1,7 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { HOME_GYM, offlineServer, renderApp } from '../../test/appHarness';
-import { sampleGym } from '../../test/fakeGyms';
+import { offlineServer, renderApp } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
 afterEach(() => {
@@ -18,7 +17,7 @@ describe('Settings', () => {
     await user.click((await screen.findAllByRole('link', { name: 'Settings' }))[0]!);
     expect(await screen.findByRole('heading', { name: 'Settings', level: 1 })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/settings');
-    for (const name of ['Units', 'Default gym', 'Appearance', 'Account'])
+    for (const name of ['Units', 'Your bars', 'Appearance', 'Account'])
       expect(await section(name)).toBeInTheDocument();
   });
 
@@ -112,51 +111,41 @@ describe('appearance', () => {
   });
 });
 
-describe('the default gym', () => {
-  it('shows the default gym with its bar, and links to the gyms', async () => {
+describe('your bars', () => {
+  it('shows your bars with a way to change them', async () => {
     renderApp('/settings');
-    const gym = await section('Default gym');
-    expect(await within(gym).findByText('Home gym')).toBeInTheDocument();
-    expect(gym).toHaveTextContent('15 kg barbell, used when you start a workout');
-    expect(within(gym).getByRole('link', { name: 'Manage gyms' })).toHaveAttribute('href', '/gyms');
+    const gym = await section('Your bars');
+    expect(await within(gym).findByText('Barbell 15 kg · EZ bar 7.5 kg')).toBeInTheDocument();
+    expect(within(gym).getByRole('link', { name: 'Change bars' })).toHaveAttribute('href', '/gym');
   });
 
-  it('shows the default one when there are several', async () => {
-    const office = sampleGym({
-      id: '22222222-2222-4222-8222-222222222222',
-      name: 'Office gym',
-      barbellKg: 20,
-      isDefault: false,
-      createdAt: '2026-10-02T10:00:00Z',
-    });
-    renderApp('/settings', { gyms: [office, HOME_GYM] });
-    expect(await within(await section('Default gym')).findByText('Home gym')).toBeInTheDocument();
-  });
-
-  it('offers to add a gym when there is none', async () => {
-    renderApp('/settings', { gyms: [] });
-    const gym = await section('Default gym');
-    expect(await within(gym).findByRole('link', { name: 'Add a gym' })).toHaveAttribute(
+  it('offers to set the bars up when there is no gym yet', async () => {
+    renderApp('/settings', { gym: null });
+    const gym = await section('Your bars');
+    expect(await within(gym).findByRole('link', { name: 'Set up your bars' })).toHaveAttribute(
       'href',
-      '/gyms/new',
+      '/gym',
     );
+    expect(gym).toHaveTextContent(/first workout sets this up/i);
   });
 
-  it('says so, and can retry, when the gyms cannot be loaded and none are saved', async () => {
+  it('says so, and can retry, when the gym cannot be loaded and none is saved', async () => {
     const { user } = renderApp('/settings', { gymsFail: 'offline' });
-    const gym = await section('Default gym');
-    expect(await within(gym).findByRole('alert')).toHaveTextContent('Could not load your gyms');
+    const gym = await section('Your bars');
+    expect(await within(gym).findByRole('alert')).toHaveTextContent('Could not load your gym');
     await user.click(within(gym).getByRole('button', { name: 'Try again' }));
-    expect(await within(gym).findByText('Home gym')).toBeInTheDocument();
+    expect(await within(gym).findByText(/Barbell 15 kg/)).toBeInTheDocument();
   });
 
   it('shows the saved gym when there is no connection', async () => {
     const first = renderApp('/settings', { userId: 'gym-cache-user' });
-    await within(await section('Default gym')).findByText('Home gym');
-    await waitFor(async () => expect(await first.store.cachedGyms()).not.toBeNull());
+    await within(await section('Your bars')).findByText(/Barbell 15 kg/);
+    await waitFor(async () => expect(await first.store.cachedGym()).not.toBeNull());
     first.unmount();
     renderApp('/settings', { userId: 'gym-cache-user', gymsFail: 'offline' });
-    expect(await within(await section('Default gym')).findByText('Home gym')).toBeInTheDocument();
+    expect(
+      await within(await section('Your bars')).findByText(/Barbell 15 kg/),
+    ).toBeInTheDocument();
   });
 });
 

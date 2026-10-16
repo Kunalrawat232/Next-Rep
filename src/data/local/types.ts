@@ -18,10 +18,10 @@ export type SyncMeta = {
 };
 
 /** The gym a workout was started at, kept on the workout so its bar weights are known offline and after a reload. */
-export type GymSnapshot = Pick<Gym, 'name' | 'barbellKg' | 'bars'>;
+export type GymSnapshot = Pick<Gym, 'barbellKg' | 'bars'>;
 
-/** The last gym list the server gave, kept so a new workout can start without a connection. */
-export type GymCache = { id: 'list'; gyms: Gym[]; savedAt: number };
+/** The gym the server last gave (or that there is none), kept so a new workout can start without a connection. */
+export type GymCache = { id: 'gym'; gym: Gym | null; savedAt: number };
 
 export type StoredWorkout = Workout &
   SyncMeta & {
@@ -120,10 +120,10 @@ export interface LogStore {
   mergePulled(pulled: PulledHistory): Promise<MergeOutcome>;
   /** Updates the gym kept on a workout (local only, nothing to sync) after the gym was edited online. */
   refreshGymSnapshot(workoutId: string, snapshot: GymSnapshot): Promise<void>;
-  /** Keeps the gym list for offline use. */
-  saveGyms(gyms: Gym[]): Promise<void>;
-  /** The last saved gym list, or null if there is none. */
-  cachedGyms(): Promise<Gym[] | null>;
+  /** Keeps the user's gym (or the fact that there is none yet) for offline use. */
+  saveGym(gym: Gym | null): Promise<void>;
+  /** The last saved answer, or null if nothing was saved (or the copy is damaged). `{ gym: null }` means "no gym yet". */
+  cachedGym(): Promise<{ gym: Gym | null } | null>;
   /** Deletes everything the server already has, and keeps what is still unsynced. Returns how much remains. */
   purgeSynced(): Promise<{ remaining: number }>;
   outbox: Outbox;
@@ -136,8 +136,8 @@ export type PulledHistory = {
   /** Every id the server returned, including rows that were refused as invalid, so none of them is taken for deleted. */
   serverWorkoutIds: ReadonlySet<string>;
   serverSetIds: ReadonlySet<string>;
-  /** The gym list, when known, to name the gym of each pulled workout. */
-  gyms: Gym[] | null;
+  /** The user's gym, when known, so each pulled workout of it gets its bar weights. */
+  gym: Gym | null;
 };
 
 export type MergeOutcome = {

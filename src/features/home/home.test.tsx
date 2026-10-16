@@ -5,7 +5,7 @@ import type { Unit } from '../../domain/schemas';
 import { BENCH, HOME_GYM, PUSH_UP, offlineServer, renderApp } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type Seed = {
   daysAgo: number;
@@ -20,7 +20,10 @@ const day = (daysAgo: number) => {
 };
 
 /** Workouts already on the device, then the app on Home. */
-async function openHome(seeds: Seed[], options: { gyms?: (typeof HOME_GYM)[]; unit?: Unit } = {}) {
+async function openHome(
+  seeds: Seed[],
+  options: { gym?: typeof HOME_GYM | null; unit?: Unit } = {},
+) {
   const userId = `home-${Math.random()}`;
   const first = renderApp('/', { userId, server: offlineServer() });
   for (const seed of seeds) {
@@ -61,14 +64,15 @@ async function openHome(seeds: Seed[], options: { gyms?: (typeof HOME_GYM)[]; un
 const main = () => within(screen.getByRole('main'));
 
 describe('Home', () => {
-  it('walks a new user through adding a gym first', async () => {
-    await openHome([], { gyms: [] });
+  it('welcomes a new user and sends them straight to their first workout', async () => {
+    await openHome([], { gym: null });
     expect(
       await screen.findByRole('heading', { name: 'Welcome to Next Rep', level: 1 }),
     ).toBeInTheDocument();
-    expect(main().getByText('1. Add your gym')).toBeInTheDocument();
-    expect(main().getByRole('link', { name: 'Add gym' })).toHaveAttribute('href', '/gyms/new');
-    expect(main().queryByRole('link', { name: 'Start workout' })).not.toBeInTheDocument();
+    expect(main().getByText(/standard 20 kg barbell/i)).toBeInTheDocument();
+    expect(main().getAllByRole('link', { name: 'Start workout' })).toHaveLength(1);
+    expect(main().getByRole('link', { name: 'Start workout' })).toHaveAttribute('href', '/workout');
+    expect(main().queryByText(/add your gym/i)).not.toBeInTheDocument();
   });
 
   it('shows the gym and its bar, and a placeholder, before the first workout', async () => {
@@ -76,7 +80,7 @@ describe('Home', () => {
     expect(
       await screen.findByRole('heading', { name: 'Ready to lift?', level: 1 }),
     ).toBeInTheDocument();
-    expect(await main().findByText('Home gym · 15 kg bar')).toBeInTheDocument();
+    expect(await main().findByText('15 kg bar')).toBeInTheDocument();
     expect(main().getByText(/after your first workout/i)).toBeInTheDocument();
     expect(main().getByRole('link', { name: 'Start workout' })).toHaveAttribute('href', '/workout');
     expect(main().getByText('Your workouts will show up here.')).toBeInTheDocument();
@@ -122,7 +126,7 @@ describe('Home', () => {
     const text = (await main().findByText(/last time, so try/i)).textContent ?? '';
     expect(text).toMatch(/lb/);
     expect(text).not.toMatch(/kg/);
-    expect(await main().findByText(/Home gym · 33\.1 lb bar/)).toBeInTheDocument();
+    expect(await main().findByText(/33\.1 lb bar/)).toBeInTheDocument();
   });
 
   it('suggests nothing for a bodyweight exercise', async () => {
@@ -171,7 +175,7 @@ describe('Home', () => {
     const seen: string[] = [];
     const observer = new MutationObserver(() => seen.push(document.body.textContent ?? ''));
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    renderApp('/', { gyms: [], server: offlineServer() });
+    renderApp('/', { gym: null, server: offlineServer() });
     await screen.findByRole('heading', { name: 'Welcome to Next Rep', level: 1 });
     observer.disconnect();
     expect(seen.some((text) => /Ready to lift\?/.test(text))).toBe(false);
@@ -187,7 +191,7 @@ describe('Home', () => {
 
   it('no longer holds the account card', async () => {
     await openHome([]);
-    await main().findByText('Home gym · 15 kg bar');
+    await main().findByText('15 kg bar');
     expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
   });
 });

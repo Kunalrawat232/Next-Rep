@@ -1,23 +1,22 @@
 import { Link } from 'react-router';
 import { buttonClasses, Chip, Section, Switch } from '../../components';
 import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
-import { pickDefaultGym } from '../../domain/gyms';
-import { withUnit } from '../../domain/units';
+import { summarizeBars } from '../../domain/gyms';
 import { useAuth } from '../auth';
-import { useGymCatalog } from '../workout';
+import { useMyGym } from '../workout';
 import { SignOutPanel } from './SignOutPanel';
 import { useTheme } from './useTheme';
 import { useUnit } from './UnitProvider';
 
-/** Weight unit, default gym, appearance and the account. */
+/** Weight unit, your bars, appearance and the account. */
 export function SettingsPage() {
   const { state } = useAuth();
   const { unit, setUnit } = useUnit();
   const { theme, setTheme } = useTheme();
-  const { catalog, reload } = useGymCatalog();
+  const { catalog, reload } = useMyGym();
   if (state.status !== 'signedIn') return null;
 
-  const gym = catalog.status === 'ready' ? pickDefaultGym(catalog.gyms) : undefined;
+  const gym = catalog.status === 'ready' ? catalog.gym : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -37,7 +36,7 @@ export function SettingsPage() {
         </div>
       </Section>
 
-      <Section headingId="gym-heading" title="Default gym">
+      <Section headingId="gym-heading" title="Your bars">
         {catalog.status === 'loading' && (
           <p role="status" className="text-callout text-ink-muted">
             Loading…
@@ -45,7 +44,7 @@ export function SettingsPage() {
         )}
         {catalog.status === 'error' && (
           <div role="alert" className="flex flex-col items-start gap-2">
-            <p className="text-callout">Could not load your gyms.</p>
+            <p className="text-callout">Could not load your gym.</p>
             <button type="button" onClick={reload} className={buttonClasses('secondary')}>
               Try again
             </button>
@@ -53,22 +52,22 @@ export function SettingsPage() {
         )}
         {catalog.status === 'ready' && gym && (
           <>
-            <p className="text-body font-semibold">{gym.name}</p>
+            <p className="text-body font-semibold">{summarizeBars(gym, unit)}</p>
             <p className="text-callout text-ink-muted">
-              {withUnit(gym.barbellKg, unit)} barbell, used when you start a workout
+              Added to every weight you log, so the total is counted for you
             </p>
-            <Link to="/gyms" className={buttonClasses('secondary', 'self-start')}>
-              Manage gyms
+            <Link to="/gym" className={buttonClasses('secondary', 'self-start')}>
+              Change bars
             </Link>
           </>
         )}
         {catalog.status === 'ready' && !gym && (
           <>
             <p className="text-callout text-ink-muted">
-              You have no gym yet. Add one so every weight adds up with the right bar.
+              Your first workout sets this up with a standard barbell. You can set it now.
             </p>
-            <Link to="/gyms/new" className={buttonClasses('primary', 'self-start')}>
-              Add a gym
+            <Link to="/gym" className={buttonClasses('primary', 'self-start')}>
+              Set up your bars
             </Link>
           </>
         )}

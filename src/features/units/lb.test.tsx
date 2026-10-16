@@ -18,12 +18,10 @@ afterEach(() => localStorage.clear());
 const BAR_45 = fromDisplay(45, 'lb'); // a 45 lb bar, stored as 20.41 kg
 const LB_GYM = sampleGym({
   id: '33333333-3333-4333-8333-333333333333',
-  name: 'Lb gym',
   barbellKg: BAR_45,
-  isDefault: true,
   bars: [{ id: 'ez', name: 'EZ bar', weightKg: fromDisplay(25, 'lb'), kind: 'ez_bar' }],
 });
-const SNAPSHOT: GymSnapshot = { name: LB_GYM.name, barbellKg: LB_GYM.barbellKg, bars: LB_GYM.bars };
+const SNAPSHOT: GymSnapshot = { barbellKg: LB_GYM.barbellKg, bars: LB_GYM.bars };
 
 type SetSeed = { exerciseId?: string; totalKg: number; reps?: number; mode?: 'total' | 'per_side' };
 
@@ -39,6 +37,8 @@ async function openLb(
     barKg?: number;
     /** Seed the past sets as entered per side, as stored in kg. */
     perSide?: boolean;
+    /** The gym on the server; null for a user who has none. The lb gym when missing. */
+    gym?: typeof LB_GYM | null;
   } = {},
 ) {
   const barKg = options.barKg ?? BAR_45;
@@ -46,7 +46,7 @@ async function openLb(
   // The gym list the app reads has the same bar, or the workout would take the list's bar.
   const gym = { ...LB_GYM, barbellKg: barKg };
   const userId = options.userId ?? `lb-${Math.random()}`;
-  const seed = renderApp('/', { userId, server: offlineServer(), gyms: [gym] });
+  const seed = renderApp('/', { userId, server: offlineServer(), gym: gym });
   const ids: string[] = [];
   const addSets = async (workoutId: string, sets: SetSeed[], day: number) => {
     for (const [i, s] of sets.entries()) {
@@ -92,7 +92,7 @@ async function openLb(
       userId,
       unit: options.unit ?? 'lb',
       server: offlineServer(),
-      gyms: [gym],
+      gym: options.gym === undefined ? gym : options.gym,
     }),
     ids,
     userId,
@@ -122,9 +122,7 @@ describe('every screen in lb shows no kg', () => {
     ['History', () => '/history', 'History'],
     ['Progress', () => '/progress', 'Progress'],
     ['an exercise’s progress', () => `/progress/${BENCH}`, 'Records'],
-    ['the gyms', () => '/gyms', 'Lb gym'],
-    ['a gym to edit', () => `/gyms/${LB_GYM.id}`, 'Edit gym'],
-    ['a new gym', () => '/gyms/new', 'New gym'],
+    ['your gym', () => '/gym', 'Barbell weight'],
     ['Settings', () => '/settings', 'Settings'],
   ];
 
@@ -144,7 +142,7 @@ describe('every screen in lb shows no kg', () => {
       userId: seeded.userId,
       unit: 'lb',
       server: offlineServer(),
-      gyms: [LB_GYM],
+      gym: LB_GYM,
     });
     await screen.findByRole('region', { name: 'Barbell Bench Press' });
     expect(document.body.textContent).not.toMatch(kgWord);
@@ -308,62 +306,56 @@ describe('logging a set in lb', () => {
   });
 });
 
-describe('the gym screens in lb', () => {
+describe('the gym screen in lb', () => {
   it('offers 45 and 35 lb presets for a new gym, and stores 45 lb as 20.41 kg', async () => {
-    const { user, gyms } = await openLb('/gyms/new', { unit: 'lb' });
+    const { user, gyms } = await openLb('/gym', { unit: 'lb', gym: null });
     const group = await screen.findByRole('group', { name: 'Barbell presets' });
     expect(group).toHaveTextContent('45 lb35 lb');
     expect(await screen.findByLabelText('Barbell weight (lb)')).toHaveValue('45');
-    await user.type(screen.getByLabelText('Gym name'), 'New gym');
-    await user.click(screen.getByRole('button', { name: 'Create gym' }));
-    await waitFor(() => expect(gyms.service.create).toHaveBeenCalled());
-    expect(gyms.service.create.mock.calls[0]![2]).toMatchObject({ barbellKg: 20.41 });
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(gyms.service.save).toHaveBeenCalled());
+    expect(gyms.service.save.mock.calls[0]![2]).toMatchObject({ barbellKg: 20.41 });
   });
 
   it('shows a 15 kg bar as 33.1 lb, and saves the gym untouched with exactly 15 kg', async () => {
     const userId = 'gym-lb-user';
-    const { user, gyms } = renderApp(`/gyms/${HOME_GYM.id}`, {
+    const { user, gyms } = renderApp('/gym', {
       userId,
       unit: 'lb',
-      gyms: [
-        sampleGym({
-          ...HOME_GYM,
-          barbellKg: 15,
-          bars: [{ id: 'ez', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
-        }),
-      ],
+      gym: sampleGym({
+        ...HOME_GYM,
+        barbellKg: 15,
+        bars: [{ id: 'ez', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
+      }),
     });
     expect(await screen.findByLabelText('Barbell weight (lb)')).toHaveValue('33.1');
     expect(screen.getByLabelText('EZ bar weight (lb)')).toHaveValue('16.5');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
-    await waitFor(() => expect(gyms.service.update).toHaveBeenCalled());
-    const input = gyms.service.update.mock.calls[0]![2];
+    await waitFor(() => expect(gyms.service.save).toHaveBeenCalled());
+    const input = gyms.service.save.mock.calls[0]![2];
     expect(input.barbellKg).toBe(15);
     expect(input.bars[0]!.weightKg).toBe(7.5);
   });
 
   it('says what is wrong in lb', async () => {
-    const { user } = await openLb('/gyms/new', { unit: 'lb' });
+    const { user } = await openLb('/gym', { unit: 'lb', gym: null });
     const field = await screen.findByLabelText('Barbell weight (lb)');
     await user.clear(field);
     await user.type(field, '300');
-    await user.type(screen.getByLabelText('Gym name'), 'X');
-    await user.click(screen.getByRole('button', { name: 'Create gym' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Use a weight between 0 and 220.4 lb.')).toBeInTheDocument();
   });
 
   it('lists the bars in lb', async () => {
-    await openLb('/gyms', { unit: 'lb' });
+    await openLb('/workout', { unit: 'lb' });
     expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
   });
 });
 
 describe('Settings in lb', () => {
-  it('shows the default gym’s bar in lb', async () => {
+  it('shows your bars in lb', async () => {
     await openLb('/settings', { unit: 'lb' });
-    expect(
-      await screen.findByText('45 lb barbell, used when you start a workout'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
   });
 
   it('switches every screen at once, without a reload', async () => {
@@ -376,15 +368,12 @@ describe('Settings in lb', () => {
     await router.navigate('/settings');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
     await user.click(within(group).getByRole('button', { name: 'lb' }));
-    await router.navigate('/gyms');
     expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
-    await user.click(await screen.findByRole('link', { name: 'Settings' }));
     await user.click(
       within(await screen.findByRole('group', { name: 'Weight unit' })).getByRole('button', {
         name: 'kg',
       }),
     );
-    await router.navigate('/gyms');
     expect(await screen.findByText('Barbell 20.41 kg · EZ bar 11.34 kg')).toBeInTheDocument();
   });
 });

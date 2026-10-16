@@ -2,7 +2,6 @@ import type { Breakdown } from '../../domain/workout';
 import { cardClasses } from '../../components';
 
 type Props = {
-  gymName: string;
   /** The weight made up of bar and plates, when it can be shown. */
   breakdown?: Breakdown;
   /** Shown instead when there is nothing to break down yet (a question is open, or the input is not valid). */
@@ -10,10 +9,10 @@ type Props = {
 };
 
 /** How the weight is made up, as the validator resolved it. */
-export function BreakdownCard({ gymName, breakdown, message }: Props) {
+export function BreakdownCard({ breakdown, message }: Props) {
   return (
     <section aria-label="Weight breakdown" className={cardClasses('flex flex-col gap-3')}>
-      <h2 className="text-caption font-medium text-ink-muted">Weight breakdown · {gymName}</h2>
+      <h2 className="text-caption font-medium text-ink-muted">Weight breakdown</h2>
       {breakdown ? (
         <dl className="flex flex-col gap-2">
           {breakdown.lines.map((line) => (

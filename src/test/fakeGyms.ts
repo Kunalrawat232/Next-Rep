@@ -4,71 +4,36 @@ import type { GymResult, GymService } from '../features/gyms/types';
 
 export const sampleGym = (over: Partial<Gym> = {}): Gym => ({
   id: 'g1',
-  name: 'Home gym',
   barbellKg: 15,
-  isDefault: true,
-  createdAt: '2026-10-01T10:00:00Z',
   bars: [],
   ...over,
 });
 
-/** An in-memory GymService for tests. Methods are spies; `failNext` makes the next call of one method fail. */
-export function createFakeGymService(initial: Gym[] = []) {
-  let gyms = [...initial];
+/**
+ * An in-memory GymService for tests, holding the user's one gym (or none). Methods are spies; `failNext`
+ * makes the next call of one method fail. Like the unique index on the server, saving under a different id
+ * while a gym exists is a `conflict`.
+ */
+export function createFakeGymService(initial: Gym | null = null) {
+  let gym = initial;
   const failures = new Map<keyof GymService, 'offline' | 'conflict' | 'unknown'>();
   const fail = (method: keyof GymService): GymResult<never> | null => {
     const reason = failures.get(method);
     failures.delete(method);
     return reason ? { status: 'error', reason } : null;
   };
-  let counter = 0;
 
   const service = {
-    list: vi.fn<GymService['list']>(async () => fail('list') ?? { status: 'ok', value: [...gyms] }),
-    create: vi.fn<GymService['create']>(async (_user, id, input, makeDefault) => {
-      const failed = fail('create');
+    get: vi.fn<GymService['get']>(async () => fail('get') ?? { status: 'ok', value: gym }),
+    save: vi.fn<GymService['save']>(async (_user, id, input) => {
+      const failed = fail('save');
       if (failed) return failed;
-      counter += 1;
-      gyms = gyms.filter((gym) => gym.id !== id);
-      gyms.push({
+      if (gym && gym.id !== id) return { status: 'error', reason: 'conflict' };
+      gym = {
         id,
-        name: input.name,
         barbellKg: input.barbellKg,
-        isDefault: makeDefault,
-        createdAt: new Date(2026, 9, 10, 10, counter).toISOString(),
-        bars: input.bars.map((bar, i) => ({
-          id: bar.id ?? `bar-${counter}-${i}`,
-          ...bar,
-          kind: bar.kind,
-        })),
-      });
-      return { status: 'ok', value: undefined };
-    }),
-    update: vi.fn<GymService['update']>(async (_user, gymId, input) => {
-      const failed = fail('update');
-      if (failed) return failed;
-      gyms = gyms.map((gym) =>
-        gym.id === gymId
-          ? {
-              ...gym,
-              name: input.name,
-              barbellKg: input.barbellKg,
-              bars: input.bars.map((bar, i) => ({ id: bar.id ?? `bar-${i}`, ...bar })),
-            }
-          : gym,
-      );
-      return { status: 'ok', value: undefined };
-    }),
-    remove: vi.fn<GymService['remove']>(async (gymId) => {
-      const failed = fail('remove');
-      if (failed) return failed;
-      gyms = gyms.filter((gym) => gym.id !== gymId);
-      return { status: 'ok', value: undefined };
-    }),
-    setDefault: vi.fn<GymService['setDefault']>(async (gymId) => {
-      const failed = fail('setDefault');
-      if (failed) return failed;
-      gyms = gyms.map((gym) => ({ ...gym, isDefault: gym.id === gymId }));
+        bars: input.bars.map((bar, i) => ({ id: bar.id ?? `bar-${i}`, ...bar })),
+      };
       return { status: 'ok', value: undefined };
     }),
   } satisfies GymService;
@@ -77,6 +42,6 @@ export function createFakeGymService(initial: Gym[] = []) {
     service,
     failNext: (method: keyof GymService, reason: 'offline' | 'conflict' | 'unknown' = 'unknown') =>
       void failures.set(method, reason),
-    current: () => gyms,
+    current: () => gym,
   };
 }

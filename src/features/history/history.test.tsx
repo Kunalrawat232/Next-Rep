@@ -6,7 +6,7 @@ import { BENCH, DUMBBELL_CURL, HOME_GYM, renderApp, offlineServer } from '../../
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type SetSeed = { exerciseId?: string; totalKg?: number; reps?: number; synced?: boolean };
 type WorkoutSeed = {
@@ -94,7 +94,7 @@ describe('the history list', () => {
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent('Today');
     expect(items[0]).toHaveTextContent('45 min');
-    expect(items[0]).toHaveTextContent('Home gym · 3 sets · 1 exercise');
+    expect(items[0]).toHaveTextContent('3 sets · 1 exercise');
     expect(items[1]).toHaveTextContent('Yesterday');
     expect(items[1]).toHaveTextContent('1 set · 1 exercise');
     expect(items[2]).toHaveTextContent(dayLabel(at(3).toISOString(), new Date()));
@@ -188,7 +188,7 @@ describe('a past workout', () => {
     ]);
     await user.click(await screen.findByRole('link', { name: /Yesterday/ }));
     expect(await screen.findByRole('heading', { name: 'Yesterday' })).toBeInTheDocument();
-    expect(screen.getByText(/Home gym · 3 sets · 50 min/)).toBeInTheDocument();
+    expect(screen.getByText(/3 sets · 50 min/)).toBeInTheDocument();
     const bench = screen.getByRole('region', { name: 'Barbell Bench Press' });
     const rows = within(bench).getAllByRole('listitem');
     expect(rows).toHaveLength(2);

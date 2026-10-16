@@ -17,7 +17,7 @@ import { UnitsForTest } from '../test/UnitsForTest';
 function renderAt(
   path: string,
   fake = createFakeAuthService(),
-  gyms = createFakeGymService([sampleGym()]),
+  gyms = createFakeGymService(sampleGym()),
 ) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] });
   render(
@@ -40,13 +40,22 @@ function renderAt(
 }
 
 describe('app routes', () => {
-  it('shows the gyms list inside the shell to a signed-in user', async () => {
-    renderAt('/gyms', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
-    expect(await screen.findByRole('link', { name: /home gym/i })).toBeInTheDocument();
+  it('shows your gym inside the shell to a signed-in user', async () => {
+    renderAt('/gym', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+    expect(await screen.findByRole('heading', { name: 'Your gym' })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Main' })).toBeInTheDocument();
   });
 
-  it.each(['/gyms', '/gyms/new', '/gyms/g1', '/exercises', '/exercises/new'])(
+  it.each(['/gyms', '/gyms/new', '/gyms/g1'])(
+    'sends the old gym address %s to your gym',
+    async (path) => {
+      const { router } = renderAt(path, createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
+      expect(await screen.findByRole('heading', { name: 'Your gym' })).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe('/gym');
+    },
+  );
+
+  it.each(['/gym', '/gyms', '/exercises', '/exercises/new'])(
     'sends a signed-out visitor from %s to sign-in',
     async (path) => {
       const { router } = renderAt(path);
@@ -67,10 +76,10 @@ describe('app routes', () => {
     expect(router.state.location.pathname).toBe('/exercises');
   });
 
-  it('links Home to the gyms list', async () => {
+  it('links Home to your bars', async () => {
     const { router, user } = renderAt('/', createFakeAuthService({ id: 'u1', email: 'a@b.co' }));
-    await user.click(await screen.findByRole('link', { name: /manage gyms/i }));
-    expect(router.state.location.pathname).toBe('/gyms');
+    await user.click(await screen.findByRole('link', { name: /your bars/i }));
+    expect(router.state.location.pathname).toBe('/gym');
   });
 
   it('sends a signed-out visitor from / to the sign-in page', async () => {

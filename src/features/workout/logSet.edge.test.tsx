@@ -14,8 +14,8 @@ import {
 import { aSet, aWorkout } from '../../test/localDb';
 import { tapTogether } from '../../test/doubleTap';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
-const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
+const NO_EZ: GymSnapshot = { barbellKg: 15, bars: [] };
 
 type Seed = { totalKg: number; perSide?: boolean };
 
@@ -202,10 +202,7 @@ describe('saving', () => {
     const { user } = await openLog(BENCH);
     await user.type(await weight(), '10');
     await user.click(logButton());
-    expect(await screen.findByRole('link', { name: 'Change bar' })).toHaveAttribute(
-      'href',
-      `/gyms/${HOME_GYM.id}`,
-    );
+    expect(await screen.findByRole('link', { name: 'Change bar' })).toHaveAttribute('href', '/gym');
   });
 
   it('says it could not save, and lets you try again, when the workout is gone from the device', async () => {
@@ -251,9 +248,8 @@ describe('what the page is asked to show', () => {
 describe('the gym kept on the workout', () => {
   it('uses a bar added to the gym after the workout started, when going back to log', async () => {
     const { gyms, userId, router } = await openLog(EZ_CURL, { snapshot: NO_EZ });
-    expect(await screen.findByRole('heading', { name: /no ez bar set/i })).toBeInTheDocument();
-    await gyms.service.update(userId, HOME_GYM.id, {
-      name: HOME_GYM.name,
+    expect(await screen.findByRole('heading', { name: /no ez bar set up/i })).toBeInTheDocument();
+    await gyms.service.save(userId, HOME_GYM.id, {
       barbellKg: 15,
       bars: [{ name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
     });
@@ -262,10 +258,10 @@ describe('the gym kept on the workout', () => {
     expect(await screen.findByRole('button', { name: 'Log set' })).toBeInTheDocument();
   });
 
-  it('does not offer a link to a gym that the workout does not have', async () => {
+  it('still offers to set up the bars when the workout has no saved gym', async () => {
     await openLog(BENCH, { snapshot: null, gymId: null });
-    expect(await screen.findByRole('heading', { name: /no barbell set/i })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /set the bar/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /no barbell set up/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /set up your bars/i })).toHaveAttribute('href', '/gym');
   });
 
   it('still logs dumbbells and bodyweight in a workout with no saved gym', async () => {

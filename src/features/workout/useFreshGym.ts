@@ -17,11 +17,11 @@ export function useFreshGym(workout: StoredWorkout, reload: () => Promise<void>)
     if (!gymId) return;
     let current = true;
     (async () => {
-      const result = await service.list().catch(() => null);
+      const result = await service.get().catch(() => null);
       if (!current || result?.status !== 'ok') return;
-      const gym = result.value.find((g) => g.id === gymId);
-      if (!gym) return;
-      const fresh = { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars };
+      const gym = result.value;
+      if (!gym || gym.id !== gymId) return;
+      const fresh = { barbellKg: gym.barbellKg, bars: gym.bars };
       if (JSON.stringify(fresh) === JSON.stringify(gymSnapshot)) return;
       await store.refreshGymSnapshot(id, fresh);
       if (current) await reload();

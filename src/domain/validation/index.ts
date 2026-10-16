@@ -172,7 +172,7 @@ function prepare(candidate: SetCandidate, displayUnit?: Unit): Prepared | Valida
         issues: [
           {
             code: 'MISSING_BAR',
-            message: 'Set the bar weight for this gym to log a per-side weight.',
+            message: 'Set your bar weight to log a per-side weight.',
           },
         ],
       };

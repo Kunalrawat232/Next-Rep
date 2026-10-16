@@ -102,7 +102,7 @@ describe('pulling history', () => {
     expect(s.server.callsTo('fetchWorkouts')).toHaveLength(2);
   });
 
-  it('names the gym of a pulled workout from the saved gym list, and leaves it empty without one', async () => {
+  it('names the gym of a pulled workout from the saved gym, and leaves it empty without one', async () => {
     const s = setup();
     const gymId = uuid();
     const w = aWorkout({ gymId });
@@ -112,19 +112,9 @@ describe('pulling history', () => {
     expect((await s.store.getWorkout(w.id))?.gymSnapshot).toBeNull();
     await s.db.workouts.clear();
     await s.db.sets.clear();
-    await s.store.saveGyms([
-      {
-        id: gymId,
-        name: 'Away gym',
-        barbellKg: 20,
-        isDefault: true,
-        createdAt: '2026-10-01T00:00:00.000Z',
-        bars: [],
-      },
-    ]);
+    await s.store.saveGym({ id: gymId, barbellKg: 20, bars: [] });
     await s.pull();
     expect((await s.store.getWorkout(w.id))?.gymSnapshot).toEqual({
-      name: 'Away gym',
       barbellKg: 20,
       bars: [],
     });
@@ -144,29 +134,24 @@ describe('pulling history', () => {
 });
 
 describe('the gym of a workout that changed on the server', () => {
-  it('follows the new gym, and keeps the old snapshot when the gym did not change', async () => {
+  it('follows the gym id, and keeps the old snapshot when the gym did not change', async () => {
     const s = setup();
     const gymA = uuid();
-    const gymB = uuid();
-    const gym = (id: string, name: string) => ({
-      id,
-      name,
-      barbellKg: 20,
-      isDefault: false,
-      createdAt: '2026-10-01T00:00:00.000Z',
-      bars: [],
-    });
-    await s.store.saveGyms([gym(gymA, 'Gym A'), gym(gymB, 'Gym B')]);
+    const otherGym = uuid();
+    await s.store.saveGym({ id: gymA, barbellKg: 20, bars: [] });
     const w = aWorkout({ gymId: gymA });
-    await s.store.startWorkout({ ...w, gymSnapshot: { name: 'Gym A', barbellKg: 20, bars: [] } });
+    await s.store.startWorkout({ ...w, gymSnapshot: { barbellKg: 15, bars: [] } });
     await s.db.workouts.update(w.id, { syncStatus: 'synced' });
     s.server.seedWorkout({ ...w, gymId: gymA, endedAt: '2026-10-10T11:00:00.000Z' });
     s.server.seedSet(aSet(w.id));
     await s.pull();
-    expect((await s.store.getWorkout(w.id))?.gymSnapshot?.name).toBe('Gym A');
-    s.server.seedWorkout({ ...w, gymId: gymB, endedAt: '2026-10-10T11:00:00.000Z' });
+    expect((await s.store.getWorkout(w.id))?.gymSnapshot).toEqual({ barbellKg: 15, bars: [] });
+    s.server.seedWorkout({ ...w, gymId: otherGym, endedAt: '2026-10-10T11:00:00.000Z' });
     await s.pull();
-    expect((await s.store.getWorkout(w.id))?.gymSnapshot?.name).toBe('Gym B');
+    expect((await s.store.getWorkout(w.id))?.gymSnapshot).toBeNull();
+    s.server.seedWorkout({ ...w, gymId: gymA, endedAt: '2026-10-10T11:00:00.000Z' });
+    await s.pull();
+    expect((await s.store.getWorkout(w.id))?.gymSnapshot).toEqual({ barbellKg: 20, bars: [] });
   });
 });
 

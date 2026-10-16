@@ -5,7 +5,7 @@ import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness
 import { aSet, aWorkout } from '../../test/localDb';
 import { tapTogether } from '../../test/doubleTap';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 async function openWith(
   path: string,
@@ -66,7 +66,7 @@ describe('starting twice', () => {
   it('opens one workout on a double tap', async () => {
     const { db } = renderApp('/workout');
     tapTogether(await screen.findByRole('button', { name: 'Start workout' }));
-    await screen.findByText('Home gym · 15 kg bar');
+    await screen.findByText('15 kg bar');
     expect(await db.workouts.count()).toBe(1);
   });
 });
@@ -90,21 +90,18 @@ describe('switching how the weight is entered', () => {
 describe('damaged data on the device', () => {
   it('treats a damaged gym snapshot as missing, so the bar is asked for, not guessed', async () => {
     await openWith(`/workout/log?exercise=${BENCH}`, [], {
-      name: 'Home gym',
       barbellKg: 'heavy',
       bars: 7,
     });
-    expect(await screen.findByRole('heading', { name: /no barbell set/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /no barbell set up/i })).toBeInTheDocument();
   });
 
-  it('ignores a damaged saved gym list', async () => {
+  it('ignores a damaged saved gym', async () => {
     const { store } = renderApp('/workout');
-    await store.saveGyms([
-      { id: 'g', name: 'x', barbellKg: Number.NaN, isDefault: true, createdAt: 'x', bars: [] },
-    ]);
-    expect(await store.cachedGyms()).toBeNull();
-    await store.saveGyms('nonsense' as never);
-    expect(await store.cachedGyms()).toBeNull();
+    await store.saveGym({ id: 'g', barbellKg: Number.NaN, bars: [] });
+    expect(await store.cachedGym()).toBeNull();
+    await store.saveGym('nonsense' as never);
+    expect(await store.cachedGym()).toBeNull();
   });
 });
 
@@ -123,9 +120,9 @@ describe('signing out', () => {
   it('changes nothing on the device when you stay signed in', async () => {
     // Offline, so the set stays waiting and the warning appears whatever the machine's speed.
     const { user, store } = await openWith('/settings', [60], HOME, offlineServer());
-    await store.saveGyms([HOME_GYM]);
+    await store.saveGym(HOME_GYM);
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     await user.click(await screen.findByRole('button', { name: 'Stay signed in' }));
-    expect(await store.cachedGyms()).not.toBeNull();
+    expect(await store.cachedGym()).not.toBeNull();
   });
 });

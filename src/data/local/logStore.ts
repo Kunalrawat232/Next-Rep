@@ -1,6 +1,6 @@
 import { SetSchema, WorkoutSchema, type LoggedSet } from '../../domain/schemas';
 import type { LocalDb } from './db';
-import { readGymList, readGymSnapshot } from './gymShape';
+import { readCachedGym, readGymSnapshot } from './gymShape';
 import type {
   LogStore,
   MergeOutcome,
@@ -334,7 +334,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async mergePulled(pulled) {
-      const gyms = new Map((pulled.gyms ?? []).map((g) => [g.id, g]));
+      const gyms = new Map(pulled.gym ? [[pulled.gym.id, pulled.gym]] : []);
       return db.transaction('rw', db.workouts, db.sets, db.deletions, async () => {
         const outcome: MergeOutcome = {
           addedWorkouts: 0,
@@ -347,7 +347,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
         };
         const snapshotOf = (gymId: string | null) => {
           const gym = gymId === null ? undefined : gyms.get(gymId);
-          return gym ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars } : null;
+          return gym ? { barbellKg: gym.barbellKg, bars: gym.bars } : null;
         };
         const confirmed = (): SyncMeta & { everSynced: boolean } => ({
           ...fresh(),
@@ -369,9 +369,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
             await db.workouts.put({
               ...parsed,
               ...confirmed(),
-              gymSnapshot: gym
-                ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars }
-                : null,
+              gymSnapshot: gym ? { barbellKg: gym.barbellKg, bars: gym.bars } : null,
             });
             outcome.addedWorkouts += 1;
           } else if (
@@ -381,7 +379,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
               local.endedAt !== parsed.endedAt ||
               local.notes !== parsed.notes)
           ) {
-            // The gym name on screen must follow the gym the workout now belongs to.
+            // The bars shown must follow the gym the workout now belongs to.
             const gymSnapshot =
               local.gymId === parsed.gymId ? local.gymSnapshot : snapshotOf(parsed.gymId);
             await db.workouts.put({ ...local, ...parsed, gymSnapshot });
@@ -441,12 +439,15 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       await db.workouts.update(workoutId, { gymSnapshot: snapshot });
     },
 
-    async saveGyms(gyms) {
-      await db.gymCache.put({ id: 'list', gyms, savedAt: clock() });
+    async saveGym(gym) {
+      await db.gymCache.put({ id: 'gym', gym, savedAt: clock() });
     },
 
-    async cachedGyms() {
-      return readGymList((await db.gymCache.get('list'))?.gyms);
+    async cachedGym() {
+      const row = await db.gymCache.get('gym');
+      if (!row) return null;
+      const gym = readCachedGym(row.gym);
+      return gym === undefined ? null : { gym };
     },
 
     async counts() {
@@ -484,7 +485,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
 
     async purgeSynced() {
       return db.transaction('rw', db.workouts, db.sets, db.deletions, db.gymCache, async () => {
-        await db.gymCache.clear(); // gym names are the user's data too; they are fetched again at the next sign-in
+        await db.gymCache.clear(); // the gym is the user's data too; it is fetched again at the next sign-in
         await db.sets.where('syncStatus').equals('synced').delete();
         const remainingSets = await db.sets.toArray();
         const keep = new Set(remainingSets.map((s) => s.workoutId));

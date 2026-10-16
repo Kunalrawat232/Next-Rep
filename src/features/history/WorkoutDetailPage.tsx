@@ -90,7 +90,7 @@ export function WorkoutDetailPage() {
     <div className="flex flex-col gap-6">
       <PageHeader back="/history" title={dayLabel(workout.startedAt, new Date())} />
       <p className="text-callout text-ink-muted">
-        {workout.gymSnapshot?.name ?? 'No gym'} · {countLabel(sets.length, 'set')}
+        {countLabel(sets.length, 'set')}
         {minutes !== null && ` · ${formatDuration(minutes)}`}
       </p>
       {workout.endedAt === null && (

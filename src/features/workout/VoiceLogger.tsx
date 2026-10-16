@@ -334,7 +334,6 @@ export function VoiceLogger({
           candidate={pending.draft.candidate}
           lastTotalKg={pending.lastTotalKg}
           unit={unit}
-          gymName={workout.gymSnapshot?.name ?? 'this gym'}
           saving={saving}
           problem={problem}
           onLog={(resolved) => void save(resolved)}

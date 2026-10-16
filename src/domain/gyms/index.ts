@@ -1,8 +1,7 @@
 import { BAR_KG_RANGE, type EquipmentType, type Unit } from '../schemas';
 import { cleanName, nameKey } from '../text';
-import { formatWeight, kgFromField, maxDisplay, unitLabel, withUnit } from '../units';
+import { formatWeight, fromDisplay, kgFromField, maxDisplay, unitLabel, withUnit } from '../units';
 
-export const GYM_NAME_MAX = 80;
 export const BAR_NAME_MAX = 60;
 
 /** `ez_bar` and `smith` are looked up by exercise equipment; `other` bars are manual overrides only. */
@@ -10,19 +9,20 @@ export type BarKind = 'ez_bar' | 'smith' | 'other';
 
 export type Bar = { id: string; name: string; weightKg: number; kind: BarKind };
 
+/** The user's gym: the bars that are added to every weight they log. A person has exactly one. */
 export type Gym = {
   id: string;
-  name: string;
   /** The barbell, kept on the gym itself. Other bars are in `bars`. */
   barbellKg: number;
-  isDefault: boolean;
-  createdAt: string;
   bars: Bar[];
 };
 
+/** The barbell a new gym starts with: a standard 20 kg bar, or 45 lb where the user works in pounds. */
+export const defaultBarbellKg = (unit: Unit): number =>
+  unit === 'lb' ? fromDisplay(45, 'lb') : 20;
+
 /** What the form holds: weights are still text, as typed. */
 export type GymForm = {
-  name: string;
   barbellKg: string;
   /** The stored kg the barbell field started from, so saving it untouched changes nothing (see `WeightField`). */
   barbellOrigin?: number | null;
@@ -30,13 +30,11 @@ export type GymForm = {
 };
 
 export type GymInput = {
-  name: string;
   barbellKg: number;
   bars: { id?: string; name: string; weightKg: number; kind: BarKind }[];
 };
 
 export type GymFormErrors = {
-  name?: string;
   barbellKg?: string;
   bars: Record<number, { name?: string; weightKg?: string }>;
 };
@@ -57,10 +55,6 @@ function readWeight(text: string, origin: number | null | undefined, unit: Unit)
 /** Checks the form. Weights are typed in `unit` and come back as kg. */
 export function validateGymForm(form: GymForm, unit: Unit): GymFormResult {
   const errors: GymFormErrors = { bars: {} };
-  const name = cleanName(form.name);
-  if (name === '') errors.name = 'Give the gym a name.';
-  else if (name.length > GYM_NAME_MAX) errors.name = `Use ${GYM_NAME_MAX} characters or fewer.`;
-
   const barbell = readWeight(form.barbellKg, form.barbellOrigin, unit);
   if (typeof barbell === 'string') errors.barbellKg = barbell;
 
@@ -91,23 +85,15 @@ export function validateGymForm(form: GymForm, unit: Unit): GymFormResult {
       bars.push({ id: entry.id, name: barName, weightKg: weight, kind: entry.kind });
   });
 
-  const failed = errors.name || errors.barbellKg || Object.keys(errors.bars).length > 0;
+  const failed = errors.barbellKg || Object.keys(errors.bars).length > 0;
   if (failed || typeof barbell !== 'number') return { ok: false, errors };
-  return { ok: true, value: { name, barbellKg: barbell, bars } };
+  return { ok: true, value: { barbellKg: barbell, bars } };
 }
 
 export function summarizeBars(gym: Gym, unit: Unit): string {
   return [`Barbell ${withUnit(gym.barbellKg, unit)}`]
     .concat(gym.bars.map((bar) => `${bar.name} ${withUnit(bar.weightKg, unit)}`))
     .join(' · ');
-}
-
-/** The gym marked default, else the oldest, so "no default" is never a dead end. */
-export function pickDefaultGym(gyms: readonly Gym[]): Gym | undefined {
-  const marked = gyms.find((gym) => gym.isDefault);
-  if (marked) return marked;
-  const time = (gym: Gym) => Date.parse(gym.createdAt) || 0;
-  return [...gyms].sort((a, b) => time(a) - time(b))[0];
 }
 
 /** The bar an exercise uses in this gym, or undefined when the gym has none for it (ask the user). */

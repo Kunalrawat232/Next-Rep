@@ -135,11 +135,11 @@ describe('purgeSynced at sign-out', () => {
     const synced = await store.logSet(aSet(w.id, { loggedAt: '2026-10-10T10:01:00.000Z' }));
     const pending = await store.logSet(aSet(w.id, { loggedAt: '2026-10-10T10:02:00.000Z' }));
     await db.sets.update(synced.id, { syncStatus: 'synced' });
-    await store.saveGyms([]);
+    await store.saveGym(null);
     const out = await store.purgeSynced();
     expect((await db.sets.toArray()).map((s) => s.id)).toEqual([pending.id]);
     expect(await db.workouts.get(w.id)).toBeDefined();
-    expect(await store.cachedGyms()).toBeNull();
+    expect(await store.cachedGym()).toBeNull();
     expect(out.remaining).toBe(2);
   });
 
@@ -165,22 +165,19 @@ describe('purgeSynced at sign-out', () => {
 });
 
 describe('the gym snapshot rule', () => {
-  const gym = (name: string, barbellKg: number) => ({
+  const gym = (barbellKg: number) => ({
     id: uuid(9100),
-    name,
     barbellKg,
-    isDefault: true,
-    createdAt: '2026-10-01T10:00:00.000Z',
     bars: [],
   });
 
-  it('a workout keeps the bar weight it started with when the gym list changes afterwards', async () => {
+  it('a workout keeps the bar weight it started with when the gym changes afterwards', async () => {
     const { store } = freshLocal();
     const w = await store.startWorkout({
       ...aWorkout({ gymId: uuid(9100) }),
-      gymSnapshot: { name: 'Home', barbellKg: 20, bars: [] },
+      gymSnapshot: { barbellKg: 20, bars: [] },
     });
-    await store.saveGyms([gym('Home', 15)]);
+    await store.saveGym(gym(15));
     expect((await store.getWorkout(w.id))?.gymSnapshot).toMatchObject({ barbellKg: 20 });
   });
 
@@ -188,13 +185,13 @@ describe('the gym snapshot rule', () => {
     const { store } = freshLocal();
     const a = await store.startWorkout({
       ...aWorkout(),
-      gymSnapshot: { name: 'A', barbellKg: 20, bars: [] },
+      gymSnapshot: { barbellKg: 20, bars: [] },
     });
     const b = await store.startWorkout({
       ...aWorkout(),
-      gymSnapshot: { name: 'B', barbellKg: 20, bars: [] },
+      gymSnapshot: { barbellKg: 20, bars: [] },
     });
-    await store.refreshGymSnapshot(a.id, { name: 'A', barbellKg: 15, bars: [] });
+    await store.refreshGymSnapshot(a.id, { barbellKg: 15, bars: [] });
     expect((await store.getWorkout(a.id))?.gymSnapshot?.barbellKg).toBe(15);
     expect((await store.getWorkout(b.id))?.gymSnapshot?.barbellKg).toBe(20);
   });
@@ -203,18 +200,18 @@ describe('the gym snapshot rule', () => {
     const { store, db } = freshLocal();
     const w = await store.startWorkout(aWorkout());
     await db.workouts.update(w.id, {
-      gymSnapshot: { name: 'x', barbellKg: '20', bars: [] } as never,
+      gymSnapshot: { barbellKg: '20', bars: [] } as never,
     });
     expect((await store.getWorkout(w.id))?.gymSnapshot).toBeNull();
     await db.workouts.update(w.id, {
-      gymSnapshot: { name: 'x', barbellKg: 9999, bars: [] } as never,
+      gymSnapshot: { barbellKg: 9999, bars: [] } as never,
     });
     expect((await store.getWorkout(w.id))?.gymSnapshot).toBeNull();
   });
 
   it('a gym with no bars other than the barbell survives a cache round trip', async () => {
     const { store } = freshLocal();
-    await store.saveGyms([gym('Garage', 20)]);
-    expect(await store.cachedGyms()).toEqual([gym('Garage', 20)]);
+    await store.saveGym(gym(20));
+    expect(await store.cachedGym()).toEqual({ gym: gym(20) });
   });
 });

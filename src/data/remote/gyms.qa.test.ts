@@ -16,7 +16,7 @@ function fakeClient(script: Record<string, Result[]> = {}) {
         calls.push({ table, op, args });
         return builder;
       };
-    for (const name of ['eq', 'neq', 'in', 'not', 'order']) builder[name] = () => builder;
+    for (const name of ['eq', 'neq', 'in', 'not', 'order', 'limit']) builder[name] = () => builder;
     builder.then = (resolve: (r: Result) => void) => {
       const queue = script[`${table}:${op}`] ?? [];
       resolve((queue.length > 1 ? queue.shift() : queue[0]) ?? { data: [], error: null });
@@ -28,17 +28,14 @@ function fakeClient(script: Record<string, Result[]> = {}) {
 
 const goodRow = (over: Record<string, unknown> = {}) => ({
   id: 'g1',
-  name: 'Home',
   default_bar_kg: '20.00',
-  is_default: true,
-  created_at: '2026-10-01T10:00:00+00:00',
   gym_bars: [],
   ...over,
 });
 const offline = { data: null, error: { message: 'Failed to fetch' } };
-const input = { name: 'Home', barbellKg: 20, bars: [] as never[] };
+const input = { barbellKg: 20, bars: [] as never[] };
 
-describe('list(): server rows are untrusted', () => {
+describe('get(): server rows are untrusted', () => {
   const bad: [string, unknown][] = [
     ['bar weight text with a unit', goodRow({ default_bar_kg: '20kg' })],
     ['negative-looking text', goodRow({ default_bar_kg: '-5' })],
@@ -46,7 +43,6 @@ describe('list(): server rows are untrusted', () => {
     ['empty text', goodRow({ default_bar_kg: '' })],
     ['null bar weight', goodRow({ default_bar_kg: null })],
     ['boolean bar weight', goodRow({ default_bar_kg: true })],
-    ['is_default as text', goodRow({ is_default: 'true' })],
     [
       'bar kind that is not known',
       goodRow({ gym_bars: [{ id: 'b', name: 'x', weight_kg: 5, kind: 'trap' }] }),
@@ -56,76 +52,75 @@ describe('list(): server rows are untrusted', () => {
       Object.fromEntries(Object.entries(goodRow()).filter(([key]) => key !== 'gym_bars')),
     ],
   ];
-  it.each(bad)('%s makes the whole list unknown, never a crash or a raw error', async (_l, row) => {
+  it.each(bad)('%s makes the result unknown, never a crash or a raw error', async (_l, row) => {
     const { client } = fakeClient({ 'gyms:select': [{ data: [row], error: null }] });
-    expect(await createSupabaseGymService(client).list()).toEqual({
+    expect(await createSupabaseGymService(client).get()).toEqual({
       status: 'error',
       reason: 'unknown',
     });
   });
 
-  it('data: null with no error is an unknown failure, not an empty list', async () => {
+  it('data: null with no error is an unknown failure, not a missing gym', async () => {
     const { client } = fakeClient({ 'gyms:select': [{ data: null, error: null }] });
-    expect(await createSupabaseGymService(client).list()).toEqual({
+    expect(await createSupabaseGymService(client).get()).toEqual({
       status: 'error',
       reason: 'unknown',
     });
   });
 
-  it('no gyms at all is an empty list', async () => {
+  it('no gym at all is null', async () => {
     const { client } = fakeClient({ 'gyms:select': [{ data: [], error: null }] });
-    expect(await createSupabaseGymService(client).list()).toEqual({ status: 'ok', value: [] });
+    expect(await createSupabaseGymService(client).get()).toEqual({ status: 'ok', value: null });
   });
 
   it('a gym with no bars keeps its barbell and an empty bar list', async () => {
     const { client } = fakeClient({ 'gyms:select': [{ data: [goodRow()], error: null }] });
-    const r = await createSupabaseGymService(client).list();
-    expect(r).toMatchObject({ status: 'ok', value: [{ barbellKg: 20, bars: [] }] });
+    const r = await createSupabaseGymService(client).get();
+    expect(r).toMatchObject({ status: 'ok', value: { barbellKg: 20, bars: [] } });
   });
 
   it('numeric text with 2 decimals and plain numbers read the same', async () => {
-    const { client } = fakeClient({
-      'gyms:select': [
-        {
-          data: [goodRow({ default_bar_kg: '15.50' }), goodRow({ id: 'g2', default_bar_kg: 15.5 })],
-          error: null,
-        },
-      ],
+    const text = fakeClient({
+      'gyms:select': [{ data: [goodRow({ default_bar_kg: '15.50' })], error: null }],
     });
-    const r = await createSupabaseGymService(client).list();
-    expect(r.status === 'ok' && r.value.map((g) => g.barbellKg)).toEqual([15.5, 15.5]);
+    const plain = fakeClient({
+      'gyms:select': [{ data: [goodRow({ default_bar_kg: 15.5 })], error: null }],
+    });
+    const rows = [
+      await createSupabaseGymService(text.client).get(),
+      await createSupabaseGymService(plain.client).get(),
+    ];
+    expect(rows.map((r) => r.status === 'ok' && r.value?.barbellKg)).toEqual([15.5, 15.5]);
   });
 });
 
 describe('write failures are classified, and partial writes stop at the first failure', () => {
-  it('create: if the gym row fails, no bars are sent', async () => {
+  it('if the gym row fails, no bars are sent', async () => {
     const { client, calls } = fakeClient({ 'gyms:upsert': [offline] });
-    const r = await createSupabaseGymService(client).create(
-      'u',
-      'g',
-      { ...input, bars: [{ name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }] },
-      false,
-    );
+    const r = await createSupabaseGymService(client).save('u', 'g', {
+      ...input,
+      bars: [{ name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }],
+    });
     expect(r).toEqual({ status: 'error', reason: 'offline' });
     expect(calls.some((c) => c.table === 'gym_bars')).toBe(false);
   });
 
-  it('create: a duplicate gym name is a conflict', async () => {
+  it('a unique violation (a second gym for the user) is a conflict', async () => {
     const { client } = fakeClient({
       'gyms:upsert': [{ data: null, error: { code: '23505', message: 'dup' } }],
     });
-    expect(await createSupabaseGymService(client).create('u', 'g', input, true)).toEqual({
+    expect(await createSupabaseGymService(client).save('u', 'g', input)).toEqual({
       status: 'error',
       reason: 'conflict',
     });
   });
 
-  it('update: a failing bar delete stops before any bar is upserted', async () => {
+  it('a failing bar delete stops before any bar is upserted', async () => {
     const { client, calls } = fakeClient({
       'gym_bars:select': [{ data: [{ id: 'old' }], error: null }],
       'gym_bars:delete': [{ data: null, error: { code: '42501', message: 'rls' } }],
     });
-    const r = await createSupabaseGymService(client).update('u', 'g', {
+    const r = await createSupabaseGymService(client).save('u', 'g', {
       ...input,
       bars: [{ id: 'new', name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }],
     });
@@ -133,11 +128,11 @@ describe('write failures are classified, and partial writes stop at the first fa
     expect(calls.some((c) => c.table === 'gym_bars' && c.op === 'upsert')).toBe(false);
   });
 
-  it('update: a bar without an id is created with a fresh id, and a bar with its id is kept', async () => {
+  it('a bar without an id is created with a fresh id, and a bar with its id is kept', async () => {
     const { client, calls } = fakeClient({
       'gym_bars:select': [{ data: [{ id: 'keep' }, { id: 'drop' }], error: null }],
     });
-    await createSupabaseGymService(client).update('u', 'g', {
+    await createSupabaseGymService(client).save('u', 'g', {
       ...input,
       bars: [
         { id: 'keep', name: 'EZ', weightKg: 7.5, kind: 'ez_bar' },
@@ -151,37 +146,20 @@ describe('write failures are classified, and partial writes stop at the first fa
     expect(calls.find((c) => c.op === 'delete')).toBeDefined();
   });
 
-  it('update: when every bar is removed, the delete covers them and no empty upsert is sent', async () => {
+  it('when every bar is removed, the delete covers them and no empty upsert is sent', async () => {
     const { client, calls } = fakeClient({
       'gym_bars:select': [{ data: [{ id: 'a' }], error: null }],
     });
-    await createSupabaseGymService(client).update('u', 'g', input);
+    await createSupabaseGymService(client).save('u', 'g', input);
     expect(calls.some((c) => c.table === 'gym_bars' && c.op === 'upsert')).toBe(false);
     expect(calls.some((c) => c.table === 'gym_bars' && c.op === 'delete')).toBe(true);
   });
 
-  it('setDefault: the old default is cleared first, and a failure there never sets the new one', async () => {
-    const { client, calls } = fakeClient({ 'gyms:update': [offline] });
-    const r = await createSupabaseGymService(client).setDefault('g2');
-    expect(r).toEqual({ status: 'error', reason: 'offline' });
-    expect(calls.filter((c) => c.op === 'update')).toHaveLength(1);
-  });
-
-  it('remove: a foreign-key refusal (gym still used) is a rejection', async () => {
-    const { client } = fakeClient({
-      'gyms:delete': [{ data: null, error: { code: '23503', message: 'fk' } }],
-    });
-    expect(await createSupabaseGymService(client).remove('g')).toEqual({
-      status: 'error',
-      reason: 'rejected',
-    });
-  });
-
-  it('create with the same id twice upserts by id both times (retry-safe)', async () => {
+  it('saving with the same id twice upserts by id both times (retry-safe)', async () => {
     const { client, calls } = fakeClient();
     const svc = createSupabaseGymService(client);
-    await svc.create('u', 'same-id', input, false);
-    await svc.create('u', 'same-id', input, false);
+    await svc.save('u', 'same-id', input);
+    await svc.save('u', 'same-id', input);
     const gymUpserts = calls.filter((c) => c.table === 'gyms');
     expect(gymUpserts).toHaveLength(2);
     for (const call of gymUpserts) {
@@ -190,16 +168,25 @@ describe('write failures are classified, and partial writes stop at the first fa
     }
   });
 
-  it('create: a bar failure after the gym row was written is reported (the gym stays; retry is safe)', async () => {
+  it('a bar failure after the gym row was written is reported (the gym stays; retry is safe)', async () => {
     const { client } = fakeClient({
       'gym_bars:upsert': [{ data: null, error: { code: '23514', message: 'check' } }],
     });
-    const r = await createSupabaseGymService(client).create(
-      'u',
-      'g',
-      { ...input, bars: [{ name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }] },
-      false,
-    );
+    const r = await createSupabaseGymService(client).save('u', 'g', {
+      ...input,
+      bars: [{ name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }],
+    });
     expect(r).toEqual({ status: 'error', reason: 'rejected' });
+  });
+
+  it('a bar name or kind already used in the gym is a conflict', async () => {
+    const { client } = fakeClient({
+      'gym_bars:upsert': [{ data: null, error: { code: '23505', message: 'dup' } }],
+    });
+    const r = await createSupabaseGymService(client).save('u', 'g', {
+      ...input,
+      bars: [{ name: 'EZ', weightKg: 7.5, kind: 'ez_bar' }],
+    });
+    expect(r).toEqual({ status: 'error', reason: 'conflict' });
   });
 });

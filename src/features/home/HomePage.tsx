@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { buttonClasses, EmptyState, ErrorMessage, LoadingMessage, Section } from '../../components';
+import { defaultBarbellKg } from '../../domain/gyms';
 import { dayLabel, groupByExercise, topSet } from '../../domain/history';
-import { pickDefaultGym } from '../../domain/gyms';
 import { describeSuggestion, suggest } from '../../domain/progression';
 import { withUnit } from '../../domain/units';
 import { setSummary } from '../../domain/workout';
@@ -9,7 +9,7 @@ import { useAuth } from '../auth';
 import { useExerciseService, useExercises } from '../exercises';
 import { useUnit } from '../settings/UnitProvider';
 import { SyncBadge } from '../sync';
-import { useGymCatalog, useWorkout } from '../workout';
+import { useMyGym, useWorkout } from '../workout';
 import { useHomeData } from './useHomeData';
 
 /** Home: ready to lift. What to try today, what you did last time, and the way into a workout. */
@@ -18,13 +18,12 @@ export function HomePage() {
   const { unit } = useUnit();
   const data = useHomeData();
   const { state: open } = useWorkout();
-  const { catalog } = useGymCatalog();
+  const { catalog } = useMyGym();
   const { state: exercises } = useExercises(useExerciseService());
   if (auth.status !== 'signedIn') return null;
 
-  const gyms = catalog.status === 'ready' ? catalog.gyms : null;
-  const gym = gyms ? pickDefaultGym(gyms) : undefined;
-  const noGym = gyms !== null && gyms.length === 0;
+  const gym = catalog.status === 'ready' ? catalog.gym : null;
+  const noGym = catalog.status === 'ready' && catalog.gym === null;
 
   if (
     data.status === 'loading' ||
@@ -64,36 +63,21 @@ export function HomePage() {
       </h1>
 
       {firstTime ? (
-        <Section headingId="steps-heading" title="Two quick steps">
+        <Section headingId="steps-heading" title="Your first workout">
           <p className="text-callout text-ink-muted">
-            You are ready to log your first set after these.
+            Start a workout, then say or tap your first set. Next Rep adds the bar for you, starting
+            with a standard {withUnit(defaultBarbellKg(unit), unit)} barbell. You can change it any
+            time in Settings.
           </p>
-          <ol className="flex flex-col gap-4">
-            <li className="flex flex-col items-start gap-2">
-              <span className="text-body font-semibold">1. Add your gym</span>
-              <span className="text-callout text-ink-muted">
-                Tell Next Rep which bar you use, so every weight adds up.
-              </span>
-              <Link to="/gyms/new" className={buttonClasses('primary')}>
-                Add gym
-              </Link>
-            </li>
-            <li className="flex flex-col items-start gap-2">
-              <span className="text-body font-semibold">2. Start your first workout</span>
-              <span className="text-callout text-ink-muted">
-                Add a gym first, then say or tap your first set.
-              </span>
-              <button type="button" disabled className={buttonClasses('primary', 'opacity-60')}>
-                Start workout
-              </button>
-            </li>
-          </ol>
+          <Link to="/workout" className={buttonClasses('primary', 'self-start')}>
+            Start workout
+          </Link>
         </Section>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           {gym && (
             <p className="inline-flex h-8 items-center rounded-full border border-line bg-surface-200 px-3 text-caption font-medium">
-              {gym.name} · {withUnit(gym.barbellKg, unit)} bar
+              {withUnit(gym.barbellKg, unit)} bar
             </p>
           )}
           <SyncBadge />
@@ -132,7 +116,6 @@ export function HomePage() {
         <Section headingId="last-heading" title="Last workout">
           <p className="text-callout text-ink-muted">
             {dayLabel(data.last.workout.startedAt, new Date())}
-            {data.last.workout.gymSnapshot ? ` · ${data.last.workout.gymSnapshot.name}` : ''}
           </p>
           <ul className="flex flex-col gap-2">
             {groupByExercise(data.last.sets)
@@ -163,8 +146,8 @@ export function HomePage() {
       )}
 
       <div className="flex flex-col gap-2">
-        <Link to="/gyms" className={buttonClasses('secondary', 'w-full')}>
-          Manage gyms
+        <Link to="/gym" className={buttonClasses('secondary', 'w-full')}>
+          Your bars
         </Link>
         <Link to="/exercises" className={buttonClasses('secondary', 'w-full')}>
           Exercises

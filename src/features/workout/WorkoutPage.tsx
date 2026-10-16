@@ -5,15 +5,16 @@ import {
   buttonClasses,
   Card,
   cardClasses,
-  EmptyState,
   ErrorMessage,
   LoadingMessage,
   PageHeader,
 } from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
-import { pickDefaultGym } from '../../domain/gyms';
+import { defaultBarbellKg, summarizeBars } from '../../domain/gyms';
 import { useOnline } from '../../lib/useOnline';
+import { useAuth } from '../auth';
 import { useExerciseService, useExercises } from '../exercises';
+import { useGymService } from '../gyms';
 import { SyncBadge, useLogStore, useSyncControls } from '../sync';
 import { OfflineBanner } from './OfflineBanner';
 import { SetList } from './SetList';
@@ -23,7 +24,7 @@ import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { RestTimer } from './RestTimer';
 import { VoiceLogger } from './VoiceLogger';
-import { useGymCatalog } from './useGymCatalog';
+import { useMyGym } from './useMyGym';
 import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
@@ -45,27 +46,48 @@ export function WorkoutPage() {
 
 function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
   const { unit } = useUnit();
-  const { catalog, reload } = useGymCatalog();
+  const { state: auth } = useAuth();
+  const service = useGymService();
+  const { catalog, reload, saved } = useMyGym();
   const store = useLogStore();
   const { notify } = useSyncControls();
-  const [chosen, setChosen] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const { pending: starting, begin: beginStart, end: endStart } = usePending();
   // One id for this screen, so a second tap starts the same workout instead of another one.
   const workoutId = useRef(crypto.randomUUID());
+  // Likewise for the gym made on the first workout, so a retry finishes the job instead of making a second.
+  const newGymId = useRef(crypto.randomUUID());
 
-  async function start(gymId: string) {
-    if (catalog.status !== 'ready') return;
-    const gym = catalog.gyms.find((g) => g.id === gymId);
-    if (!gym) return;
+  async function start() {
+    if (catalog.status !== 'ready' || auth.status !== 'signedIn') return;
     setProblem(null);
     if (!beginStart()) return;
     try {
+      let gym = catalog.gym;
+      if (!gym) {
+        // The first workout sets the gym up with a standard barbell; Settings changes it.
+        const input = { barbellKg: defaultBarbellKg(unit), bars: [] };
+        const result = await service.save(auth.user.id, newGymId.current, input);
+        if (result.status !== 'ok') {
+          if (result.reason === 'conflict') reload();
+          setProblem(
+            result.reason === 'offline'
+              ? "You're offline. Setting up your gym needs a connection once, so connect and try again."
+              : result.reason === 'conflict'
+                ? 'Your gym was just set up on another device. Try again.'
+                : 'Could not set up your gym. Please try again.',
+          );
+          endStart();
+          return;
+        }
+        gym = { id: newGymId.current, ...input };
+        saved(gym);
+      }
       await store.startWorkout({
         id: workoutId.current,
         gymId: gym.id,
         startedAt: new Date().toISOString(),
-        gymSnapshot: { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars },
+        gymSnapshot: { barbellKg: gym.barbellKg, bars: gym.bars },
       });
       notify();
       await onStarted();
@@ -80,63 +102,41 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
       <PageHeader back="/" title="Workout" />
       <OfflineBanner />
 
-      {catalog.status === 'loading' && <LoadingMessage>Loading your gyms…</LoadingMessage>}
+      {catalog.status === 'loading' && <LoadingMessage>Loading your gym…</LoadingMessage>}
       {catalog.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
           <ErrorMessage>
-            Could not load your gyms. Connect once to load them, and they stay available offline.
+            Could not load your gym. Connect once to load it, and it stays available offline.
           </ErrorMessage>
           <Button variant="secondary" onClick={reload}>
             Try again
           </Button>
         </div>
       )}
-      {catalog.status === 'ready' && catalog.gyms.length === 0 && (
-        <EmptyState
-          title="Add a gym first"
-          message="A workout needs a gym, so the bar weight is added to every weight you log."
-        >
-          <Link to="/gyms/new" className={buttonClasses('primary')}>
-            Add a gym
-          </Link>
-        </EmptyState>
-      )}
-      {catalog.status === 'ready' && catalog.gyms.length > 0 && (
+      {catalog.status === 'ready' && (
         <>
           {catalog.fromCache && (
-            <p className="text-caption text-ink-muted">Using the gyms saved on this device.</p>
+            <p className="text-caption text-ink-muted">Using the gym saved on this device.</p>
           )}
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-callout font-medium">Where are you training?</legend>
-            {catalog.gyms.map((gym) => {
-              const selected = (chosen ?? pickDefaultGym(catalog.gyms)?.id) === gym.id;
-              return (
-                <label
-                  key={gym.id}
-                  className={`flex min-h-touch items-center gap-3 rounded-md border p-4 ${selected ? 'border-accent' : 'border-line'}`}
-                >
-                  <input
-                    type="radio"
-                    name="gym"
-                    checked={selected}
-                    onChange={() => setChosen(gym.id)}
-                    className="size-5 accent-[var(--color-accent)]"
-                  />
-                  <span>
-                    <span className="block text-body font-semibold">{gym.name}</span>
-                    <span className="block text-callout text-ink-muted">
-                      Barbell {withUnit(gym.barbellKg, unit)}
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
+          <Card as="section" aria-label="Your bars" className="flex flex-col gap-2">
+            {catalog.gym ? (
+              <>
+                <p className="text-callout text-ink-muted">Bars added to your weights</p>
+                <p className="text-body font-semibold">{summarizeBars(catalog.gym, unit)}</p>
+                <Link to="/gym" className="min-h-touch content-center font-semibold text-accent">
+                  Change bars
+                </Link>
+              </>
+            ) : (
+              <p className="text-callout text-ink-muted">
+                Next Rep adds the bar to every weight you log. It starts with a standard{' '}
+                {withUnit(defaultBarbellKg(unit), unit)} barbell, and you can change it any time in
+                Settings.
+              </p>
+            )}
+          </Card>
           {problem && <ErrorMessage>{problem}</ErrorMessage>}
-          <Button
-            disabled={starting}
-            onClick={() => void start(chosen ?? pickDefaultGym(catalog.gyms)!.id)}
-          >
+          <Button disabled={starting} onClick={() => void start()}>
             Start workout
           </Button>
         </>
@@ -230,7 +230,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         <div className="flex flex-wrap items-center gap-2">
           {gym && (
             <p className="inline-flex h-8 items-center rounded-full border border-line bg-surface-200 px-3 text-caption font-medium">
-              {gym.name} · {withUnit(gym.barbellKg, unit)} bar
+              {withUnit(gym.barbellKg, unit)} bar
             </p>
           )}
           <SyncBadge />

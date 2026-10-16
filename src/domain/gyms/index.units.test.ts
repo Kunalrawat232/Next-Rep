@@ -3,7 +3,6 @@ import { summarizeBars, validateGymForm, type Gym, type GymForm } from '.';
 import { fieldFromKg, fromDisplay } from '../units';
 
 const form = (over: Partial<GymForm> = {}): GymForm => ({
-  name: 'Home gym',
   barbellKg: '45',
   bars: [],
   ...over,
@@ -73,10 +72,7 @@ describe('a gym form typed in lb', () => {
 describe('summarizing the bars', () => {
   const gym: Gym = {
     id: 'g',
-    name: 'Home gym',
     barbellKg: fromDisplay(45, 'lb'),
-    isDefault: true,
-    createdAt: '2026-10-01T00:00:00.000Z',
     bars: [{ id: 'b', name: 'EZ bar', weightKg: fromDisplay(25, 'lb'), kind: 'ez_bar' }],
   };
 

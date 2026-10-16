@@ -28,9 +28,7 @@ export function offlineServer() {
 
 export const HOME_GYM: Gym = sampleGym({
   id: '11111111-1111-4111-8111-111111111111',
-  name: 'Home gym',
   barbellKg: 15,
-  isDefault: true,
   bars: [{ id: 'bar-ez', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
 });
 
@@ -41,7 +39,8 @@ export const DUMBBELL_CURL = '814bdc82-53bf-53c1-b20e-ff5e43b46e1a'; // Dumbbell
 export const PUSH_UP = '2dde008c-509c-5d7c-853f-da59e1756a81'; // Push-Up, bodyweight
 
 type Options = {
-  gyms?: Gym[];
+  /** The user's gym; null for a user who has not set one up. The standard HOME_GYM when missing. */
+  gym?: Gym | null;
   /** Makes the gym list fail, as when there is no connection. */
   gymsFail?: 'offline' | 'unknown';
   customExercises?: Exercise[];
@@ -61,8 +60,8 @@ export function renderApp(path: string, options: Options = {}) {
   const userId = options.userId ?? `u-${Math.random().toString(36).slice(2)}`;
   const deps = { indexedDB, IDBKeyRange };
   const auth = createFakeAuthService({ id: userId, email: 'ada@example.com' });
-  const gyms = createFakeGymService(options.gyms ?? [HOME_GYM]);
-  if (options.gymsFail) gyms.failNext('list', options.gymsFail);
+  const gyms = createFakeGymService(options.gym === undefined ? HOME_GYM : options.gym);
+  if (options.gymsFail) gyms.failNext('get', options.gymsFail);
   const exercises = createFakeExerciseService(options.customExercises ?? []);
   const server = options.server ?? createFakeRemoteLog();
   const profile = createFakeProfileService(options.savedUnit ?? options.unit ?? null);

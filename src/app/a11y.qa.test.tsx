@@ -12,7 +12,7 @@ async function openWithWorkout(path: (workoutId: string) => string) {
   const w = await first.store.startWorkout({
     ...aWorkout(),
     gymId: HOME_GYM.id,
-    gymSnapshot: { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars },
+    gymSnapshot: { barbellKg: 15, bars: HOME_GYM.bars },
   });
   await first.store.logSet(aSet(w.id, { totalKg: 60, barKg: 15, perSideKg: 22.5 }));
   await first.store.logSet(

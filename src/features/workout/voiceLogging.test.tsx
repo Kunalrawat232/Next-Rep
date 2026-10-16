@@ -7,7 +7,7 @@ import { aSet, aWorkout } from '../../test/localDb';
 import type { ParseService } from '../voice';
 import type { GeminiOutput } from '../../domain/parser';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 class FakeMic {
   static all: FakeMic[] = [];

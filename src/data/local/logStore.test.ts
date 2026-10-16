@@ -293,7 +293,6 @@ describe('purgeSynced', () => {
 
 describe('gym snapshot and gym cache', () => {
   const gym = {
-    name: 'Home gym',
     barbellKg: 15,
     bars: [{ id: 'b1', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' as const }],
   };
@@ -319,37 +318,28 @@ describe('gym snapshot and gym cache', () => {
     expect((await db.workouts.get(w.id))?.gymSnapshot).toEqual(gym);
   });
 
-  it('saves and reads back the gym list, and reads null before anything was saved', async () => {
+  it('saves and reads back the gym, and reads null before anything was saved', async () => {
     const { store } = freshLocal();
-    expect(await store.cachedGyms()).toBeNull();
-    const gyms = [
-      {
-        id: 'g1',
-        name: 'Home gym',
-        barbellKg: 15,
-        isDefault: true,
-        createdAt: '2026-10-01T10:00:00Z',
-        bars: [],
-      },
-    ];
-    await store.saveGyms(gyms);
-    expect(await store.cachedGyms()).toEqual(gyms);
-    await store.saveGyms([]);
-    expect(await store.cachedGyms()).toEqual([]);
+    expect(await store.cachedGym()).toBeNull();
+    const saved = { id: 'g1', barbellKg: 15, bars: [] };
+    await store.saveGym(saved);
+    expect(await store.cachedGym()).toEqual({ gym: saved });
+    await store.saveGym(null);
+    expect(await store.cachedGym()).toEqual({ gym: null });
   });
 
-  it('keeps the gym list per user', async () => {
+  it('keeps the gym per user', async () => {
     const a = freshLocal('cache-user-a');
     const b = freshLocal('cache-user-b');
-    await a.store.saveGyms([]);
-    expect(await b.store.cachedGyms()).toBeNull();
+    await a.store.saveGym(null);
+    expect(await b.store.cachedGym()).toBeNull();
   });
 
-  it('clears the gym list when synced data is purged', async () => {
+  it('clears the gym when synced data is purged', async () => {
     const { store } = freshLocal();
-    await store.saveGyms([]);
+    await store.saveGym(null);
     await store.purgeSynced();
-    expect(await store.cachedGyms()).toBeNull();
+    expect(await store.cachedGym()).toBeNull();
   });
 
   it('opens a database that was created before the gym cache existed, keeping its sets', async () => {

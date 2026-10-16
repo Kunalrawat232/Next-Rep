@@ -5,7 +5,7 @@ import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type Seed = {
   startedAt: string;
@@ -144,11 +144,11 @@ describe('history rows with odd data', () => {
   it('counts a large workout correctly in the list and the detail page', async () => {
     const { user } = await openWith([{ startedAt: daysAgo(1), sets: 250 }]);
     const [item] = await rows();
-    expect(item).toHaveTextContent('Home gym · 250 sets · 1 exercise');
+    expect(item).toHaveTextContent('250 sets · 1 exercise');
     await user.click(item!.querySelector('a')!);
     const region = await screen.findByRole('region', { name: 'Barbell Bench Press' });
     expect(within(region).getAllByRole('listitem')).toHaveLength(250);
-    expect(screen.getByText(/Home gym · 250 sets/)).toBeInTheDocument();
+    expect(screen.getByText(/250 sets/)).toBeInTheDocument();
   });
 });
 
@@ -166,7 +166,7 @@ describe('workout detail with odd data', () => {
     seeded.unmount();
     renderApp(`/history/${seeded.ids[0]}`, { userId: seeded.userId, server: offline() });
     expect(await screen.findByRole('heading', { name: 'Yesterday' })).toBeInTheDocument();
-    expect(screen.getByText(/Home gym · 1 set$/)).toBeInTheDocument();
+    expect(screen.getByText(/1 set$/)).toBeInTheDocument();
   });
 
   it('says not found for sets whose workout is gone, and the list ignores them', async () => {

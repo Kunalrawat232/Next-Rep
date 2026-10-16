@@ -12,8 +12,8 @@ import {
 } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
-const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
+const NO_EZ: GymSnapshot = { barbellKg: 15, bars: [] };
 
 /** An open workout already on the device, then the log screen for an exercise. */
 async function openLog(exerciseId: string, snapshot: GymSnapshot = HOME, withSets: number[] = []) {
@@ -194,13 +194,8 @@ describe('other equipment', () => {
 
   it('blocks an EZ bar exercise when the gym has no EZ bar, and links to set it', async () => {
     const { workout } = await openLog(EZ_CURL, NO_EZ);
-    expect(
-      await screen.findByRole('heading', { name: /no ez bar set for home gym/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Set the bar for this gym' })).toHaveAttribute(
-      'href',
-      `/gyms/${HOME_GYM.id}`,
-    );
+    expect(await screen.findByRole('heading', { name: /no ez bar set up/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Set up your bars' })).toHaveAttribute('href', '/gym');
     expect(screen.queryByRole('button', { name: 'Log set' })).not.toBeInTheDocument();
     expect(workout.id).toBeTruthy();
   });

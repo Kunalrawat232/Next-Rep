@@ -18,10 +18,7 @@ const Kg = z.union([
 
 const GymRowSchema = z.object({
   id: z.string(),
-  name: z.string(),
   default_bar_kg: Kg,
-  is_default: z.boolean(),
-  created_at: z.string(),
   gym_bars: z.array(
     z.object({
       id: z.string(),
@@ -35,7 +32,8 @@ const GymRowSchema = z.object({
 const ok = <T>(value: T): GymResult<T> => ({ status: 'ok', value });
 
 function gymRow(userId: string, id: string, input: GymInput) {
-  return { id, user_id: userId, name: input.name, default_bar_kg: input.barbellKg };
+  // The name column keeps its default ('My gym'): there is one gym, so it has no name of its own.
+  return { id, user_id: userId, default_bar_kg: input.barbellKg };
 }
 
 function barRows(userId: string, gymId: string, bars: GymInput['bars']) {
@@ -51,52 +49,34 @@ function barRows(userId: string, gymId: string, bars: GymInput['bars']) {
 
 export function createSupabaseGymService(client: Client): GymService {
   return {
-    async list() {
+    async get() {
       const { data, error } = await client
         .from('gyms')
-        .select(
-          'id, name, default_bar_kg, is_default, created_at, gym_bars(id, name, weight_kg, kind)',
-        )
-        .order('created_at', { ascending: true })
-        .order('name', { referencedTable: 'gym_bars', ascending: true });
+        .select('id, default_bar_kg, gym_bars(id, name, weight_kg, kind)')
+        .order('name', { referencedTable: 'gym_bars', ascending: true })
+        .limit(1);
       if (error) return failure(error);
       const parsed = z.array(GymRowSchema).safeParse(data);
       if (!parsed.success) return { status: 'error', reason: 'unknown' };
-      const gyms: Gym[] = parsed.data.map((row) => ({
+      const row = parsed.data[0];
+      if (!row) return ok(null);
+      const gym: Gym = {
         id: row.id,
-        name: row.name,
         barbellKg: row.default_bar_kg,
-        isDefault: row.is_default,
-        createdAt: row.created_at,
         bars: row.gym_bars.map((bar) => ({
           id: bar.id,
           name: bar.name,
           weightKg: bar.weight_kg,
           kind: bar.kind,
         })),
-      }));
-      return ok(gyms);
+      };
+      return ok(gym);
     },
 
-    async create(userId, id, input, makeDefault) {
+    async save(userId, gymId, input) {
       const gym = await client
         .from('gyms')
-        .upsert({ ...gymRow(userId, id, input), is_default: makeDefault }, { onConflict: 'id' });
-      if (gym.error) return failure(gym.error);
-      if (input.bars.length > 0) {
-        const bars = await client
-          .from('gym_bars')
-          .upsert(barRows(userId, id, input.bars), { onConflict: 'id' });
-        if (bars.error) return failure(bars.error);
-      }
-      return ok(undefined);
-    },
-
-    async update(userId, gymId, input) {
-      const gym = await client
-        .from('gyms')
-        .update({ name: input.name, default_bar_kg: input.barbellKg })
-        .eq('id', gymId);
+        .upsert(gymRow(userId, gymId, input), { onConflict: 'id' });
       if (gym.error) return failure(gym.error);
 
       const existing = await client.from('gym_bars').select('id').eq('gym_id', gymId);
@@ -117,24 +97,6 @@ export function createSupabaseGymService(client: Client): GymService {
         if (bars.error) return failure(bars.error);
       }
       return ok(undefined);
-    },
-
-    async remove(gymId) {
-      const { error } = await client.from('gyms').delete().eq('id', gymId);
-      return error ? failure(error) : ok(undefined);
-    },
-
-    async setDefault(gymId) {
-      // Two statements, not one: the one-default rule is checked row by row, so swapping in a single
-      // update fails for some row orders (see ADR-009).
-      const cleared = await client
-        .from('gyms')
-        .update({ is_default: false })
-        .eq('is_default', true)
-        .neq('id', gymId);
-      if (cleared.error) return failure(cleared.error);
-      const set = await client.from('gyms').update({ is_default: true }).eq('id', gymId);
-      return set.error ? failure(set.error) : ok(undefined);
     },
   };
 }

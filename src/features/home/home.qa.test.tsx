@@ -5,7 +5,7 @@ import type { GymSnapshot } from '../../data/local/types';
 import { BENCH, HOME_GYM, PUSH_UP, offlineServer, renderApp } from '../../test/appHarness';
 import { aSet, aWorkout, uuid } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type Seed = {
   daysAgo: number;

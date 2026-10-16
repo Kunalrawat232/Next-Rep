@@ -18,7 +18,7 @@ async function openWith(seeds: Seed[], path: string, unit: Unit) {
       ...aWorkout(),
       startedAt: start.toISOString(),
       gymId: HOME_GYM.id,
-      gymSnapshot: { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars },
+      gymSnapshot: { barbellKg: 15, bars: HOME_GYM.bars },
     });
     for (const [i, s] of seed.sets.entries())
       await first.store.logSet(

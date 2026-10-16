@@ -6,7 +6,7 @@ import { HOME_GYM, offlineServer, renderApp } from '../../test/appHarness';
 import { tapTogether } from '../../test/doubleTap';
 import { aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 const START = new Date('2026-10-10T10:00:00.000Z').getTime();
 
 beforeEach(() => {
