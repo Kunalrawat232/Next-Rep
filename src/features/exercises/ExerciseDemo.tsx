@@ -10,8 +10,12 @@ type Props = {
   media: DemoMedia | null;
 };
 
-/** The same square whatever is inside, so nothing on the page moves when the picture arrives or fails. */
-const FRAME = 'relative aspect-square w-full overflow-hidden rounded-sm bg-surface-300';
+/**
+ * The same square whatever is inside, so nothing on the page moves when the picture arrives or fails. It is
+ * never wider than the pictures themselves (180 px): stretching them only blurs them.
+ */
+const FRAME =
+  'relative mx-auto aspect-square w-full max-w-[180px] overflow-hidden rounded-sm bg-surface-300';
 
 /** The empty square shown while the animation or the exercise's data is on its way. */
 export function DemoSkeleton() {

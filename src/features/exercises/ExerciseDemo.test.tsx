@@ -83,6 +83,13 @@ describe('ExerciseDemo', () => {
     expect(screen.getByTestId('demo-skeleton')).toBeInTheDocument();
   });
 
+  it('never stretches the 180 px picture beyond its own size', () => {
+    const view = render(<ExerciseDemo exerciseName="A" media={media} />);
+    const square = view.container.querySelector('.aspect-square');
+    expect(square?.className).toContain('max-w-[180px]');
+    expect(screen.getByRole('img')).toHaveAttribute('width', '180');
+  });
+
   it('keeps the same square in every state, so the page never jumps', () => {
     const squares = (view: ReturnType<typeof render>) =>
       view.container.querySelectorAll('.aspect-square').length;
