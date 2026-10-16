@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { buttonClasses, Chip, Section, Switch } from '../../components';
+import { DEMO_MEDIA } from '../../domain/exercises/demoMedia';
 import { pickDefaultGym } from '../../domain/gyms';
 import { withUnit } from '../../domain/units';
 import { useAuth } from '../auth';
@@ -85,6 +86,31 @@ export function SettingsPage() {
             onChange={(on) => setTheme(on ? 'light' : 'dark')}
           />
         </div>
+      </Section>
+
+      <Section headingId="credits-heading" title="About and credits">
+        <p className="text-callout text-ink-muted">{DEMO_MEDIA.credit.note}</p>
+        <p className="text-callout">
+          Exercise demonstrations ©{' '}
+          <a
+            href={DEMO_MEDIA.credit.ownerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-accent"
+          >
+            {DEMO_MEDIA.credit.owner}
+          </a>
+          . Exercise data from{' '}
+          <a
+            href={DEMO_MEDIA.credit.datasetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-accent"
+          >
+            {DEMO_MEDIA.credit.dataset}
+          </a>{' '}
+          (MIT licence).
+        </p>
       </Section>
 
       <Section headingId="account-heading" title="Account">

@@ -8,9 +8,15 @@ muscle groups) were selected and converted from the open
 `scripts/import-exercises.mjs`. The dataset's data is released under the MIT License, reproduced
 below as that licence requires.
 
-**Not used:** the dataset's images and animated GIFs belong to Gym visual
-(https://gymvisual.com/), are redistributed there under separate terms, and are not part of this
-project. See [ADR-010](docs/architecture/decisions/010-exercise-library-and-muscle-search.md).
+**Exercise demonstrations (hotlinked, not part of this project's files):** the dataset's animated
+GIFs and thumbnails are © Gym visual (https://gymvisual.com/), redistributed in the dataset under
+separate terms. Next Rep does not store, bundle or cache them: the exercise page loads them at run
+time from the dataset's files on the jsDelivr CDN, for non-commercial use, and credits the owner in
+Settings. The licence below covers the dataset's data, **not** this media. If the project is ever used
+commercially, the media must be licensed from Gym visual or removed: set `DEMO_MEDIA.enabled` to
+`false` in `src/domain/exercises/demoMedia.ts`. See
+[ADR-013](docs/architecture/decisions/013-hotlinked-exercise-demonstrations.md) (which replaces the "no
+media" decision in [ADR-010](docs/architecture/decisions/010-exercise-library-and-muscle-search.md)).
 
 ```text
 MIT License

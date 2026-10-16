@@ -63,6 +63,12 @@ Setup of Supabase, Vercel and Gemini: [deployment guide](docs/delivery/deploymen
 
 Once voice is built it will need HTTPS or localhost, so test on phones through a Vercel preview deployment or a tunnel.
 
+## Credits
+
+Exercise names and muscle data come from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (MIT licence). The exercise demonstrations are © [Gym visual](https://gymvisual.com/) and are shown for **non-commercial use only**: they are loaded from the dataset at run time and are never stored in this repository, the build or the offline cache. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [ADR-013](docs/architecture/decisions/013-hotlinked-exercise-demonstrations.md).
+
+To re-run the matching of exercises to demonstrations after the exercise list changes: download `data/exercises.json` from the dataset (do not commit it), then run `node scripts/match-exercise-demos.mjs path/to/exercises.json` to print the report of matched, ambiguous, declined and unmatched exercises, and add `--write` to update `src/domain/exercises.demo.json`. Decisions for names that do not match go in `scripts/exercise-demo-overrides.json`.
+
 ## Documentation map
 
 Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain rules, standards, design, security, AI practices, QA, delivery, hackathon and plans. `CLAUDE.md` is the entry point for AI assistants and links to the main docs.
@@ -72,6 +78,7 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 - Voice is planned, not built yet. The plan: it works on Chrome (Android, desktop) and Safari (iOS); Firefox lacks the Web Speech API, so voice will be hidden and tap logging used.
 - Planned voice: speech recognition needs internet, so offline only tap logging works. The audio leaves the device to the browser vendor's recogniser, which the app does not control.
 - Offline, only creating sets is supported. Editing or deleting needs a connection.
+- Exercise demonstrations load from a third-party CDN and need internet; offline, or if the CDN is down, a placeholder shows. They are for non-commercial use (see Credits).
 - Browsers (especially iOS Safari) can evict local data, so sets sync as soon as possible.
 - Gemini free tier has low rate limits and is a fallback only (planned); its free-tier terms can change.
 - Supabase free projects can pause after a period of inactivity.
