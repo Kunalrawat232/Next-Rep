@@ -3,28 +3,14 @@
 // used, see THIRD_PARTY_NOTICES.md and ADR-010).
 // Usage: node scripts/import-exercises.mjs path/to/exercises.json
 // The output is committed and reviewed; the 17 MB source file is not.
-import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { MUSCLES } from '../src/domain/exercises/muscles.ts';
+import { MUSCLE, uuidV5 } from './lib/dataset.mjs';
 
 const input = process.argv[2];
 if (!input) {
   console.error('Usage: node scripts/import-exercises.mjs path/to/exercises.json');
   process.exit(1);
-}
-
-// Fixed namespace, so an exercise keeps the same id every time the import is re-run.
-const NAMESPACE = 'a3f1c2d4-5b6e-4f70-8a91-b2c3d4e5f607';
-
-function uuidV5(name) {
-  const hash = createHash('sha1')
-    .update(Buffer.from(NAMESPACE.replaceAll('-', ''), 'hex'))
-    .update(name)
-    .digest();
-  hash[6] = (hash[6] & 0x0f) | 0x50;
-  hash[8] = (hash[8] & 0x3f) | 0x80;
-  const h = hash.subarray(0, 16).toString('hex');
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
 // Only equipment that maps cleanly to how we count weight (bar included, or per dumbbell).
@@ -48,25 +34,6 @@ const BODY_PART = {
   'upper legs': 'lower',
   'lower legs': 'lower',
   waist: 'core',
-};
-
-const MUSCLE = {
-  pectorals: 'chest',
-  delts: 'shoulders',
-  biceps: 'biceps',
-  triceps: 'triceps',
-  forearms: 'forearms',
-  lats: 'lats',
-  'upper back': 'upper_back',
-  traps: 'traps',
-  spine: 'lower_back',
-  abs: 'abs',
-  glutes: 'glutes',
-  quads: 'quads',
-  hamstrings: 'hamstrings',
-  calves: 'calves',
-  adductors: 'adductors',
-  abductors: 'abductors',
 };
 
 const NOISE =
