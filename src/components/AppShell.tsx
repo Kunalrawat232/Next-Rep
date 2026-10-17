@@ -82,8 +82,9 @@ const ITEMS: Item[] = [
     to: '/settings',
     icon: (
       <Icon>
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+        <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+        <circle cx="15" cy="7" r="2" />
+        <circle cx="9" cy="17" r="2" />
       </Icon>
     ),
   },
