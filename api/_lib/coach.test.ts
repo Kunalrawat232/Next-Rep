@@ -278,6 +278,63 @@ describe('keeping the coach to the gym and diet', () => {
   });
 });
 
+describe('saying which step failed, in the log', () => {
+  const logged = (spy: ReturnType<typeof vi.spyOn>) => JSON.stringify(spy.mock.calls);
+
+  it('names the model step, the kind of error and the HTTP status, but not the question or the message', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = Object.assign(new Error(`models/bad not found for ${valid.question}`), {
+      name: 'ApiError',
+      status: 404,
+    });
+    const { deps: d } = deps({
+      ask: async () => {
+        throw failure;
+      },
+    });
+    await handleCoach(request(valid), d);
+    expect(logged(log)).toContain('the model call failed');
+    expect(logged(log)).toContain('ApiError');
+    expect(logged(log)).toContain('HTTP 404');
+    expect(logged(log)).not.toContain('plateau');
+    expect(logged(log)).not.toContain('bad not found');
+  });
+
+  it('names the sign-in check when it breaks', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { deps: d } = deps({
+      verify: async () => {
+        throw new Error('supabase not configured');
+      },
+    });
+    expect((await handleCoach(request(valid), d)).status).toBe(503);
+    expect(logged(log)).toContain('could not check the sign-in');
+  });
+
+  it('names the limit counter when it breaks or cannot count', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await handleCoach(request(valid), deps({ consume: async () => null }).deps);
+    await handleCoach(
+      request(valid),
+      deps({
+        consume: async () => {
+          throw new Error('down');
+        },
+      }).deps,
+    );
+    expect(
+      log.mock.calls.filter((c) => String(c[0]).includes('could not count the limit')),
+    ).toHaveLength(2);
+  });
+
+  it('names an answer that could not be read, without printing it', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await handleCoach(request(valid), deps({ ask: async () => 'secret prose' }).deps);
+    expect(logged(log)).toContain('could not be read');
+    expect(logged(log)).not.toContain('secret prose');
+  });
+});
+
 describe('readModelOutput', () => {
   it('reads a well-formed answer, and nothing else', () => {
     expect(readModelOutput(model(true, 'Hi'))).toEqual({ onTopic: true, reply: 'Hi' });

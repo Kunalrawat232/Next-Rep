@@ -47,8 +47,28 @@ export function devApi(): Plugin {
         if (value && !process.env[key]) process.env[key] = value;
       }
       // The browser's own (public) settings stand in when the server-only ones are not set.
-      process.env.SUPABASE_URL ||= env.VITE_SUPABASE_URL;
-      process.env.SUPABASE_ANON_KEY ||= env.VITE_SUPABASE_ANON_KEY;
+      // (Assigning undefined to process.env would store the text "undefined", so only real values are set.)
+      if (!process.env.SUPABASE_URL && env.VITE_SUPABASE_URL)
+        process.env.SUPABASE_URL = env.VITE_SUPABASE_URL;
+      if (!process.env.SUPABASE_ANON_KEY && env.VITE_SUPABASE_ANON_KEY)
+        process.env.SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
+
+      // Says what is missing or still the example text, by name only (a value is never printed).
+      const problems = [
+        !process.env.GEMINI_API_KEY || /^your-/.test(process.env.GEMINI_API_KEY)
+          ? 'GEMINI_API_KEY'
+          : '',
+        !(process.env.COACH_MODEL || process.env.GEMINI_MODEL) ||
+        /^your-/.test(process.env.COACH_MODEL || process.env.GEMINI_MODEL || '')
+          ? 'GEMINI_MODEL (a free model name, for example gemini-3.5-flash-lite)'
+          : '',
+        !process.env.SUPABASE_URL ? 'SUPABASE_URL' : '',
+        !process.env.SUPABASE_ANON_KEY ? 'SUPABASE_ANON_KEY' : '',
+      ].filter(Boolean);
+      if (problems.length > 0)
+        console.warn(
+          `dev api: the coach and the voice fallback need these in .env.local: ${problems.join(', ')}`,
+        );
 
       server.middlewares.use(async (req, res, next) => {
         const name = /^\/api\/([a-z]+)(?:\?.*)?$/.exec(req.url ?? '')?.[1];

@@ -209,4 +209,45 @@ describe('the dev server api', () => {
     setup('GEMINI_API_KEY=from-file\n');
     expect(process.env.GEMINI_API_KEY).toBe('from-shell');
   });
+
+  describe('the warning at start-up', () => {
+    const warned = (spy: ReturnType<typeof vi.spyOn>) =>
+      spy.mock.calls.map((call: unknown[]) => String(call[0])).join('\n');
+
+    it('names what is missing, and nothing about any value', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      setup('GEMINI_API_KEY=real-secret-key\n');
+      const text = warned(warn);
+      expect(text).toContain('GEMINI_MODEL');
+      expect(text).toContain('SUPABASE_URL');
+      expect(text).not.toContain('GEMINI_API_KEY');
+      expect(text).not.toContain('real-secret-key');
+    });
+
+    it('catches settings that are still the example text', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      setup(
+        'GEMINI_API_KEY=your-gemini-api-key\nGEMINI_MODEL=your-free-tier-model-name\nSUPABASE_URL=https://a.example\nSUPABASE_ANON_KEY=anon\n',
+      );
+      const text = warned(warn);
+      expect(text).toContain('GEMINI_API_KEY');
+      expect(text).toContain('GEMINI_MODEL');
+    });
+
+    it('is quiet when everything is set', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      setup(
+        'GEMINI_API_KEY=k\nGEMINI_MODEL=gemini-3.5-flash-lite\nSUPABASE_URL=https://a.example\nSUPABASE_ANON_KEY=anon\n',
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('accepts COACH_MODEL in place of GEMINI_MODEL', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      setup(
+        'GEMINI_API_KEY=k\nCOACH_MODEL=gemini-3.5-flash\nSUPABASE_URL=https://a.example\nSUPABASE_ANON_KEY=anon\n',
+      );
+      expect(warn).not.toHaveBeenCalled();
+    });
+  });
 });

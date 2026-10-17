@@ -32,6 +32,16 @@ const reply = (status: number, body: CoachResponse | { status: string }) =>
 const unavailable = (status: number) => reply(status, { status: 'unavailable' });
 
 /**
+ * Says which step failed, in the server log: the step, the kind of error and an HTTP status when it has one. Never
+ * the question, the reply, a key or an error message (those can hold what the person typed).
+ */
+function logFailure(step: string, error?: unknown) {
+  const kind = error instanceof Error ? error.name : error === undefined ? '' : 'unknown';
+  const status = (error as { status?: unknown } | null)?.status;
+  console.error(`coach: ${step}`, kind, typeof status === 'number' ? `HTTP ${status}` : '');
+}
+
+/**
  * The chat as the model wants it: starting with the person, and taking turns. Earlier turns that would break
  * that (a reply that was never kept, two questions in a row) are merged or dropped instead of failing.
  */
@@ -71,7 +81,8 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
   if (!token) return reply(401, { status: 'unauthorized' });
   try {
     if (!(await deps.verify(token))) return reply(401, { status: 'unauthorized' });
-  } catch {
+  } catch (error) {
+    logFailure('could not check the sign-in', error);
     return unavailable(503);
   }
 
@@ -88,12 +99,19 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
 
   try {
     const perMinute = await deps.consume(token, 60);
-    if (perMinute === null) return unavailable(503);
+    if (perMinute === null) {
+      logFailure('could not count the limit');
+      return unavailable(503);
+    }
     if (perMinute > COACH_LIMITS.perMinute) return reply(429, { status: 'limited' });
     const perHour = await deps.consume(token, 3600);
-    if (perHour === null) return unavailable(503);
+    if (perHour === null) {
+      logFailure('could not count the limit');
+      return unavailable(503);
+    }
     if (perHour > COACH_LIMITS.perHour) return reply(429, { status: 'limited' });
-  } catch {
+  } catch (error) {
+    logFailure('could not count the limit', error);
     return unavailable(503);
   }
 
@@ -108,17 +126,20 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
     });
     const output = readModelOutput(answer);
     if (output === null) {
-      console.error('coach: model answer unreadable');
+      logFailure('the model answered in a form that could not be read');
       return unavailable(503);
     }
     // The refusal is ours: whatever the model wrote next to "off topic" is thrown away.
     if (!output.onTopic) return reply(200, { status: 'off_topic' });
     const textOut = output.reply.trim().slice(0, COACH_REPLY_MAX);
-    if (textOut === '') return unavailable(503);
+    if (textOut === '') {
+      logFailure('the model answered with nothing');
+      return unavailable(503);
+    }
     return reply(200, { status: 'ok', text: textOut });
   } catch (error) {
     // The kind of failure only: never the question, and never next to a user id.
-    console.error('coach: model failed', error instanceof Error ? error.name : 'unknown');
+    logFailure('the model call failed', error);
     return unavailable(503);
   }
 }
