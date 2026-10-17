@@ -150,3 +150,9 @@ describe('text on glass', () => {
     expect(THEME_COLOR.dark).toBe(dark['surface-100']);
   });
 });
+
+describe('lensed controls', () => {
+  it('stay clickable: liquid-gl turns pointer events off on the element it lenses, so the stylesheet turns them back on', () => {
+    expect(css).toMatch(/\[data-liquid\]\s*\{\s*pointer-events:\s*auto\s*!important;?\s*\}/);
+  });
+});
