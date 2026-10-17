@@ -4,11 +4,12 @@ import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { GeminiOutputSchema } from '../src/domain/parser/gemini.js';
 import { handleParse, type ParseDeps } from './_lib/parse.js';
-import { consumeLimit, verifyToken } from './_lib/supabase.js';
+import { consumeLimit, consumeModelCall, verifyToken } from './_lib/supabase.js';
 
 const deps: ParseDeps = {
   verify: verifyToken,
-  consume: consumeLimit,
+  consume: (token, windowSeconds) => consumeLimit(token, 'parse', windowSeconds),
+  ceiling: consumeModelCall,
   async ask({ system, user, signal }) {
     const apiKey = process.env.GEMINI_API_KEY;
     const model = process.env.GEMINI_MODEL;

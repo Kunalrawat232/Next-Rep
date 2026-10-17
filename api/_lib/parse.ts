@@ -18,6 +18,8 @@ export type ParseDeps = {
   verify(token: string): Promise<boolean>;
   /** Counts a request in the window of this many seconds for the token's user; null when it cannot be counted. */
   consume(token: string, windowSeconds: number): Promise<number | null>;
+  /** True while the whole project is under its model calls for the day; null when it cannot be counted. */
+  ceiling(token: string): Promise<boolean | null>;
   /** Asks Gemini and returns its text. Throws on any failure. */
   ask(input: { system: string; user: string; signal: AbortSignal }): Promise<string>;
 };
@@ -53,6 +55,14 @@ export async function handleParse(request: Request, deps: ParseDeps): Promise<Re
     const perHour = await deps.consume(token, 3600);
     if (perHour === null) return unavailable(503);
     if (perHour > LIMITS.perHour) return unavailable(429);
+  } catch {
+    return unavailable(503);
+  }
+
+  try {
+    const room = await deps.ceiling(token);
+    if (room === null) return unavailable(503);
+    if (!room) return unavailable(429);
   } catch {
     return unavailable(503);
   }

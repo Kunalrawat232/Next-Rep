@@ -16,6 +16,7 @@ function deps(over: Partial<ParseDeps> = {}) {
   const calls = { ask: [] as { system: string; user: string }[], consume: [] as number[] };
   const made: ParseDeps = {
     verify: async () => true,
+    ceiling: async () => true,
     consume: async (_token, window) => {
       calls.consume.push(window);
       return 1;
@@ -194,5 +195,21 @@ describe('POST /api/parse', () => {
     await handleParse(request(valid), d);
     expect(signal).toBeInstanceOf(AbortSignal);
     expect(signal?.aborted).toBe(false);
+  });
+});
+
+describe("the project's model calls for the day", () => {
+  it('answers 429 and does not call Gemini when the day is used up', async () => {
+    const { deps: d, calls } = deps({ ceiling: async () => false });
+    const response = await handleParse(request(valid), d);
+    expect(response.status).toBe(429);
+    expect(calls.ask).toHaveLength(0);
+  });
+
+  it('answers 503 and does not call Gemini when the day cannot be counted', async () => {
+    const { deps: d, calls } = deps({ ceiling: async () => null });
+    const response = await handleParse(request(valid), d);
+    expect(response.status).toBe(503);
+    expect(calls.ask).toHaveLength(0);
   });
 });

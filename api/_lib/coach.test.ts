@@ -14,6 +14,7 @@ function deps(over: Partial<CoachDeps> = {}) {
   };
   const made: CoachDeps = {
     verify: async () => true,
+    ceiling: async () => true,
     consume: async (_token, window) => {
       calls.consume.push(window);
       return 1;
@@ -434,5 +435,33 @@ describe('what the server does not take on trust', () => {
     const { deps: d } = deps({ ask: async () => model(true, 'Keep RPE < 9 and reps > 5.') });
     const response = await handleCoach(request(valid), d);
     expect(await response.json()).toEqual({ status: 'ok', text: 'Keep RPE < 9 and reps > 5.' });
+  });
+});
+
+describe("the project's model calls for the day", () => {
+  it('says "limited" and does not call the model when the day is used up', async () => {
+    const { deps: d, calls } = deps({ ceiling: async () => false });
+    const response = await handleCoach(request(valid), d);
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({ status: 'limited' });
+    expect(calls.ask).toHaveLength(0);
+  });
+
+  it.each([
+    ['cannot be counted', async () => null],
+    ['fails', async () => Promise.reject(new Error('down'))],
+  ])('says unavailable, without calling the model, when the day %s', async (_why, ceiling) => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { deps: d, calls } = deps({ ceiling });
+    const response = await handleCoach(request(valid), d);
+    expect(response.status).toBe(503);
+    expect(calls.ask).toHaveLength(0);
+  });
+
+  it('does not spend a model call on a question turned away before the model', async () => {
+    const ceiling = vi.fn(async () => true);
+    const { deps: d } = deps({ ceiling });
+    await handleCoach(request({ question: 'What is the weather today?', history: [] }), d);
+    expect(ceiling).not.toHaveBeenCalled();
   });
 });

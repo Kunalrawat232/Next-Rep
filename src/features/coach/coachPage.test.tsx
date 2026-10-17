@@ -143,6 +143,56 @@ describe('the Coach screen', () => {
     expect(sent).not.toContain('ada@example.com');
   });
 
+  it('does not send the name of an exercise the person made up, which can say something private', async () => {
+    const userId = `coach-${Math.random()}`;
+    const mine = '11111111-2222-4333-8444-555555555555';
+    const customExercises = [
+      {
+        id: mine,
+        name: 'rehab left knee',
+        equipmentType: 'cable' as const,
+        bodyPart: 'lower' as const,
+        muscle: null,
+        aliases: [],
+        tier: 'custom' as const,
+      },
+    ];
+    const seed = renderApp('/', { userId, server: offlineServer(), customExercises });
+    const workout = await seed.store.startWorkout({
+      ...aWorkout(),
+      startedAt: '2026-10-10T10:00:00.000Z',
+      gymId: HOME_GYM.id,
+      gymSnapshot: { barbellKg: 15, bars: [] },
+    });
+    await seed.store.logSet(
+      aSet(workout.id, {
+        exerciseId: mine,
+        totalKg: 20,
+        barKg: null,
+        perSideKg: null,
+        inputMode: 'total',
+        reps: 10,
+      }),
+    );
+    await seed.store.endWorkout(workout.id, '2026-10-10T11:00:00.000Z');
+    seed.unmount();
+
+    const coach = fakeCoach();
+    const { user } = renderApp('/coach', {
+      userId,
+      coach: coach.service,
+      server: offlineServer(),
+      customExercises,
+    });
+    await user.click(await screen.findByRole('switch', { name: 'Use my last 3 workouts' }));
+    await user.type(await box(), 'How am I doing?');
+    await user.click(askButton());
+    await waitFor(() => expect(coach.asked).toHaveLength(1));
+    const sent = JSON.stringify(coach.asked[0]);
+    expect(sent).toContain('Custom exercise');
+    expect(sent).not.toContain('rehab');
+  });
+
   it('sends no summary unless the switch is turned on', async () => {
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { coach: coach.service });

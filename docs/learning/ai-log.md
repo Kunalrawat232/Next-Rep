@@ -438,3 +438,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: Clear is disabled while a question is out and is guarded and reports a failure; the question is taken back out when anything fails; the server cleans every turn and refuses links, code and tags in a reply; the prefilter no longer catches "program"; the summary starts off. 17 new tests.
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4250). Not done: rate-limit buckets and a daily ceiling (need a migration), the 48 px send button and `PageHeader`, the real-schema check script.
 - Lesson: an agent review of your own feature finds bugs that your own tests were written around.
+
+## 2026-10-17: Rate-limit scopes and a daily ceiling
+
+- Tool: Claude Code, from the security audit and the code review.
+- Found: `/api/parse` and `/api/coach` shared one counter per window, and in the first minute of each hour the 60 s and 3600 s windows used the same row, so one request counted twice. Anyone could also open many accounts and use up the free Gemini quota.
+- AI produced: migration 0005 (counters per scope and window, the old one-argument function kept for an older deployment, a daily ceiling table and function with a per-account hourly cap), the two endpoints counting under their own scope and checking the ceiling just before the model call, and the names of the person's own exercises left out of the summary. PGlite tests for the database part and fake-based tests for the endpoints.
+- How validated: _(developer to fill)_ Evidence: `npm run test:db` and the api and coach tests pass. Not done: applying the migration to the hosted project, which needs the developer's go; email confirmation and CAPTCHA at sign-up.
+- Lesson: a shared counter needs the endpoint in its key, and a global limit needs a per-account cap or one account can switch it off for everyone.

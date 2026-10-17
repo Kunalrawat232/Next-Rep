@@ -4,11 +4,12 @@ import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 import { CoachModelOutputSchema } from '../src/domain/coach/schemas.js';
 import { handleCoach, type CoachDeps } from './_lib/coach.js';
-import { consumeLimit, verifyToken } from './_lib/supabase.js';
+import { consumeLimit, consumeModelCall, verifyToken } from './_lib/supabase.js';
 
 const deps: CoachDeps = {
   verify: verifyToken,
-  consume: consumeLimit,
+  consume: (token, windowSeconds) => consumeLimit(token, 'coach', windowSeconds),
+  ceiling: consumeModelCall,
   async ask({ system, turns, signal }) {
     const apiKey = process.env.GEMINI_API_KEY;
     // The coach may use a stronger free model than the voice fallback; it falls back to the same one.

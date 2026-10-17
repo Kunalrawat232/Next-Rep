@@ -25,6 +25,8 @@ export type CoachDeps = {
   verify(token: string): Promise<boolean>;
   /** Counts a request in the window of this many seconds for the token's user; null when it cannot be counted. */
   consume(token: string, windowSeconds: number): Promise<number | null>;
+  /** True while the whole project is under its model calls for the day; null when it cannot be counted. */
+  ceiling(token: string): Promise<boolean | null>;
   /** Asks the model and returns its text. Throws on any failure. */
   ask(input: { system: string; turns: CoachTurnForModel[]; signal: AbortSignal }): Promise<string>;
 };
@@ -143,6 +145,18 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
 
   // A question that is plainly not about the gym or diet is turned away without asking the model.
   if (isObviouslyOffTopic(cleaned.question)) return reply(200, { status: 'off_topic' });
+
+  try {
+    const room = await deps.ceiling(token);
+    if (room === null) {
+      logFailure('could not count the day');
+      return unavailable(503);
+    }
+    if (!room) return reply(429, { status: 'limited' });
+  } catch (error) {
+    logFailure('could not count the day', error);
+    return unavailable(503);
+  }
 
   try {
     const answer = await deps.ask({

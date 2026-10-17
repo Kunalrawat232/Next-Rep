@@ -100,7 +100,11 @@ export function useCoachChat() {
         unit: shown,
         now: new Date(),
         workouts,
-        nameOf: (id) => known.find((e) => e.id === id)?.name,
+        // The person's own exercise names are free text and can say private things, so they are not sent.
+        nameOf: (id) => {
+          const found = known.find((e) => e.id === id);
+          return found && found.tier !== 'custom' ? found.name : undefined;
+        },
         suggestion,
       });
     } catch {
