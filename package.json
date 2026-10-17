@@ -22,6 +22,7 @@
     "seed:check": "node scripts/generate-seed-sql.mjs --check",
     "test:db": "vitest run --config vitest.db.config.ts",
     "check:supabase": "node --env-file=.env.local scripts/check-supabase.mjs",
+    "check:coach": "node --env-file=.env.local scripts/check-coach.mjs",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
