@@ -2,12 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const undos: ReturnType<typeof vi.fn>[] = [];
-const startLiquidGlass = vi.fn(async () => {
-  const undo = vi.fn();
-  undos.push(undo);
-  return undo as () => void;
-});
-vi.mock('./liquidGlass', () => ({ startLiquidGlass: () => startLiquidGlass() }));
+const startLiquidGlass = vi.fn<(element: HTMLElement, preset: string) => Promise<() => void>>(
+  async () => {
+    const undo = vi.fn();
+    undos.push(undo);
+    return undo as () => void;
+  },
+);
+vi.mock('./liquidGlass', () => ({
+  startLiquidGlass: (element: HTMLElement, preset: string) => startLiquidGlass(element, preset),
+}));
 
 import { readGlassEffect, useGlassEffect, useLiquidGlass } from './useGlassEffect';
 
@@ -51,31 +55,47 @@ describe('the glass effect setting', () => {
 });
 
 describe('keeping the lens on', () => {
-  it('starts the lens when enabled, and takes it off when the page goes away', async () => {
-    const { unmount } = renderHook(() => useLiquidGlass(true));
+  const ref = () => ({ current: document.createElement('div') });
+  const turn = (on: boolean) => {
+    localStorage.setItem('next-rep-glass', on ? 'on' : 'off');
+    window.dispatchEvent(new Event('next-rep-glass-change'));
+  };
+
+  it('starts the lens on the element, with the preset, and takes it off when the page goes away', async () => {
+    const target = ref();
+    const { unmount } = renderHook(() => useLiquidGlass(target, 'dock'));
     await waitFor(() => expect(startLiquidGlass).toHaveBeenCalledTimes(1));
+    expect(startLiquidGlass).toHaveBeenCalledWith(target.current, 'dock');
     await waitFor(() => expect(undos).toHaveLength(1));
     unmount();
     expect(undos[0]).toHaveBeenCalledTimes(1);
   });
 
-  it('does nothing while it is switched off', async () => {
-    renderHook(() => useLiquidGlass(false));
+  it('does nothing while the setting is off', async () => {
+    localStorage.setItem('next-rep-glass', 'off');
+    renderHook(() => useLiquidGlass(ref(), 'round'));
     await Promise.resolve();
     expect(startLiquidGlass).not.toHaveBeenCalled();
   });
 
-  it('takes the lens off when it is switched off, and puts it back when switched on', async () => {
-    const { rerender } = renderHook(({ on }) => useLiquidGlass(on), { initialProps: { on: true } });
+  it('does nothing when there is no element yet', async () => {
+    renderHook(() => useLiquidGlass({ current: null }, 'round'));
+    await Promise.resolve();
+    expect(startLiquidGlass).not.toHaveBeenCalled();
+  });
+
+  it('takes the lens off when the setting is switched off, and puts it back when switched on', async () => {
+    const target = ref();
+    renderHook(() => useLiquidGlass(target, 'round'));
     await waitFor(() => expect(undos).toHaveLength(1));
-    rerender({ on: false });
+    act(() => turn(false));
     expect(undos[0]).toHaveBeenCalledTimes(1);
-    rerender({ on: true });
+    act(() => turn(true));
     await waitFor(() => expect(startLiquidGlass).toHaveBeenCalledTimes(2));
   });
 
   it('starts again when the theme changes, because the colour behind the app changed', async () => {
-    renderHook(() => useLiquidGlass(true));
+    renderHook(() => useLiquidGlass(ref(), 'round'));
     await waitFor(() => expect(undos).toHaveLength(1));
     act(() => document.documentElement.setAttribute('data-theme', 'light'));
     await waitFor(() => expect(startLiquidGlass).toHaveBeenCalledTimes(2));
@@ -89,7 +109,7 @@ describe('keeping the lens on', () => {
     startLiquidGlass.mockImplementationOnce(
       () => new Promise<() => void>((resolve) => (finish = resolve)),
     );
-    const { unmount } = renderHook(() => useLiquidGlass(true));
+    const { unmount } = renderHook(() => useLiquidGlass(ref(), 'round'));
     unmount();
     const late = vi.fn();
     finish(late);

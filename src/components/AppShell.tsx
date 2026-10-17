@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
-import { useGlassEffect, useLiquidGlass } from '../lib/useGlassEffect';
+import { useLiquidGlass } from '../lib/useGlassEffect';
 import { Logo } from './Logo';
 
 type Item = { label: string; to: string; icon: ReactNode; desktopOnly?: boolean };
@@ -80,20 +80,25 @@ const ITEMS: Item[] = [
 const itemBase =
   'flex min-h-touch flex-1 flex-col items-center justify-center gap-1 text-caption lg:flex-none lg:flex-row lg:justify-start lg:gap-3 lg:rounded-md lg:px-3 lg:text-body';
 
-/** Bottom tab bar on phones, sidebar from 1024 px up. One nav element, laid out by CSS. */
+/** A floating glass tab bar on phones, a sidebar from 1024 px up. One nav element, laid out by CSS. */
 export function AppShell() {
-  const { enabled } = useGlassEffect();
-  useLiquidGlass(enabled);
+  const dock = useRef<HTMLDivElement>(null);
+  const workoutButton = useRef<HTMLAnchorElement>(null);
+  useLiquidGlass(dock, 'dock');
+  useLiquidGlass(workoutButton, 'round');
   return (
     <div className="relative isolate min-h-dvh lg:flex">
       {/* The colour behind the app, for the glass to show. Decoration only. */}
       <div id="ambient" aria-hidden="true" className="fixed inset-0 -z-10" />
-      <div className="glass fixed inset-x-0 bottom-0 z-10 border-t border-glass-line pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:pl-6 lg:pr-6 lg:static lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:gap-6 lg:border-t-0 lg:border-r lg:p-6 lg:pb-6">
+      <div
+        ref={dock}
+        className="glass fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] right-[calc(0.75rem+env(safe-area-inset-right))] z-10 rounded-full border border-glass-line lg:static lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:gap-6 lg:rounded-none lg:border-0 lg:border-r lg:p-6 lg:pb-6"
+      >
         <div className="hidden px-2 lg:block">
           <Logo width={150} />
         </div>
         <nav aria-label="Main">
-          <ul className="flex px-2 pt-2 lg:flex-col lg:gap-1 lg:p-0">
+          <ul className="flex px-2 py-1 lg:flex-col lg:gap-1 lg:p-0">
             {ITEMS.map((item) => (
               <li
                 key={item.label}
@@ -118,7 +123,8 @@ export function AppShell() {
       <Link
         to="/workout"
         aria-label="Workout"
-        className="liquidGL glass fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full border border-glass-line text-accent lg:hidden"
+        ref={workoutButton}
+        className="glass fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full border border-glass-line text-accent lg:hidden"
       >
         <svg
           width="28"
@@ -134,7 +140,7 @@ export function AppShell() {
           <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
         </svg>
       </Link>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-28 lg:px-8 lg:pb-8">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-32 lg:px-8 lg:pb-8">
         <Outlet />
       </main>
     </div>

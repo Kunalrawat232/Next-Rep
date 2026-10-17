@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Button, Card, TextField } from '../../components';
+import { useLiquidGlass } from '../../lib/useGlassEffect';
 import {
   REST_EXTEND,
   REST_MAX,
@@ -17,6 +18,7 @@ export function RestTimer({ timer }: { timer: Timer }) {
   const [custom, setCustom] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const pillRef = useRef<HTMLButtonElement>(null);
+  useLiquidGlass(pillRef, 'round');
 
   const label =
     timer.remaining === null
@@ -49,15 +51,18 @@ export function RestTimer({ timer }: { timer: Timer }) {
   }
 
   return (
-    <div className="flex flex-col gap-3" onKeyDown={escape}>
+    <div
+      className="pointer-events-none sticky top-[calc(0.75rem+env(safe-area-inset-top))] z-10 flex flex-col gap-3"
+      onKeyDown={escape}
+    >
       <button
         ref={pillRef}
         type="button"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => (open ? close() : setOpen(true))}
-        className={`inline-flex min-h-touch items-center gap-2 self-start rounded-full border bg-surface-200 px-4 text-callout font-medium tabular-nums ${
-          timer.over ? 'border-warning text-warning' : 'border-line'
+        className={`pointer-events-auto glass inline-flex min-h-touch items-center gap-2 self-start rounded-full border px-4 text-callout font-medium tabular-nums ${
+          timer.over ? 'border-warning text-warning' : 'border-glass-line'
         }`}
       >
         {label}
@@ -66,7 +71,12 @@ export function RestTimer({ timer }: { timer: Timer }) {
         {timer.over ? 'Rest over' : ''}
       </span>
       {open && (
-        <Card id={panelId} role="group" aria-label="Rest timer" className="flex flex-col gap-4">
+        <Card
+          id={panelId}
+          role="group"
+          aria-label="Rest timer"
+          className="pointer-events-auto flex flex-col gap-4"
+        >
           <div className="grid grid-cols-2 gap-2">
             {REST_PRESETS.map((seconds) => (
               <Button key={seconds} variant="secondary" onClick={() => begin(seconds)}>

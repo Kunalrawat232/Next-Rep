@@ -241,8 +241,9 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
           )}
           <SyncBadge />
         </div>
-        <RestTimer timer={rest} />
       </header>
+      {/* Outside the header, so it can stay in view at the top while the sets list scrolls. */}
+      <RestTimer timer={rest} />
 
       {confirmingEnd && (
         <Card tone="danger" role="group" aria-label="End workout" className="flex flex-col gap-4">

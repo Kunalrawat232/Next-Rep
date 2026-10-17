@@ -53,17 +53,24 @@ describe('AppShell', () => {
     expect(mic).toHaveAttribute('href', '/workout');
   });
 
-  it('uses a dumbbell, not a microphone, for Workout, and makes the floating button the glass target', () => {
+  it('uses a dumbbell, not a microphone, for Workout', () => {
+    const { container } = renderShell();
+    const paths = [...container.querySelectorAll('svg path')].map((p) => p.getAttribute('d'));
+    expect(paths.filter((d) => d?.startsWith('M6.5 6.5v11'))).toHaveLength(2);
+    expect(paths.some((d) => d?.startsWith('M12 3a3 3 0 0 0'))).toBe(false);
+  });
+
+  it('floats the phone tab bar and the Workout button as glass over the page', () => {
     const { container } = renderShell();
     const floating = screen
       .getAllByRole('link', { name: 'Workout' })
       .find((link) => link.className.includes('lg:hidden'))!;
-    expect(floating).toHaveClass('liquidGL', 'glass', 'fixed');
-    // The only element the liquid glass effect is put on.
-    expect(container.querySelectorAll('.liquidGL')).toHaveLength(1);
-    const paths = [...container.querySelectorAll('svg path')].map((p) => p.getAttribute('d'));
-    expect(paths.filter((d) => d?.startsWith('M6.5 6.5v11'))).toHaveLength(2);
-    expect(paths.some((d) => d?.startsWith('M12 3a3 3 0 0 0'))).toBe(false);
+    expect(floating).toHaveClass('glass', 'fixed', 'rounded-full');
+    const dock = container.querySelector('nav')!.parentElement!;
+    expect(dock).toHaveClass('glass', 'fixed', 'rounded-full');
+    // From 1024 px up the same element is the sidebar: not floating, not rounded.
+    expect(dock.className).toContain('lg:static');
+    expect(dock.className).toContain('lg:rounded-none');
   });
 
   it('has the colour layer behind the app that the glass shows, hidden from assistive technology', () => {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
-import { startLiquidGlass } from './liquidGlass';
+import { useCallback, useEffect, useRef, useSyncExternalStore, type RefObject } from 'react';
+import { startLiquidGlass, type LensPreset } from './liquidGlass';
 
 const KEY = 'next-rep-glass';
 const CHANGED = 'next-rep-glass-change';
@@ -37,20 +37,23 @@ export function useGlassEffect(): { enabled: boolean; setEnabled: (on: boolean) 
 }
 
 /**
- * Keeps the lens on while `enabled`. It starts again when the theme changes (the colour behind the app is
- * different) and when the window crosses the phone width, and it is taken off on the way out.
+ * Keeps a lens on this element while the "Liquid glass effect" setting is on. It starts again when the theme
+ * changes (the colour behind the app is different) and when the window crosses the phone width, and it is
+ * taken off on the way out.
  */
-export function useLiquidGlass(enabled: boolean): void {
+export function useLiquidGlass(ref: RefObject<HTMLElement | null>, preset: LensPreset): void {
+  const { enabled } = useGlassEffect();
   const run = useRef(0);
   useEffect(() => {
-    if (!enabled) return;
+    const element = ref.current;
+    if (!enabled || !element) return;
     let stop: () => void = () => undefined;
     const restart = () => {
       stop();
       stop = () => undefined;
       run.current += 1;
       const mine = run.current;
-      void startLiquidGlass().then((undo) => {
+      void startLiquidGlass(element, preset).then((undo) => {
         // A newer start, or leaving the page, came first: this one is not wanted any more.
         if (mine === run.current) stop = undo;
         else undo();
@@ -68,5 +71,5 @@ export function useLiquidGlass(enabled: boolean): void {
       theme.disconnect();
       width?.removeEventListener('change', restart);
     };
-  }, [enabled]);
+  }, [enabled, ref, preset]);
 }

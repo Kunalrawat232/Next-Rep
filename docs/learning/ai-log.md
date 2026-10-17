@@ -378,3 +378,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: a page-wide loader on every screen until all its sources settle (workout, Start workout, Settings, exercise page including its demonstration data, History, Progress, Exercises, Choose exercise, workout detail); `useRecordMarksState` so badges are waited for; `within` (an 8 second limit on the server calls for the gym and your own exercises, then the saved gym or "offline" is used); `useSettled` so a screen never returns to the loader on a later background re-read.
 - How validated: _(developer to fill)_ Not run on purpose (the developer asked for no tests; typecheck and lint are clean). Existing tests that look for the old inline loaders (Settings, the exercise page, History and Progress while a download runs, the workout screen) will need updating once the behaviour is accepted.
 - Lesson: waiting for all the data costs one longer loader; showing it in pieces costs the layout.
+
+## 2026-10-17: Liquid glass on more places
+
+- Tool: Claude Code, with the throwaway test page and headless Chromium to see each shape first.
+- Asked: the lens on the Workout button looks good; put it in more places.
+- Findings: the lens only reads on small, rounded, floating shapes, and only on elements that are fixed or sticky. So the bottom bar was turned into a rounded floating dock, and the rest timer pill into a sticky pill, and both get a lens; cards, rows and dialogs do not.
+- AI produced: a per-element lens (`useLiquidGlass(ref, preset)`, presets `round` and `dock`) instead of one started at app start, so elements that appear later get theirs; the floating dock layout (a sidebar again from 1024 px); the rest pill moved out of the header and made sticky, with pointer events passed through the empty strip; the ADR and design notes updated.
+- How validated: _(developer to fill)_ Evidence: typecheck and lint clean; the three shapes checked together on the test page. Not run: the unit tests (the developer asked for none; the two lens test files and the shell test were rewritten for the per-element lens and are untested), and not seen in the real app on a phone.
+- Lesson: change the shape to fit the effect (a rounded floating dock), not the effect to fit the shape.
