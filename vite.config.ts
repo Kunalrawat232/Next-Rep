@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 import type { Plugin } from 'vite';
 import { unsafePublicEnvProblems } from './src/data/remote/env';
 import { manifest } from './pwa.config';
+import { devApi } from './vite.devApi';
 
 /** Stops the dev server and the build when a secret would be published through a VITE_ variable. */
 function guardPublicEnv(): Plugin {
@@ -23,6 +24,7 @@ function guardPublicEnv(): Plugin {
 export default defineConfig({
   plugins: [
     guardPublicEnv(),
+    devApi(),
     react(),
     tailwindcss(),
     VitePWA({

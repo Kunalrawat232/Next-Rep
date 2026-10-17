@@ -406,3 +406,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Also changed: diet and nutrition questions are now allowed (no crash diets, no drugs, medical conditions go to a doctor or dietitian); the screen says it only answers gym and diet questions and has a diet starter idea.
 - How validated: _(developer to fill)_ Evidence: new tests for the filter (14 turned away, 16 let through), the handler (off topic from the model, unreadable output, fenced JSON, limits still counted) and the screen all pass (only these tests were run). Not done: trying real off-topic and tricky questions against the live model, which is the real test of the prompt.
 - Lesson: let code own the refusal; a model can only be asked nicely.
+
+## 2026-10-17: The coach on the dev server
+
+- Tool: Claude Code.
+- Problem found by the developer: on `localhost` the coach always said "can't answer right now". Cause: Vercel functions do not exist in `npm run dev`; the dev server answered `/api/coach` with the app's own page.
+- AI produced: `vite.devApi.ts`, a dev-only Vite plugin that runs `api/parse.ts` and `api/coach.ts` inside the dev server with the same handlers Vercel runs, reading only the five server-only settings from `.env.local` (never printing them, never copying other variables); a test of the routing, the body and header handoff, the failure path (only the kind of failure is printed) and the env mapping.
+- How validated: _(developer to fill)_ Evidence: the 10 new tests pass (only these were run). Not done: trying it with the real keys, which needs the developer's `.env.local`.
+- Lesson: a feature that depends on a platform's functions needs a way to run them locally, or testing it by hand sends people to a deploy for every change.
