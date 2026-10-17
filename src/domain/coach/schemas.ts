@@ -3,6 +3,9 @@
 import { z } from 'zod';
 import { UnitSchema } from '../schemas.js';
 
+/** The coach's name: the one place to change it. The screen, the prompt and the messages all use it. */
+export const COACH_NAME = 'Kai';
+
 /** The longest question the function accepts. */
 export const COACH_QUESTION_MAX = 500;
 /** How many earlier turns of the chat go along with a question. */

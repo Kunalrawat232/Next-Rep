@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Button, Card, Chip, ErrorMessage, LoadingMessage, Switch } from '../../components';
-import { COACH_QUESTION_MAX } from '../../domain/coach';
+import { COACH_NAME, COACH_QUESTION_MAX } from '../../domain/coach';
 import { useOnline } from '../../lib/useOnline';
 import { useSettled } from '../../lib/useSettled';
-import { CoachBubble, TypingBubble } from './ChatParts';
+import { CoachAvatar, CoachBubble, TypingBubble } from './ChatParts';
 import { CoachText } from './CoachText';
 import { useCoachChat } from './useCoachChat';
 
@@ -35,7 +35,16 @@ export function CoachPage() {
   const [seen, setSeen] = useState(noticeSeen);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
   const count = chat.state.status === 'ready' ? chat.state.messages.length : 0;
+
+  // The box grows with what is typed, up to about five lines, and shrinks when it is sent.
+  useEffect(() => {
+    const box = field.current;
+    if (!box) return;
+    box.style.height = 'auto';
+    if (box.scrollHeight > 0) box.style.height = `${box.scrollHeight}px`;
+  }, [draft]);
 
   // Keeps the newest message in view.
   useEffect(() => {
@@ -43,7 +52,7 @@ export function CoachPage() {
   }, [count, chat.sending]);
 
   if (!settled || chat.state.status !== 'ready')
-    return <LoadingMessage>Loading the coach…</LoadingMessage>;
+    return <LoadingMessage>Loading {COACH_NAME}…</LoadingMessage>;
   const { messages } = chat.state;
 
   async function submit(event?: FormEvent) {
@@ -55,8 +64,11 @@ export function CoachPage() {
     if ((await chat.send(text, share)) === 'failed') setDraft((now) => (now === '' ? text : now));
   }
 
+  // Enter sends, as in a chat app; Shift+Enter makes a new line. Enter that confirms a word in an input method does not send.
   function onKey(event: KeyboardEvent) {
-    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) void submit();
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void submit();
   }
 
   function dismissNotice() {
@@ -71,7 +83,13 @@ export function CoachPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between gap-2">
-        <h1 className="text-title font-semibold">Coach</h1>
+        <div className="flex items-center gap-3">
+          <CoachAvatar size={44} />
+          <div className="flex flex-col">
+            <h1 className="text-title font-semibold">{COACH_NAME}</h1>
+            <span className="text-caption text-ink-muted">Your gym and diet coach</span>
+          </div>
+        </div>
         {messages.length > 0 &&
           (confirmingClear ? (
             <div className="flex gap-2">
@@ -98,9 +116,10 @@ export function CoachPage() {
       {!seen && (
         <Card role="note" tone="accent" className="flex flex-col gap-3">
           <p className="text-callout">
-            The coach is an AI that gives training tips, not medical advice. Your question, and a
-            short summary of your recent workouts if you leave that on, go to Google&apos;s free AI
-            service, which may use it to improve its products. Your chat stays on this device.
+            {COACH_NAME} is an AI coach that gives training tips, not medical advice. Your question,
+            and a short summary of your recent workouts if you leave that on, go to Google&apos;s
+            free AI service, which may use it to improve its products. Your chat stays on this
+            device.
           </p>
           <Button variant="secondary" className="self-start" onClick={dismissNotice}>
             Got it
@@ -111,8 +130,8 @@ export function CoachPage() {
       {messages.length === 0 && !chat.sending ? (
         <section aria-label="Ideas" className="flex flex-col gap-3">
           <p className="text-callout text-ink-muted">
-            The coach only answers gym and diet questions: technique, workouts, progress, recovery
-            or what to eat. For example:
+            Ask {COACH_NAME} about gym and diet: technique, workouts, progress, recovery or what to
+            eat. {COACH_NAME} can't help with anything else. For example:
           </p>
           <div className="flex flex-wrap gap-2">
             {STARTERS.map((starter) => (
@@ -141,7 +160,7 @@ export function CoachPage() {
             ) : (
               <li key={message.id} className="flex max-w-[92%] items-end gap-2 self-start">
                 <CoachBubble>
-                  <span className="sr-only">Coach: </span>
+                  <span className="sr-only">{COACH_NAME}: </span>
                   <CoachText text={message.text} />
                 </CoachBubble>
               </li>
@@ -155,24 +174,49 @@ export function CoachPage() {
       {chat.problem && <ErrorMessage>{chat.problem}</ErrorMessage>}
 
       <form onSubmit={submit} className="flex flex-col gap-3">
-        <label htmlFor="coach-question" className="text-callout font-medium">
-          Ask the coach
-        </label>
-        <textarea
-          id="coach-question"
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={onKey}
-          maxLength={COACH_QUESTION_MAX}
-          rows={3}
-          disabled={!online}
-          placeholder={
-            online
-              ? 'For example: how many sets of squats should I do?'
-              : 'The coach needs an internet connection.'
-          }
-          className="min-h-touch w-full resize-none rounded-2xl border border-glass-line bg-surface-300 px-4 py-3 text-body text-ink disabled:opacity-60"
-        />
+        <div className="relative rounded-3xl border border-glass-line glass-flat focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+          <label htmlFor="coach-question" className="sr-only">
+            Message {COACH_NAME}
+          </label>
+          <textarea
+            id="coach-question"
+            ref={field}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={onKey}
+            maxLength={COACH_QUESTION_MAX}
+            rows={1}
+            disabled={!online}
+            placeholder={
+              online ? `Message ${COACH_NAME}…` : `${COACH_NAME} needs an internet connection.`
+            }
+            className="block max-h-40 min-h-12 w-full resize-none bg-transparent px-4 pb-9 pr-16 pt-3 text-body text-ink placeholder:text-ink-muted focus-visible:outline-none disabled:opacity-60"
+          />
+          <span className="pointer-events-none absolute bottom-3 left-4 text-caption text-ink-muted">
+            {draft.length}/{COACH_QUESTION_MAX}
+          </span>
+          <button
+            type="submit"
+            aria-label="Send"
+            aria-busy={chat.sending}
+            disabled={!online || chat.sending || draft.trim() === ''}
+            className="absolute bottom-2 right-2 flex size-11 items-center justify-center rounded-full bg-accent text-on-accent disabled:opacity-40"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 19V5M5.5 11.5L12 5l6.5 6.5" />
+            </svg>
+          </button>
+        </div>
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-callout font-medium">Use my last 3 workouts</span>
@@ -182,17 +226,9 @@ export function CoachPage() {
           </div>
           <Switch label="Use my last 3 workouts" checked={share} onChange={setShare} />
         </div>
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-caption text-ink-muted">
-            {draft.length}/{COACH_QUESTION_MAX}
-          </span>
-          <Button type="submit" disabled={!online || chat.sending || draft.trim() === ''}>
-            {chat.sending ? 'Thinking…' : 'Ask'}
-          </Button>
-        </div>
         {!online && (
           <p role="status" className="text-callout text-ink-muted">
-            You're offline. The coach needs an internet connection; everything else still works.
+            You're offline. {COACH_NAME} needs an internet connection; everything else still works.
           </p>
         )}
       </form>

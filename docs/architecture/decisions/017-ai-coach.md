@@ -31,3 +31,4 @@ The developer wanted an AI coach: a text chat where a user asks training questio
 - The shared rate counter couples the coach and the voice fallback (see above).
 - The answers are advice from a language model: the screen says so, and the prompt keeps it away from medical topics, but it cannot be made perfect. The developer should read a few real answers before the demo.
 - Needs the function deployed and `GEMINI_API_KEY` set (already done for `/api/parse`); `COACH_MODEL` is optional.
+- The coach has a name, Kai (`COACH_NAME`), and a person-shaped avatar so it reads as a someone to talk to. It always says it is an AI if asked, and the screen says so too. The nav tab is still labelled "Coach".

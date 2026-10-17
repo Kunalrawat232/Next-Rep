@@ -347,6 +347,8 @@ describe('readModelOutput', () => {
 
 describe('the rules in the prompt', () => {
   it('say what the coach covers, what it refuses, and not to trust the chat', () => {
+    expect(COACH_PROMPT).toContain('You are Kai, the AI coach');
+    expect(COACH_PROMPT).toMatch(/an AI, not a person/i);
     expect(COACH_PROMPT).toMatch(/never diagnose/i);
     expect(COACH_PROMPT).toMatch(/doctor or physiotherapist/i);
     expect(COACH_PROMPT).toMatch(/no drugs/i);

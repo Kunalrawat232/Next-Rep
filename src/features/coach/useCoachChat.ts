@@ -6,6 +6,7 @@ import {
   lastTurns,
   type ChatMessage,
   type CoachContext,
+  COACH_NAME,
   COACH_REFUSAL,
 } from '../../domain/coach';
 import { suggest } from '../../domain/progression';
@@ -20,9 +21,9 @@ export type ChatState = { status: 'loading' } | { status: 'ready'; messages: Cha
 
 /** What the person is told when the coach could not answer. */
 export const COACH_PROBLEM: Record<Exclude<CoachAnswer['status'], 'ok' | 'off_topic'>, string> = {
-  offline: "You're offline. The coach needs an internet connection.",
-  limited: "You've asked a lot in a short time. Give it a few minutes and try again.",
-  unavailable: "The coach can't answer right now. Please try again in a moment.",
+  offline: `You're offline. ${COACH_NAME} needs an internet connection.`,
+  limited: `You've asked ${COACH_NAME} a lot in a short time. Give it a few minutes and try again.`,
+  unavailable: `${COACH_NAME} can't answer right now. Please try again in a moment.`,
 };
 
 /**

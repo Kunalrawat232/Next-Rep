@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CoachRequest } from '../../domain/coach';
 import { BENCH, HOME_GYM, offlineServer, renderApp } from '../../test/appHarness';
@@ -24,10 +24,39 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const box = () => screen.findByRole('textbox', { name: 'Ask the coach' });
-const askButton = () => screen.getByRole('button', { name: 'Ask' });
+const box = () => screen.findByRole('textbox', { name: 'Message Kai' });
+const askButton = () => screen.getByRole('button', { name: 'Send' });
 
 describe('the Coach screen', () => {
+  it('gives the coach a name, a person for a picture, and a plain way to say what it is', async () => {
+    renderApp('/coach', { coach: fakeCoach().service });
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kai' })).toBeInTheDocument();
+    expect(screen.getByText('Your gym and diet coach')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Coach' })).not.toBeInTheDocument();
+  });
+
+  it('has the send button and the character count inside the text box', async () => {
+    const { user } = renderApp('/coach', { coach: fakeCoach().service });
+    const field = await box();
+    await user.type(field, 'abc');
+    const frame = field.parentElement!;
+    expect(within(frame).getByRole('button', { name: 'Send' })).toBeInTheDocument();
+    expect(within(frame).getByText('3/500')).toBeInTheDocument();
+    // There is no separate "Ask" button any more.
+    expect(screen.queryByRole('button', { name: 'Ask' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Ask')).not.toBeInTheDocument();
+  });
+
+  it('introduces itself by name in what it says: its messages, the typing label and the screen reader prefix', async () => {
+    const coach = fakeCoach({ status: 'ok', text: 'Add 2.5 kg.' });
+    const { user } = renderApp('/coach', { coach: coach.service });
+    await user.type(await box(), 'hi');
+    await user.click(askButton());
+    const chat = await screen.findByRole('list', { name: 'Chat with the coach' });
+    const reply = (await within(chat).findByText('Add 2.5 kg.')).closest('li')!;
+    expect(reply).toHaveTextContent('Kai: ');
+  });
+
   it('starts with ideas, and tapping one puts it in the box without sending it', async () => {
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { coach: coach.service });
@@ -118,7 +147,7 @@ describe('the Coach screen', () => {
 
   it.each([
     ['offline', /you're offline/i],
-    ['limited', /asked a lot/i],
+    ['limited', /asked Kai a lot/i],
     ['unavailable', /can't answer right now/i],
   ] as const)(
     'says so when the coach is %s, keeps nothing, and gives the question back',
@@ -161,15 +190,16 @@ describe('the Coach screen', () => {
     const { user } = renderApp('/coach', { coach: service });
     await user.type(await box(), 'Slow one');
     await user.click(askButton());
-    const typing = await screen.findByRole('status', { name: 'The coach is thinking' });
+    const typing = await screen.findByRole('status', { name: 'Kai is typing' });
     // Three bouncing dots in the coach's bubble, like a chat app, not a skeleton.
     expect(within(typing).getAllByTestId('typing-dot')).toHaveLength(3);
     expect(typing.querySelector('.skeleton')).toBeNull();
     expect(typing).not.toHaveClass('loader-in');
-    expect(screen.getByRole('button', { name: 'Thinking…' })).toBeDisabled();
+    expect(askButton()).toBeDisabled();
+    expect(askButton()).toHaveAttribute('aria-busy', 'true');
     act(() => finish({ status: 'ok', text: 'Done.' }));
     expect(await screen.findByText('Done.')).toBeInTheDocument();
-    expect(screen.queryByRole('status', { name: 'The coach is thinking' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Kai is typing' })).not.toBeInTheDocument();
   });
 
   it("puts the coach's picture beside its messages and squares off the bubble corners nearest the speaker", async () => {
@@ -183,13 +213,34 @@ describe('the Coach screen', () => {
     expect(within(chat).getByText('Hello').closest('li')).toHaveClass('rounded-br-md');
   });
 
-  it('sends with Ctrl+Enter', async () => {
+  it('sends with Enter, and Shift+Enter makes a new line instead', async () => {
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { coach: coach.service });
-    await user.type(await box(), 'Keyboard question');
-    await user.keyboard('{Control>}{Enter}{/Control}');
+    const field = await box();
+    await user.type(field, 'first line{Shift>}{Enter}{/Shift}second line');
+    expect(coach.service.ask).not.toHaveBeenCalled();
+    expect(field).toHaveValue('first line\nsecond line');
+    await user.keyboard('{Enter}');
     await screen.findByText('Add 2.5 kg.');
     expect(coach.service.ask).toHaveBeenCalledTimes(1);
+    expect(coach.asked[0]!.question).toBe('first line\nsecond line');
+    expect(field).toHaveValue('');
+  });
+
+  it('does not send when Enter only confirms a word in an input method', async () => {
+    const coach = fakeCoach();
+    const { user } = renderApp('/coach', { coach: coach.service });
+    const field = await box();
+    await user.type(field, 'namaste');
+    fireEvent.keyDown(field, { key: 'Enter', isComposing: true });
+    expect(coach.service.ask).not.toHaveBeenCalled();
+  });
+
+  it('does not send on Enter when the box is empty', async () => {
+    const coach = fakeCoach();
+    const { user } = renderApp('/coach', { coach: coach.service });
+    await user.type(await box(), '   {Enter}');
+    expect(coach.service.ask).not.toHaveBeenCalled();
   });
 
   it('does not send an empty question', async () => {

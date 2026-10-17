@@ -422,3 +422,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: a typing bubble (three dots that bounce one after another, in the coach's bubble, shown at once and standing still under reduced motion), a round glass coach avatar beside the coach's messages, bubbles with the corner nearest the speaker squared off (the usual chat shape), and a rounder question box. The announced status and the screen-reader label are unchanged ("The coach is thinking").
 - How validated: _(developer to fill)_ Evidence: the 28 screen tests pass (run on the coach tests only). Not done: seeing it in the browser, so the speed and size of the bounce are a first guess.
 - Lesson: for a wait that is a conversation, show a person-like cue; for a page that is loading, show a skeleton.
+
+## 2026-10-17: The coach gets a name and a message box
+
+- Tool: Claude Code.
+- Asked: a send icon inside the text box that Enter triggers, the character count inside the box too, and a name and a person-like picture for the coach instead of "the coach".
+- AI produced: a round send button and the `n/500` count inside an auto-growing box (Enter sends, Shift+Enter makes a new line, Enter while an input method is composing does nothing); the name Kai as one constant used by the screen, the error messages, the typing label and the prompt (which says Kai is an AI, not a person); a person glyph avatar.
+- How validated: _(developer to fill)_ Evidence: the coach screen and handler tests pass (109, run on the coach tests only). Not done: seeing it on a phone.
+- Lesson: put a persona's name in one constant so renaming is one edit, and keep the prompt honest that it is an AI.
