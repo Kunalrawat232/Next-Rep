@@ -124,7 +124,7 @@ describe('buildCoachContext', () => {
   });
 
   it('carries no exercise ids, and cleans and shortens names', () => {
-    const long = `  Super​   long ${'x'.repeat(80)} `;
+    const long = `  Super\u200B   long ${'x'.repeat(80)} `;
     const context = buildCoachContext(
       input({
         nameOf: () => long,
@@ -133,7 +133,7 @@ describe('buildCoachContext', () => {
     );
     const name = context.sessions[0]!.exercises[0]!.name;
     expect(name.length).toBeLessThanOrEqual(40);
-    expect(name).not.toMatch(/​/);
+    expect(name).not.toMatch(/\u200B/);
     expect(JSON.stringify(context)).not.toContain(BENCH);
   });
 
@@ -162,7 +162,7 @@ describe('buildCoachContext', () => {
 
 describe('cleanQuestion and lastTurns', () => {
   it('removes hidden characters, tidies spaces and cuts a question to the limit', () => {
-    expect(cleanQuestion('  how\u0000 do ​ I   squat?  ')).toBe('how do I squat?');
+    expect(cleanQuestion('  how\u0000 do \u200B I   squat?  ')).toBe('how do I squat?');
     expect(cleanQuestion('a\n\n\n\nb')).toBe('a\n\nb');
     expect(cleanQuestion('x'.repeat(COACH_QUESTION_MAX + 50))).toHaveLength(COACH_QUESTION_MAX);
     expect(cleanQuestion('   ')).toBe('');

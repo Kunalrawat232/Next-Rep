@@ -13,7 +13,8 @@ export * from './schemas';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Control characters and the invisible ones that can hide text, which a question or a name never needs. */
-const HIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F​-‍⁠﻿]/g;
+// eslint-disable-next-line no-control-regex -- stripping control characters is the point
+const HIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200D\u2060\uFEFF]/g;
 
 /** A question as it is sent: no hidden characters, spaces tidied, and no longer than the limit. */
 export function cleanQuestion(text: string): string {
