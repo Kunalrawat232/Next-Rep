@@ -13,7 +13,8 @@ const anonKey = env.SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY || '';
 let failures = 0;
 const report = (ok, name, detail = '') => {
   if (!ok) failures += 1;
-  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`);
+  // The hint explains a failure, so a passing line has none.
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? `  (${detail})` : ''}`);
   return ok;
 };
 
