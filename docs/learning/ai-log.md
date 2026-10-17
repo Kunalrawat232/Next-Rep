@@ -414,3 +414,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: `vite.devApi.ts`, a dev-only Vite plugin that runs `api/parse.ts` and `api/coach.ts` inside the dev server with the same handlers Vercel runs, reading only the five server-only settings from `.env.local` (never printing them, never copying other variables); a test of the routing, the body and header handoff, the failure path (only the kind of failure is printed) and the env mapping.
 - How validated: _(developer to fill)_ Evidence: the 10 new tests pass (only these were run). Not done: trying it with the real keys, which needs the developer's `.env.local`.
 - Lesson: a feature that depends on a platform's functions needs a way to run them locally, or testing it by hand sends people to a deploy for every change.
+
+## 2026-10-17: The coach looks like a chat
+
+- Tool: Claude Code.
+- Asked: while the coach is working, show a typing animation like WhatsApp or Instagram instead of the skeleton, and make it look like a chatbot.
+- AI produced: a typing bubble (three dots that bounce one after another, in the coach's bubble, shown at once and standing still under reduced motion), a round glass coach avatar beside the coach's messages, bubbles with the corner nearest the speaker squared off (the usual chat shape), and a rounder question box. The announced status and the screen-reader label are unchanged ("The coach is thinking").
+- How validated: _(developer to fill)_ Evidence: the 28 screen tests pass (run on the coach tests only). Not done: seeing it in the browser, so the speed and size of the bounce are a first guess.
+- Lesson: for a wait that is a conversation, show a person-like cue; for a page that is loading, show a skeleton.
