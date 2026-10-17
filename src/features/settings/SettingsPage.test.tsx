@@ -111,6 +111,23 @@ describe('appearance', () => {
   });
 });
 
+describe('the unit buttons', () => {
+  it('look like the other buttons on the page, with the chosen unit filled', async () => {
+    renderApp('/settings');
+    const group = await screen.findByRole('group', { name: 'Weight unit' });
+    const kg = within(group).getByRole('button', { name: 'kg' });
+    const lb = within(group).getByRole('button', { name: 'lb' });
+    for (const button of [kg, lb])
+      expect(button).toHaveClass('rounded-md', 'min-h-touch', 'font-semibold');
+    expect(kg).toHaveClass('bg-accent');
+    expect(lb).not.toHaveClass('bg-accent');
+    expect(lb).toHaveClass('glass-flat');
+    // The other buttons on the page share that shape.
+    const signOut = screen.getByRole('button', { name: 'Sign out' });
+    expect(signOut).toHaveClass('rounded-md', 'min-h-touch');
+  });
+});
+
 describe('the liquid glass effect', () => {
   afterEach(() => localStorage.removeItem('next-rep-glass'));
 

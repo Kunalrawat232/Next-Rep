@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { buttonClasses, Chip, Section, Switch } from '../../components';
+import { Button, buttonClasses, Section, Switch } from '../../components';
 import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { summarizeBars } from '../../domain/gyms';
 import { useGlassEffect } from '../../lib/useGlassEffect';
@@ -29,12 +29,17 @@ export function SettingsPage() {
           Weights are shown and typed in this unit. They are always saved in kg.
         </p>
         <div role="group" aria-label="Weight unit" className="flex gap-2">
-          <Chip selected={unit === 'kg'} onClick={() => setUnit('kg')}>
-            kg
-          </Chip>
-          <Chip selected={unit === 'lb'} onClick={() => setUnit('lb')}>
-            lb
-          </Chip>
+          {(['kg', 'lb'] as const).map((choice) => (
+            <Button
+              key={choice}
+              variant={unit === choice ? 'primary' : 'secondary'}
+              aria-pressed={unit === choice}
+              className="flex-1"
+              onClick={() => setUnit(choice)}
+            >
+              {choice}
+            </Button>
+          ))}
         </div>
       </Section>
 
