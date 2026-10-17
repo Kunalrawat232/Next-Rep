@@ -40,6 +40,17 @@ The function requires the user's Supabase access token (`Authorization: Bearer .
 
 `GEMINI_API_KEY`, `GEMINI_MODEL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
 
+## `POST /api/coach` (the AI coach)
+
+Vercel function in `api/coach.ts`; the handler and its tests are in `api/_lib/coach.ts`. See [ADR-017](decisions/017-ai-coach.md).
+
+- **Auth:** `Authorization: Bearer <access token>`, checked with `getClaims`, like `/api/parse`.
+- **Request** (`CoachRequestSchema`, strict, no extra fields): `question` (1 to 500 characters), `history` (at most 8 turns, each `{role: 'user' | 'coach', text}` of up to 2000 characters), and an optional `context` (`CoachContextSchema`: the unit, up to 3 recent workouts as exercise names with sets, top weight and reps, and the rule-based suggestion). No ids or account details.
+- **Response:** `{status: 'ok', text}` (at most 2000 characters), `{status: 'limited'}` (HTTP 429) or `{status: 'unavailable'}` (503). Also 401 (no or bad token), 400 (invalid request) and 413 (body over 24,000 characters).
+- **Limits:** 5 a minute and 20 an hour per user through `consume_rate_limit`, shared with `/api/parse`. The model gets 20 seconds; the reply is capped at 700 tokens.
+- **Env:** `GEMINI_API_KEY`, `COACH_MODEL` (optional, else `GEMINI_MODEL`), `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
+- **Never logged:** questions and replies (only the kind of failure).
+
 ## `ParseResult` schema
 
 ```ts

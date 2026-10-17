@@ -82,7 +82,7 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 - Offline, only creating sets is supported. Editing or deleting needs a connection.
 - Exercise demonstrations load from a third-party CDN and need internet; offline, or if the CDN is down, a placeholder shows. They are for non-commercial use (see Credits).
 - Browsers (especially iOS Safari) can evict local data, so sets sync as soon as possible.
-- Gemini free tier has low rate limits and is a fallback only (planned); its free-tier terms can change.
+- Gemini free tier has low rate limits and its free-tier terms can change. It reads unclear voice phrases (a fallback) and powers the text-only AI coach; free-tier prompts may be used by Google to improve its products, so the app sends only a question and a small summary, and says so on the Coach screen. The coach gives training tips, not medical advice.
 - Supabase free projects can pause after a period of inactivity.
 - Sign-in works offline for a user who is already signed in: the app reads the stored session instead of waiting for the network.
 - "Confirm email" is off during development and is switched on at code freeze, so judges should use the demo accounts in the submission.
