@@ -1,4 +1,5 @@
 import Dexie, { type DexieOptions, type Table } from 'dexie';
+import type { ChatMessage } from '../../domain/coach';
 import type { GymCache, PendingDeletion, StoredSet, StoredWorkout } from './types';
 
 /** Overrides for tests, where IndexedDB is a fake. */
@@ -9,6 +10,7 @@ export class LocalDb extends Dexie {
   sets!: Table<StoredSet, string>;
   deletions!: Table<PendingDeletion, string>;
   gymCache!: Table<GymCache, string>;
+  coachMessages!: Table<ChatMessage, string>;
 
   constructor(name: string, deps: DexieDeps = {}) {
     super(name, deps);
@@ -19,6 +21,8 @@ export class LocalDb extends Dexie {
     });
     // Version 2 adds the gym cache. Version 1 stays as it was, so data already on a device is kept.
     this.version(2).stores({ gymCache: 'id' });
+    // Version 3 adds the chat with the AI coach, which stays on this device only.
+    this.version(3).stores({ coachMessages: 'id, at' });
   }
 }
 

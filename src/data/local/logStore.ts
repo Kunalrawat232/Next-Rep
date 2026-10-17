@@ -1,5 +1,6 @@
 import { SetSchema, WorkoutSchema, type LoggedSet } from '../../domain/schemas';
 import type { LocalDb } from './db';
+import { CoachTurnSchema, type ChatMessage } from '../../domain/coach';
 import { readCachedGym, readGymSnapshot } from './gymShape';
 import type {
   LogStore,
@@ -58,6 +59,9 @@ const compareText = (a: string | undefined, b: string | undefined): number => {
 /** A wait that is longer than the longest backoff means the clock was wrong when it was set, so it is over. */
 const isDue = (row: SyncMeta, now: number): boolean =>
   row.nextAttemptAt <= now || row.nextAttemptAt - now > BACKOFF_MAX_MS;
+
+/** How many messages of the chat with the coach stay on the device. */
+const COACH_MESSAGES_KEPT = 50;
 
 export function createLogStore(db: LocalDb, clock: () => number = Date.now): LogStore {
   const table = (kind: RowKind) => (kind === 'workout' ? db.workouts : db.sets);
@@ -443,6 +447,40 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       await db.gymCache.put({ id: 'gym', gym, savedAt: clock() });
     },
 
+    async coachMessages() {
+      const rows = await db.coachMessages.orderBy('at').toArray();
+      // Rows on the device are not trusted: a damaged one is left out, never shown.
+      return rows.flatMap((row) => {
+        const turn = CoachTurnSchema.safeParse({ role: row.role, text: row.text });
+        return turn.success && typeof row.id === 'string' && Number.isFinite(row.at)
+          ? [{ ...turn.data, id: row.id, at: row.at }]
+          : [];
+      });
+    },
+
+    async addCoachMessage(message) {
+      const stored: ChatMessage = {
+        role: message.role,
+        text: message.text,
+        id: crypto.randomUUID(),
+        // Two messages in the same millisecond keep their order: the second is placed after the newest.
+        at: Math.max(clock(), ((await db.coachMessages.orderBy('at').last())?.at ?? 0) + 1),
+      };
+      await db.transaction('rw', db.coachMessages, async () => {
+        await db.coachMessages.put(stored);
+        const surplus = (await db.coachMessages.count()) - COACH_MESSAGES_KEPT;
+        if (surplus > 0) {
+          const oldest = await db.coachMessages.orderBy('at').limit(surplus).primaryKeys();
+          await db.coachMessages.bulkDelete(oldest);
+        }
+      });
+      return stored;
+    },
+
+    async clearCoachMessages() {
+      await db.coachMessages.clear();
+    },
+
     async cachedGym() {
       const row = await db.gymCache.get('gym');
       if (!row) return null;
@@ -484,18 +522,27 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async purgeSynced() {
-      return db.transaction('rw', db.workouts, db.sets, db.deletions, db.gymCache, async () => {
-        await db.gymCache.clear(); // the gym is the user's data too; it is fetched again at the next sign-in
-        await db.sets.where('syncStatus').equals('synced').delete();
-        const remainingSets = await db.sets.toArray();
-        const keep = new Set(remainingSets.map((s) => s.workoutId));
-        await db.workouts.filter((w) => w.syncStatus === 'synced' && !keep.has(w.id)).delete();
-        const [workouts, deletions] = await Promise.all([
-          db.workouts.count(),
-          db.deletions.count(),
-        ]);
-        return { remaining: workouts + remainingSets.length + deletions };
-      });
+      return db.transaction(
+        'rw',
+        db.workouts,
+        db.sets,
+        db.deletions,
+        db.gymCache,
+        db.coachMessages,
+        async () => {
+          await db.gymCache.clear(); // the gym is the user's data too; it is fetched again at the next sign-in
+          await db.coachMessages.clear(); // so is the chat with the coach
+          await db.sets.where('syncStatus').equals('synced').delete();
+          const remainingSets = await db.sets.toArray();
+          const keep = new Set(remainingSets.map((s) => s.workoutId));
+          await db.workouts.filter((w) => w.syncStatus === 'synced' && !keep.has(w.id)).delete();
+          const [workouts, deletions] = await Promise.all([
+            db.workouts.count(),
+            db.deletions.count(),
+          ]);
+          return { remaining: workouts + remainingSets.length + deletions };
+        },
+      );
     },
   };
 }

@@ -1,3 +1,4 @@
+import type { ChatMessage } from '../../domain/coach';
 import type { Gym } from '../../domain/gyms';
 import type { LoggedSet, Workout } from '../../domain/schemas';
 
@@ -124,6 +125,12 @@ export interface LogStore {
   saveGym(gym: Gym | null): Promise<void>;
   /** The last saved answer, or null if nothing was saved (or the copy is damaged). `{ gym: null }` means "no gym yet". */
   cachedGym(): Promise<{ gym: Gym | null } | null>;
+  /** The chat with the AI coach, oldest first. It lives on this device only and is never synced. */
+  coachMessages(): Promise<ChatMessage[]>;
+  /** Adds a message to the chat, keeping only the newest 50. */
+  addCoachMessage(message: Pick<ChatMessage, 'role' | 'text'>): Promise<ChatMessage>;
+  /** Forgets the whole chat. */
+  clearCoachMessages(): Promise<void>;
   /** Deletes everything the server already has, and keeps what is still unsynced. Returns how much remains. */
   purgeSynced(): Promise<{ remaining: number }>;
   outbox: Outbox;

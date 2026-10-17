@@ -6,6 +6,7 @@ import { GymServiceProvider, type GymService } from '../features/gyms';
 import type { RemoteLog } from '../data/sync';
 import { ProfileServiceProvider, UnitProvider, type ProfileService } from '../features/settings';
 import { SyncProvider } from '../features/sync';
+import { CoachServiceProvider, type CoachService } from '../features/coach';
 import { ParseServiceProvider, type ParseService } from '../features/voice';
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
   logRemote: RemoteLog;
   /** The Gemini fallback; without it, phrases the parser is unsure of are not sent anywhere. */
   parseService?: ParseService;
+  /** The AI coach; without it the Coach screen says it is unavailable. */
+  coachService?: CoachService;
   router: ComponentProps<typeof RouterProvider>['router'];
   ensureProfile?: (userId: string) => Promise<void>;
 };
@@ -27,6 +30,7 @@ export function App({
   profileService,
   logRemote,
   parseService,
+  coachService,
   router,
   ensureProfile,
 }: Props) {
@@ -38,7 +42,9 @@ export function App({
             <ExerciseServiceProvider service={exerciseService}>
               <SyncProvider remote={logRemote}>
                 <Fallback service={parseService}>
-                  <RouterProvider router={router} />
+                  <CoachFallback service={coachService}>
+                    <RouterProvider router={router} />
+                  </CoachFallback>
                 </Fallback>
               </SyncProvider>
             </ExerciseServiceProvider>
@@ -52,6 +58,14 @@ export function App({
 function Fallback({ service, children }: { service?: ParseService; children: ReactNode }) {
   return service ? (
     <ParseServiceProvider service={service}>{children}</ParseServiceProvider>
+  ) : (
+    children
+  );
+}
+
+function CoachFallback({ service, children }: { service?: CoachService; children: ReactNode }) {
+  return service ? (
+    <CoachServiceProvider service={service}>{children}</CoachServiceProvider>
   ) : (
     children
   );
