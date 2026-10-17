@@ -1,16 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import {
-  Button,
-  Card,
-  Chip,
-  ErrorMessage,
-  LoadingMessage,
-  Skeleton,
-  Switch,
-} from '../../components';
+import { Button, Card, Chip, ErrorMessage, LoadingMessage, Switch } from '../../components';
 import { COACH_QUESTION_MAX } from '../../domain/coach';
 import { useOnline } from '../../lib/useOnline';
 import { useSettled } from '../../lib/useSettled';
+import { CoachBubble, TypingBubble } from './ChatParts';
 import { CoachText } from './CoachText';
 import { useCoachChat } from './useCoachChat';
 
@@ -140,31 +133,21 @@ export function CoachPage() {
             message.role === 'user' ? (
               <li
                 key={message.id}
-                className="self-end rounded-md bg-accent px-4 py-3 text-on-accent max-w-[85%]"
+                className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-accent px-4 py-3 text-on-accent"
               >
                 <span className="sr-only">You: </span>
                 <p className="whitespace-pre-wrap">{message.text}</p>
               </li>
             ) : (
-              <li
-                key={message.id}
-                className="max-w-[92%] self-start rounded-md border border-glass-line glass-flat px-4 py-3"
-              >
-                <span className="sr-only">Coach: </span>
-                <CoachText text={message.text} />
+              <li key={message.id} className="flex max-w-[92%] items-end gap-2 self-start">
+                <CoachBubble>
+                  <span className="sr-only">Coach: </span>
+                  <CoachText text={message.text} />
+                </CoachBubble>
               </li>
             ),
           )}
-          {chat.sending && (
-            <li
-              role="status"
-              aria-label="The coach is thinking"
-              className="loader-in flex w-48 flex-col gap-2 self-start rounded-md border border-glass-line glass-flat px-4 py-3"
-            >
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-2/3" />
-            </li>
-          )}
+          {chat.sending && <TypingBubble />}
         </ol>
       )}
       <div ref={end} />
@@ -188,7 +171,7 @@ export function CoachPage() {
               ? 'For example: how many sets of squats should I do?'
               : 'The coach needs an internet connection.'
           }
-          className="min-h-touch w-full resize-none rounded-sm border border-glass-line bg-surface-300 px-4 py-3 text-body text-ink disabled:opacity-60"
+          className="min-h-touch w-full resize-none rounded-2xl border border-glass-line bg-surface-300 px-4 py-3 text-body text-ink disabled:opacity-60"
         />
         <div className="flex items-center justify-between gap-4">
           <div className="flex flex-col">

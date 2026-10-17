@@ -161,13 +161,26 @@ describe('the Coach screen', () => {
     const { user } = renderApp('/coach', { coach: service });
     await user.type(await box(), 'Slow one');
     await user.click(askButton());
-    expect(
-      await screen.findByRole('status', { name: 'The coach is thinking' }),
-    ).toBeInTheDocument();
+    const typing = await screen.findByRole('status', { name: 'The coach is thinking' });
+    // Three bouncing dots in the coach's bubble, like a chat app, not a skeleton.
+    expect(within(typing).getAllByTestId('typing-dot')).toHaveLength(3);
+    expect(typing.querySelector('.skeleton')).toBeNull();
+    expect(typing).not.toHaveClass('loader-in');
     expect(screen.getByRole('button', { name: 'Thinking…' })).toBeDisabled();
     act(() => finish({ status: 'ok', text: 'Done.' }));
     expect(await screen.findByText('Done.')).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'The coach is thinking' })).not.toBeInTheDocument();
+  });
+
+  it("puts the coach's picture beside its messages and squares off the bubble corners nearest the speaker", async () => {
+    const { user } = renderApp('/coach', { coach: fakeCoach().service });
+    await user.type(await box(), 'Hello');
+    await user.click(askButton());
+    const chat = await screen.findByRole('list', { name: 'Chat with the coach' });
+    const reply = (await within(chat).findByText('Add 2.5 kg.')).closest('li')!;
+    expect(reply.querySelector('svg')).not.toBeNull();
+    expect(reply.querySelector('.rounded-bl-md')).not.toBeNull();
+    expect(within(chat).getByText('Hello').closest('li')).toHaveClass('rounded-br-md');
   });
 
   it('sends with Ctrl+Enter', async () => {
