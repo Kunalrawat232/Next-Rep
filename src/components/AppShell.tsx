@@ -153,7 +153,7 @@ export function AppShell() {
           <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
         </svg>
       </Link>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-32 lg:px-8 lg:pb-8">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-44 lg:px-8 lg:pb-8">
         <Outlet />
       </main>
     </div>
