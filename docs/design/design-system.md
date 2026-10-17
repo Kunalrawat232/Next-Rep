@@ -34,6 +34,8 @@ Surfaces are translucent glass over a soft colour layer (`#ambient`, fixed behin
 
 A screen waiting for data shows a skeleton of what is coming (a title and glass cards of shimmering blocks), not a word: `LoadingMessage` (`variant="page"`, the default). Inside a card, `LoadingMessage variant="inline"` is a ring with two short blocks. While the app starts and finds out who is signed in, `FullPageLoader` shows the mark inside a turning ring. Every loader fades in after 200 ms (`.loader-in`), so data that arrives at once shows no loader at all; the shimmer and the ring stand still when the person asked for less motion; and each is one announced status with a hidden label (the visible picture is not read out). Build any new loader from `Skeleton` and `Spinner` in `src/components/Loading.tsx`.
 
+**One loader per screen, then the whole screen at once.** A screen lists everything it needs (its own data, the exercise list, record badges, the demonstration data, the gym, a first download of history) and shows the loader until all of it has settled, so nothing fills in or swaps later and the layout does not jump. Data from the server is waited for, but only up to 8 seconds (`within` and `SERVER_WAIT_MS` in `src/lib/withTimeout.ts`): after that the screen is drawn with what it has (the saved gym, the built-in exercises) and says that part is offline. `useSettled` (`src/lib/useSettled.ts`) keeps a screen from going back to the loader on a later background re-read, which would throw away what the person typed.
+
 ## Shared components
 
 Keep these names identical in code and in Claude Design.

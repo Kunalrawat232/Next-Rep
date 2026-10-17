@@ -14,15 +14,6 @@ type Props = {
 const FRAME =
   'relative mx-auto aspect-[3/2] w-full max-w-sm overflow-hidden rounded-sm bg-surface-300';
 
-/** The empty box shown while the animation or the exercise's data is on its way. */
-export function DemoSkeleton() {
-  return (
-    <Card aria-hidden="true" className="w-full">
-      <div className={`${FRAME} motion-safe:animate-pulse`} />
-    </Card>
-  );
-}
-
 function Placeholder({ message }: { message: string }) {
   return (
     <div className={`${FRAME} flex flex-col items-center justify-center gap-2 p-4 text-center`}>

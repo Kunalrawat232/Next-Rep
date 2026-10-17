@@ -9,7 +9,7 @@ import {
 import { demoMediaFor } from '../../domain/exercises/demoMedia';
 import { useDemoSources } from './demoMap';
 import { useExerciseService } from './ExerciseServiceContext';
-import { DemoSkeleton, ExerciseDemo } from './ExerciseDemo';
+import { ExerciseDemo } from './ExerciseDemo';
 import { useExercises } from './useExercises';
 
 export function ExerciseDetailPage() {
@@ -34,8 +34,10 @@ export function ExerciseDetailPage() {
 
 function Detail({ exercise }: { exercise: Exercise }) {
   const demo = useDemoSources(exercise.id);
-  const entry = demo.status === 'ready' ? demo.entry : undefined;
-  const photoDir = demo.status === 'ready' ? demo.photoDir : undefined;
+  // One loader until the demonstration data is here too, so the picture area never swaps in later.
+  if (demo.status === 'loading') return <LoadingMessage>Loading exercise…</LoadingMessage>;
+  const entry = demo.entry;
+  const photoDir = demo.photoDir;
   const secondary = entry?.secondary ?? [];
 
   return (
@@ -67,11 +69,7 @@ function Detail({ exercise }: { exercise: Exercise }) {
           </dl>
         </Card>
         <div className="order-first md:order-last">
-          {demo.status === 'loading' ? (
-            <DemoSkeleton />
-          ) : (
-            <ExerciseDemo exerciseName={exercise.name} media={demoMediaFor({ entry, photoDir })} />
-          )}
+          <ExerciseDemo exerciseName={exercise.name} media={demoMediaFor({ entry, photoDir })} />
         </div>
       </div>
     </div>

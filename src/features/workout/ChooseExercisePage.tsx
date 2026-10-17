@@ -7,6 +7,9 @@ export function ChooseExercisePage() {
   const navigate = useNavigate();
   const { state, reload } = useExercises(useExerciseService());
 
+  // One loader until the exercise list (including your own, from the server) has settled.
+  if (state.status === 'loading') return <LoadingMessage>Loading exercises…</LoadingMessage>;
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between">
@@ -30,7 +33,6 @@ export function ChooseExercisePage() {
           </svg>
         </Link>
       </header>
-      {state.status === 'loading' && <LoadingMessage>Loading exercises…</LoadingMessage>}
       {state.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
           <ErrorMessage>Could not load the exercises. Please try again.</ErrorMessage>

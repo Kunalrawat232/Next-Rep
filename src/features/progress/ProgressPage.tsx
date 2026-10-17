@@ -37,13 +37,13 @@ export function ProgressPage() {
     }))
     .sort((a, b) => (a.last < b.last ? 1 : a.last > b.last ? -1 : 0));
   const now = new Date();
+  // One loader until your history has been downloaded too, so the page never fills in later.
+  if (rows.length === 0 && pulling) return <LoadingMessage>Loading your history…</LoadingMessage>;
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">Progress</h1>
-      {rows.length === 0 && pulling ? (
-        <LoadingMessage>Loading your history…</LoadingMessage>
-      ) : rows.length === 0 ? (
+      {rows.length === 0 ? (
         <EmptyState
           title="Nothing to chart yet"
           message="Log a few sets and your progress for each exercise shows up here. Sets from before you last signed out are not kept on this device."

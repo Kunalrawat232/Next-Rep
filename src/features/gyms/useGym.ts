@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Gym } from '../../domain/gyms';
+import { within } from '../../lib/withTimeout';
 import type { GymFailure, GymService } from './types';
 
 export type GymState =
@@ -15,10 +16,11 @@ export function useGym(service: GymService): { state: GymState; reload: () => vo
 
   useEffect(() => {
     let current = true;
-    service
-      .get()
-      .then((result) => {
+    within(service.get())
+      .then((answer) => {
         if (!current) return;
+        // No answer in time is treated like being offline.
+        const result = answer ?? ({ status: 'error', reason: 'offline' } as const);
         setState(
           result.status === 'ok'
             ? { status: 'ready', gym: result.value }

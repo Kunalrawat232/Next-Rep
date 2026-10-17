@@ -19,7 +19,7 @@ import { SyncBadge, useLogStore, useSyncControls } from '../sync';
 import { OfflineBanner } from './OfflineBanner';
 import { SetList } from './SetList';
 import { useFreshGym } from './useFreshGym';
-import { PrBadge, useRecordMarks } from '../progress';
+import { PrBadge, useRecordMarksState } from '../progress';
 import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
 import { RestTimer } from './RestTimer';
@@ -28,6 +28,7 @@ import { useMyGym } from './useMyGym';
 import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
+import { useSettled } from '../../lib/useSettled';
 import { useUnit } from '../settings/UnitProvider';
 import { withUnit } from '../../domain/units';
 
@@ -97,14 +98,14 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
     }
   }
 
+  // One loader until the gym has arrived, then the whole screen at once.
+  if (catalog.status === 'loading') return <LoadingMessage>Loading your gym…</LoadingMessage>;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader back="/" title="Workout" />
       <OfflineBanner />
 
-      {catalog.status === 'loading' && (
-        <LoadingMessage variant="inline">Loading your gym…</LoadingMessage>
-      )}
       {catalog.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
           <ErrorMessage>
@@ -162,7 +163,10 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const { pending: undoing, begin: beginUndo, end: endUndo } = usePending();
   useFreshGym(workout, reload);
   const rest = useRestTimer(workout.id);
-  const marks = useRecordMarks(sets.map((s) => s.exerciseId));
+  const { marks, loaded: marksLoaded } = useRecordMarksState(sets.map((s) => s.exerciseId));
+  // One loader until the exercise names and the record badges are here, so nothing fills in later.
+  const settled = useSettled(exercises.state.status !== 'loading' && marksLoaded);
+  if (!settled) return <LoadingMessage />;
 
   const nameOf = (id: string) =>
     exercises.state.status === 'ready'

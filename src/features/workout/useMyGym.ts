@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Gym } from '../../domain/gyms';
+import { within } from '../../lib/withTimeout';
 import { useGymService } from '../gyms';
 import { useLogStore } from '../sync';
 
@@ -23,7 +24,8 @@ export function useMyGym(): { catalog: MyGym; reload: () => void; saved: (gym: G
   useEffect(() => {
     let current = true;
     (async () => {
-      const result = await service.get().catch(() => null);
+      // Waits for the server's answer, but not for ever: after a few seconds the copy on the device is used.
+      const result = await within(service.get()).catch(() => null);
       if (result?.status === 'ok') {
         await store.saveGym(result.value).catch(() => undefined);
         if (current) setCatalog({ status: 'ready', gym: result.value, fromCache: false });

@@ -12,7 +12,7 @@ import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/loc
 import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '../../domain/history';
 import { useExerciseService, useExercises } from '../exercises';
 import { useLogStore, useSyncStatus } from '../sync';
-import { useRecordMarks } from '../progress';
+import { useRecordMarksState } from '../progress';
 import { SetList } from '../workout';
 import { countLabel, syncNote } from './rows';
 
@@ -59,7 +59,7 @@ export function WorkoutDetailPage() {
 
   const here = loaded?.workoutId === workoutId ? loaded : null;
   const shownSets = here?.status === 'ready' ? here.sets : [];
-  const marks = useRecordMarks(shownSets.map((s) => s.exerciseId));
+  const { marks, loaded: marksLoaded } = useRecordMarksState(shownSets.map((s) => s.exerciseId));
   if (here?.status === 'error')
     return (
       <RetryMessage onRetry={() => setAttempt((n) => n + 1)}>
@@ -75,7 +75,8 @@ export function WorkoutDetailPage() {
         label="Back to history"
       />
     );
-  if (!here || here.status !== 'ready' || exercises.status === 'loading') return <LoadingMessage />;
+  if (!here || here.status !== 'ready' || exercises.status === 'loading' || !marksLoaded)
+    return <LoadingMessage />;
 
   const { workout, sets } = here;
   const note = syncNote(workout, sets);

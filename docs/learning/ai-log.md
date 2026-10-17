@@ -369,3 +369,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: `Loading.tsx` with `Skeleton` (shimmering placeholder), `Spinner` (a ring), `LoadingMessage` (a page-shaped skeleton in the glass look, or a small inline form) and `FullPageLoader` (the mark inside a turning ring, used while the app starts). All of the 15 places that said "Loading…" now use them through the same component. Each fades in after 200 ms so a fast load shows nothing, stands still under reduced motion, and is one polite status with a hidden label, so screen readers hear the same text as before.
 - How validated: _(developer to fill)_ Evidence: full unit run green (4062 tests) with new tests for each loader. Not done: watching it on a slow connection on a real phone (throttle the network in DevTools to see it).
 - Lesson: a skeleton in the shape of the page reads as progress; a word reads as a pause.
+
+## 2026-10-17: One loader per screen, no staged loading
+
+- Tool: Claude Code.
+- Asked: some pages drew half their data and filled in the rest later, which made the layout jump; show the loader until everything has arrived (the server answered), on every screen. The developer asked for no unit test run and will check by hand.
+- Found: the workout screen drew before the exercise names and record badges were ready; Settings, the Start workout screen and the exercise page each had a second loader inside the page; History and Progress showed a second loader while the history downloaded.
+- AI produced: a page-wide loader on every screen until all its sources settle (workout, Start workout, Settings, exercise page including its demonstration data, History, Progress, Exercises, Choose exercise, workout detail); `useRecordMarksState` so badges are waited for; `within` (an 8 second limit on the server calls for the gym and your own exercises, then the saved gym or "offline" is used); `useSettled` so a screen never returns to the loader on a later background re-read.
+- How validated: _(developer to fill)_ Not run on purpose (the developer asked for no tests; typecheck and lint are clean). Existing tests that look for the old inline loaders (Settings, the exercise page, History and Progress while a download runs, the workout screen) will need updating once the behaviour is accepted.
+- Lesson: waiting for all the data costs one longer loader; showing it in pieces costs the layout.

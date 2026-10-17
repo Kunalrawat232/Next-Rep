@@ -17,6 +17,8 @@ export function SettingsPage() {
   const glass = useGlassEffect();
   const { catalog, reload } = useMyGym();
   if (state.status !== 'signedIn') return null;
+  // One loader until your bars have arrived, then the whole page at once.
+  if (catalog.status === 'loading') return <LoadingMessage />;
 
   const gym = catalog.status === 'ready' ? catalog.gym : null;
 
@@ -44,7 +46,6 @@ export function SettingsPage() {
       </Section>
 
       <Section headingId="gym-heading" title="Your bars">
-        {catalog.status === 'loading' && <LoadingMessage variant="inline" />}
         {catalog.status === 'error' && (
           <div role="alert" className="flex flex-col items-start gap-2">
             <p className="text-callout">Could not load your gym.</p>

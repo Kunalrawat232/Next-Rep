@@ -20,6 +20,14 @@ export function HistoryPage() {
   const open = useWorkout().state;
   const { pulling } = useSyncStatus();
 
+  // One loader until the workouts, the open workout and any first download of your history are here.
+  if (
+    state.status === 'loading' ||
+    open.status === 'loading' ||
+    (state.status === 'ready' && state.workouts.length === 0 && pulling)
+  )
+    return <LoadingMessage>Loading your history…</LoadingMessage>;
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">History</h1>
@@ -33,17 +41,11 @@ export function HistoryPage() {
         </Link>
       )}
 
-      {state.status === 'loading' && <LoadingMessage />}
-
       {state.status === 'error' && (
         <ErrorMessage onRetry={retry}>Could not read your workouts from this device.</ErrorMessage>
       )}
 
-      {state.status === 'ready' && state.workouts.length === 0 && pulling && (
-        <LoadingMessage>Loading your history…</LoadingMessage>
-      )}
-
-      {state.status === 'ready' && state.workouts.length === 0 && !pulling && (
+      {state.status === 'ready' && state.workouts.length === 0 && (
         <EmptyState
           title="No finished workouts yet"
           message="Finish a workout and it shows up here. Workouts from before you last signed out are not kept on this device."
