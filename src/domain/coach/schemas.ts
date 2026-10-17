@@ -7,6 +7,9 @@ import { UnitSchema } from '../schemas.js';
 export const COACH_QUESTION_MAX = 500;
 /** How many earlier turns of the chat go along with a question. */
 export const COACH_HISTORY_MAX = 8;
+/** What the coach says to a question that is not about the gym or diet. The words come from our code, never the model. */
+export const COACH_REFUSAL =
+  "I can't answer this question. I can only help with gym training and diet. Try asking about exercises, workouts, recovery or nutrition.";
 /** The longest reply the app keeps or shows. */
 export const COACH_REPLY_MAX = 2000;
 
@@ -64,7 +67,19 @@ export type CoachRequest = z.infer<typeof CoachRequestSchema>;
 /** What the function answers. `limited` means this user asked too much for now. */
 export const CoachResponseSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('ok'), text: z.string().min(1).max(COACH_REPLY_MAX) }),
+  /** The question is not about gym training or diet: the app shows `COACH_REFUSAL`. */
+  z.object({ status: z.literal('off_topic') }),
   z.object({ status: z.literal('limited') }),
   z.object({ status: z.literal('unavailable') }),
 ]);
 export type CoachResponse = z.infer<typeof CoachResponseSchema>;
+
+/**
+ * What the model must answer: whether the question is about gym training or diet, and if so the reply. The
+ * server trusts `onTopic` only to refuse; a refusal never uses the model's own words.
+ */
+export const CoachModelOutputSchema = z.object({
+  onTopic: z.boolean(),
+  reply: z.string().max(COACH_REPLY_MAX * 2),
+});
+export type CoachModelOutput = z.infer<typeof CoachModelOutputSchema>;

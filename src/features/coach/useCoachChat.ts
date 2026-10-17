@@ -6,6 +6,7 @@ import {
   lastTurns,
   type ChatMessage,
   type CoachContext,
+  COACH_REFUSAL,
 } from '../../domain/coach';
 import { suggest } from '../../domain/progression';
 import { usePending } from '../../lib/usePending';
@@ -18,7 +19,7 @@ import { useCoachService, type CoachAnswer } from './coachService';
 export type ChatState = { status: 'loading' } | { status: 'ready'; messages: ChatMessage[] };
 
 /** What the person is told when the coach could not answer. */
-export const COACH_PROBLEM: Record<Exclude<CoachAnswer['status'], 'ok'>, string> = {
+export const COACH_PROBLEM: Record<Exclude<CoachAnswer['status'], 'ok' | 'off_topic'>, string> = {
   offline: "You're offline. The coach needs an internet connection.",
   limited: "You've asked a lot in a short time. Give it a few minutes and try again.",
   unavailable: "The coach can't answer right now. Please try again in a moment.",
@@ -121,7 +122,7 @@ export function useCoachChat() {
           question,
           ...(context ? { context } : {}),
         });
-        if (answer.status !== 'ok') {
+        if (answer.status !== 'ok' && answer.status !== 'off_topic') {
           // The question is taken back out of the chat, so the person can edit it and send it again.
           await store.removeCoachMessage(asked.id);
           if (mounted.current) {
@@ -130,7 +131,9 @@ export function useCoachChat() {
           }
           return 'failed';
         }
-        const reply = await store.addCoachMessage({ role: 'coach', text: answer.text });
+        // An off-topic question is answered with our own words, and both stay in the chat.
+        const said = answer.status === 'ok' ? answer.text : COACH_REFUSAL;
+        const reply = await store.addCoachMessage({ role: 'coach', text: said });
         if (mounted.current) setState({ status: 'ready', messages: [...before, asked, reply] });
         return 'sent';
       } catch {

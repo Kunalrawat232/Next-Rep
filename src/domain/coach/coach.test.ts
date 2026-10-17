@@ -6,6 +6,8 @@ import {
   COACH_QUESTION_MAX,
   CoachContextSchema,
   CoachRequestSchema,
+  COACH_REFUSAL,
+  CoachModelOutputSchema,
   CoachResponseSchema,
   lastTurns,
   type CoachInput,
@@ -236,9 +238,24 @@ describe('the shared schemas', () => {
 
   it('describe the answers', () => {
     expect(CoachResponseSchema.safeParse({ status: 'ok', text: 'Add 2.5 kg.' }).success).toBe(true);
+    expect(CoachResponseSchema.safeParse({ status: 'off_topic' }).success).toBe(true);
     expect(CoachResponseSchema.safeParse({ status: 'limited' }).success).toBe(true);
     expect(CoachResponseSchema.safeParse({ status: 'unavailable' }).success).toBe(true);
     expect(CoachResponseSchema.safeParse({ status: 'ok', text: '' }).success).toBe(false);
     expect(CoachResponseSchema.safeParse({ status: 'error' }).success).toBe(false);
+  });
+});
+
+describe('keeping the coach to the gym and diet', () => {
+  it('has a fixed refusal that says so plainly', () => {
+    expect(COACH_REFUSAL).toMatch(/can't answer this question/i);
+    expect(COACH_REFUSAL).toMatch(/gym training and diet/i);
+  });
+
+  it('asks the model for a yes or no on topic, and a reply', () => {
+    expect(CoachModelOutputSchema.safeParse({ onTopic: true, reply: 'x' }).success).toBe(true);
+    expect(CoachModelOutputSchema.safeParse({ onTopic: false, reply: '' }).success).toBe(true);
+    expect(CoachModelOutputSchema.safeParse({ onTopic: 'maybe', reply: 'x' }).success).toBe(false);
+    expect(CoachModelOutputSchema.safeParse({ reply: 'x' }).success).toBe(false);
   });
 });

@@ -2,11 +2,14 @@
 // tests use fakes. The coach only answers in text. It never writes data and never decides a number (see ADR-017).
 import {
   COACH_REPLY_MAX,
+  CoachModelOutputSchema,
   CoachRequestSchema,
+  type CoachModelOutput,
   type CoachRequest,
   type CoachResponse,
 } from '../../src/domain/coach/schemas.js';
 import { COACH_PROMPT, factsFor } from './coachPrompt.js';
+import { isObviouslyOffTopic } from './coachScope.js';
 
 export const COACH_LIMITS = { perMinute: 5, perHour: 20 } as const;
 export const COACH_TIMEOUT_MS = 20_000;
@@ -49,6 +52,20 @@ export function turnsFor(request: Pick<CoachRequest, 'history' | 'question'>): C
   return turns;
 }
 
+/** Reads what the model answered: the JSON, with a code fence around it tolerated. Null when it is not usable. */
+export function readModelOutput(text: string): CoachModelOutput | null {
+  const body = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '');
+  try {
+    const parsed = CoachModelOutputSchema.safeParse(JSON.parse(body));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function handleCoach(request: Request, deps: CoachDeps): Promise<Response> {
   const token = /^Bearer (\S+)$/.exec(request.headers.get('authorization') ?? '')?.[1];
   if (!token) return reply(401, { status: 'unauthorized' });
@@ -80,13 +97,23 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
     return unavailable(503);
   }
 
+  // A question that is plainly not about the gym or diet is turned away without asking the model.
+  if (isObviouslyOffTopic(parsed.data.question)) return reply(200, { status: 'off_topic' });
+
   try {
     const answer = await deps.ask({
       system: `${COACH_PROMPT}\n\n${factsFor(parsed.data.context)}`,
       turns: turnsFor(parsed.data),
       signal: AbortSignal.timeout(COACH_TIMEOUT_MS),
     });
-    const textOut = answer.trim().slice(0, COACH_REPLY_MAX);
+    const output = readModelOutput(answer);
+    if (output === null) {
+      console.error('coach: model answer unreadable');
+      return unavailable(503);
+    }
+    // The refusal is ours: whatever the model wrote next to "off topic" is thrown away.
+    if (!output.onTopic) return reply(200, { status: 'off_topic' });
+    const textOut = output.reply.trim().slice(0, COACH_REPLY_MAX);
     if (textOut === '') return unavailable(503);
     return reply(200, { status: 'ok', text: textOut });
   } catch (error) {

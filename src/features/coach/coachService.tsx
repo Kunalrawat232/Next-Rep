@@ -4,6 +4,8 @@ import type { CoachRequest } from '../../domain/coach';
 /** What the coach said, or why it could not. The screen turns each reason into a friendly message. */
 export type CoachAnswer =
   | { status: 'ok'; text: string }
+  /** The question is not about gym training or diet: the screen shows `COACH_REFUSAL`. */
+  | { status: 'off_topic' }
   /** This user asked a lot in a short time. */
   | { status: 'limited' }
   /** No connection, or the server could not be reached. */

@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CoachResponseSchema, COACH_REPLY_MAX } from '../../src/domain/coach/schemas.js';
-import { COACH_LIMITS, handleCoach, turnsFor, type CoachDeps } from './coach.js';
+import { COACH_LIMITS, handleCoach, readModelOutput, turnsFor, type CoachDeps } from './coach.js';
 import { COACH_PROMPT } from './coachPrompt.js';
+
+/** What the model answers: the JSON the prompt asks for. */
+const model = (onTopic: boolean, reply: string) => JSON.stringify({ onTopic, reply });
 
 function deps(over: Partial<CoachDeps> = {}) {
   const calls = {
@@ -16,7 +19,7 @@ function deps(over: Partial<CoachDeps> = {}) {
     },
     ask: async (input) => {
       calls.ask.push(input);
-      return '  Add 2.5 kg and keep the reps.  ';
+      return model(true, '  Add 2.5 kg and keep the reps.  ');
     },
     ...over,
   };
@@ -166,12 +169,12 @@ describe('POST /api/coach', () => {
   });
 
   it('says unavailable when the model answers with nothing', async () => {
-    const { deps: d } = deps({ ask: async () => '   \n ' });
+    const { deps: d } = deps({ ask: async () => model(true, '   \n ') });
     expect((await handleCoach(request(valid), d)).status).toBe(503);
   });
 
   it('cuts a very long answer to the limit', async () => {
-    const { deps: d } = deps({ ask: async () => 'a'.repeat(COACH_REPLY_MAX + 500) });
+    const { deps: d } = deps({ ask: async () => model(true, 'a'.repeat(COACH_REPLY_MAX + 500)) });
     const body = (await (await handleCoach(request(valid), d)).json()) as { text: string };
     expect(body.text).toHaveLength(COACH_REPLY_MAX);
   });
@@ -181,7 +184,7 @@ describe('POST /api/coach', () => {
     const { deps: d } = deps({
       ask: async (input) => {
         signal = input.signal;
-        return 'ok';
+        return model(true, 'ok');
       },
     });
     await handleCoach(request(valid), d);
@@ -190,11 +193,108 @@ describe('POST /api/coach', () => {
   });
 });
 
+describe('keeping the coach to the gym and diet', () => {
+  it("turns away a question the model says is off topic, with our words, not the model's", async () => {
+    const { deps: d } = deps({ ask: async () => model(false, 'Sure! The weather is sunny.') });
+    const response = await handleCoach(
+      request({ ...valid, question: 'Is it going to rain later?' }),
+      d,
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: 'off_topic' });
+  });
+
+  it.each([
+    ['the weather', 'What is the weather today?'],
+    ['a sum', '2+2'],
+    ['an equation', 'solve 3x + 5 = 20'],
+    ['code', 'write me a python script'],
+    ['a price', 'bitcoin price'],
+  ])('turns away %s without asking the model at all', async (_name, question) => {
+    const { deps: d, calls } = deps();
+    const response = await handleCoach(request({ ...valid, question }), d);
+    expect(await response.json()).toEqual({ status: 'off_topic' });
+    expect(calls.ask).toHaveLength(0);
+  });
+
+  it("still counts a turned-away question against the user's limit", async () => {
+    const { deps: d, calls } = deps();
+    await handleCoach(request({ ...valid, question: '2+2' }), d);
+    expect(calls.consume).toEqual([60, 3600]);
+  });
+
+  it.each([
+    'Is 5x5 good for strength?',
+    '5x5',
+    'How should I train in hot weather?',
+    'How do I solve a bench press plateau?',
+    'Is whey protein worth the price?',
+    'What should I eat after leg day?',
+  ])(
+    'does not turn away the gym or diet question "%s" before the model sees it',
+    async (question) => {
+      const { deps: d, calls } = deps();
+      const response = await handleCoach(request({ ...valid, question }), d);
+      expect(await response.json()).toMatchObject({ status: 'ok' });
+      expect(calls.ask).toHaveLength(1);
+    },
+  );
+
+  it('says unavailable, and shows nothing, when the model does not answer in the agreed form', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    for (const text of [
+      'The weather is nice.',
+      '',
+      '[]',
+      '{"onTopic":"yes","reply":"x"}',
+      '{"reply":"x"}',
+    ]) {
+      const { deps: d } = deps({ ask: async () => text });
+      const response = await handleCoach(request(valid), d);
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({ status: 'unavailable' });
+    }
+    expect(JSON.stringify(log.mock.calls)).not.toContain('weather');
+  });
+
+  it('reads the answer when the model wraps it in a code fence', async () => {
+    const { deps: d } = deps({
+      ask: async () => `\`\`\`json\n${model(true, 'Do 3 sets.')}\n\`\`\``,
+    });
+    expect(await (await handleCoach(request(valid), d)).json()).toEqual({
+      status: 'ok',
+      text: 'Do 3 sets.',
+    });
+  });
+
+  it('puts the scope rule and the exact answer format in the prompt', async () => {
+    const { deps: d, calls } = deps();
+    await handleCoach(request(valid), d);
+    const system = calls.ask[0]!.system;
+    expect(system).toMatch(/gym training and diet, and nothing else/i);
+    expect(system).toContain('"onTopic": false');
+    expect(system).toMatch(/weather/i);
+    expect(system).toMatch(/never answer an off-topic question/i);
+  });
+});
+
+describe('readModelOutput', () => {
+  it('reads a well-formed answer, and nothing else', () => {
+    expect(readModelOutput(model(true, 'Hi'))).toEqual({ onTopic: true, reply: 'Hi' });
+    expect(readModelOutput(model(false, ''))).toEqual({ onTopic: false, reply: '' });
+    expect(readModelOutput('plain words')).toBeNull();
+    expect(readModelOutput('{"onTopic":true}')).toBeNull();
+    expect(readModelOutput('null')).toBeNull();
+  });
+});
+
 describe('the rules in the prompt', () => {
   it('say what the coach covers, what it refuses, and not to trust the chat', () => {
     expect(COACH_PROMPT).toMatch(/never diagnose/i);
     expect(COACH_PROMPT).toMatch(/doctor or physiotherapist/i);
     expect(COACH_PROMPT).toMatch(/no drugs/i);
+    expect(COACH_PROMPT).toMatch(/diet and nutrition/i);
+    expect(COACH_PROMPT).toMatch(/no crash diets/i);
     expect(COACH_PROMPT).toMatch(/never invent a weight/i);
     expect(COACH_PROMPT).toMatch(/untrusted/i);
     expect(COACH_PROMPT).toMatch(/they decide/i);

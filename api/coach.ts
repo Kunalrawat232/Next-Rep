@@ -1,6 +1,8 @@
 // The AI coach endpoint (see docs/architecture/api-contracts.md). Wires the real Supabase and Gemini clients
 // into the handler in ./_lib/coach.ts, where the rules and the tests are.
 import { GoogleGenAI } from '@google/genai';
+import { z } from 'zod';
+import { CoachModelOutputSchema } from '../src/domain/coach/schemas.js';
 import { handleCoach, type CoachDeps } from './_lib/coach.js';
 import { consumeLimit, verifyToken } from './_lib/supabase.js';
 
@@ -18,7 +20,9 @@ const deps: CoachDeps = {
       config: {
         systemInstruction: system,
         temperature: 0.6,
-        maxOutputTokens: 700,
+        maxOutputTokens: 800,
+        responseMimeType: 'application/json',
+        responseJsonSchema: z.toJSONSchema(CoachModelOutputSchema),
         abortSignal: signal,
       },
     });

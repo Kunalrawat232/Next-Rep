@@ -133,6 +133,19 @@ describe('the Coach screen', () => {
     },
   );
 
+  it('answers a question that is not about the gym or diet with the fixed refusal, and keeps both', async () => {
+    const coach = fakeCoach({ status: 'off_topic' });
+    const { user, store } = renderApp('/coach', { coach: coach.service });
+    await user.type(await box(), 'What is the weather today?');
+    await user.click(askButton());
+    const chat = await screen.findByRole('list', { name: 'Chat with the coach' });
+    expect(await within(chat).findByText(/I can't answer this question/i)).toBeInTheDocument();
+    expect(within(chat).getByText('What is the weather today?')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(await box()).toHaveValue('');
+    expect((await store.coachMessages()).map((m) => m.role)).toEqual(['user', 'coach']);
+  });
+
   it('sends once when Ask is tapped twice at once', async () => {
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { coach: coach.service });

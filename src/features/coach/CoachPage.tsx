@@ -19,6 +19,7 @@ const STARTERS = [
   'Should I deload this week?',
   'How much rest between heavy sets?',
   'How do I use my suggested weight?',
+  'What should I eat before a workout?',
 ];
 
 const NOTICE_KEY = 'next-rep-coach-notice';
@@ -117,7 +118,8 @@ export function CoachPage() {
       {messages.length === 0 && !chat.sending ? (
         <section aria-label="Ideas" className="flex flex-col gap-3">
           <p className="text-callout text-ink-muted">
-            Ask about technique, progress, rest or recovery. For example:
+            The coach only answers gym and diet questions: technique, workouts, progress, recovery
+            or what to eat. For example:
           </p>
           <div className="flex flex-wrap gap-2">
             {STARTERS.map((starter) => (

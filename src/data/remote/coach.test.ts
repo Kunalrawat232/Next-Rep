@@ -39,6 +39,14 @@ describe('the coach service', () => {
     });
   });
 
+  it('passes on that a question was off topic', async () => {
+    expect(await make((async () => answer({ status: 'off_topic' })) as never).ask(request)).toEqual(
+      {
+        status: 'off_topic',
+      },
+    );
+  });
+
   it.each([
     ['a server error', answer({ status: 'unavailable' }, 503)],
     ['an unauthorized answer', answer({ status: 'unauthorized' }, 401)],
