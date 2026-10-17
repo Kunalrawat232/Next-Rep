@@ -66,6 +66,16 @@ const ITEMS: Item[] = [
     ),
   },
   {
+    label: 'Coach',
+    to: '/coach',
+    icon: (
+      <Icon>
+        <path d="M4 5h16v11H10l-4 4v-4H4z" />
+        <path d="M8 9.5h8M8 12.5h5" />
+      </Icon>
+    ),
+  },
+  {
     label: 'Settings',
     to: '/settings',
     icon: (

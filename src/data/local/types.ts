@@ -129,6 +129,8 @@ export interface LogStore {
   coachMessages(): Promise<ChatMessage[]>;
   /** Adds a message to the chat, keeping only the newest 50. */
   addCoachMessage(message: Pick<ChatMessage, 'role' | 'text'>): Promise<ChatMessage>;
+  /** Removes one message (a question the coach could not answer, taken back so it can be sent again). */
+  removeCoachMessage(id: string): Promise<void>;
   /** Forgets the whole chat. */
   clearCoachMessages(): Promise<void>;
   /** Deletes everything the server already has, and keeps what is still unsynced. Returns how much remains. */

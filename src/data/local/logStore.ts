@@ -477,6 +477,10 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       return stored;
     },
 
+    async removeCoachMessage(id) {
+      await db.coachMessages.delete(id);
+    },
+
     async clearCoachMessages() {
       await db.coachMessages.clear();
     },

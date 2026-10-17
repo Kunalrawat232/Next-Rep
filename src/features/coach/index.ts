@@ -1,3 +1,4 @@
+export { CoachPage } from './CoachPage';
 export {
   CoachServiceProvider,
   useCoachService,
