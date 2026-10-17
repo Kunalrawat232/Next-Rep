@@ -109,7 +109,7 @@ describe('the weight field and its steppers', () => {
     expect(await weight()).toHaveValue(expected);
   });
 
-  it('steps a dumbbell by 2.5 kg', async () => {
+  it('steps a dumbbell by 2.5 Kg', async () => {
     const { user } = await openLog(DUMBBELL_CURL);
     await user.type(await weight(), '12.5');
     await user.click(screen.getByRole('button', { name: /increase weight/i }));
@@ -183,7 +183,7 @@ describe('saving', () => {
     await user.type(await weight(), '10');
     await user.click(logButton());
     const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: /without the 15 kg bar/i }));
+    await user.click(within(dialog).getByRole('button', { name: /without the 15 Kg bar/i }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/workout'));
     expect((await store.listSets(workout.id))[0]).toMatchObject({
       totalKg: 10,
@@ -194,7 +194,7 @@ describe('saving', () => {
     const [item] = await within(
       await screen.findByRole('region', { name: 'Barbell Bench Press' }),
     ).findAllByRole('listitem');
-    expect(item).toHaveTextContent('10 kg × 8');
+    expect(item).toHaveTextContent('10 Kg × 8');
     expect(item!.textContent).not.toMatch(/-\d|plates|bar \+/);
   });
 

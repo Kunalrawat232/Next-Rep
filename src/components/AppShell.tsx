@@ -1,4 +1,3 @@
-import { COACH_NAME } from '../domain/coach';
 import { useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useLiquidGlass } from '../lib/useGlassEffect';
@@ -67,7 +66,7 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    label: COACH_NAME,
+    label: 'Ai coach',
     to: '/coach',
     icon: (
       <Icon>

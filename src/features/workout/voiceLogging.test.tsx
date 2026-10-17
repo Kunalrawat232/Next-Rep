@@ -236,7 +236,7 @@ describe('voice logging on the workout page', () => {
       const { speak, user, store, workout } = await openWorkout({ withSet: true });
       await speak('undo');
       const card = await screen.findByRole('group', { name: 'Confirm undo' });
-      expect(card).toHaveTextContent(/60 kg × 8/);
+      expect(card).toHaveTextContent(/60 Kg × 8/);
       await user.click(within(card).getByRole('button', { name: 'Keep it' }));
       expect(await store.listSets(workout.id)).toHaveLength(1);
     });

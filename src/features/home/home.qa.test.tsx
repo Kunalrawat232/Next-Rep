@@ -92,20 +92,20 @@ describe('Home with odd workouts', () => {
       { daysAgo: 3, sets: [[60, 8]] },
       { daysAgo: 1, sets: [] },
     ]);
-    expect(await main().findByText('60 kg × 8 · 1 set')).toBeInTheDocument();
+    expect(await main().findByText('60 Kg × 8 · 1 set')).toBeInTheDocument();
   });
 
   // BUG: src/features/home/useHomeData.ts:31 only the 10 newest finished workouts are looked at, so 10 empty (started and ended at once) ones hide the last real workout.
   it('still finds the last workout with sets behind ten empty finished workouts', async () => {
     const empties: Seed[] = Array.from({ length: 10 }, (_, i) => ({ daysAgo: i + 1, sets: [] }));
     await openHome([{ daysAgo: 30, sets: [[60, 8]] }, ...empties]);
-    expect(await main().findByText('60 kg × 8 · 1 set', {}, { timeout: 1500 })).toBeInTheDocument();
+    expect(await main().findByText('60 Kg × 8 · 1 set', {}, { timeout: 1500 })).toBeInTheDocument();
   });
 
   it('names an exercise that is not in the catalog "Custom exercise" and explains why there is no suggestion', async () => {
     await openHome([{ daysAgo: 1, exerciseId: uuid(9001), sets: [[40, 10]] }]);
     expect(await main().findByText('Custom exercise')).toBeInTheDocument();
-    expect(main().getByText('40 kg × 10 · 1 set')).toBeInTheDocument();
+    expect(main().getByText('40 Kg × 10 · 1 set')).toBeInTheDocument();
     expect(
       main().getByText(/not in your list, so there is nothing to suggest/),
     ).toBeInTheDocument();
@@ -127,11 +127,11 @@ describe('Home with odd workouts', () => {
         ],
       },
     ]);
-    const list = (await main().findByText('60 kg × 8 · 1 set')).closest('ul')!;
+    const list = (await main().findByText('60 Kg × 8 · 1 set')).closest('ul')!;
     const items = within(list).getAllByRole('listitem');
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent('Barbell Bench Press');
-    expect(list).not.toHaveTextContent('30 kg × 3');
+    expect(list).not.toHaveTextContent('30 Kg × 3');
   });
 
   it('counts sets logged at the same instant, and picks the earlier one as the first exercise', async () => {
@@ -146,7 +146,7 @@ describe('Home with odd workouts', () => {
         ],
       },
     ]);
-    expect(await main().findByText('60 kg × 8 · 3 sets')).toBeInTheDocument();
+    expect(await main().findByText('60 Kg × 8 · 3 sets')).toBeInTheDocument();
   });
 
   it('suggests from the latest finished session when two workouts started at the same instant', async () => {
@@ -154,18 +154,18 @@ describe('Home with odd workouts', () => {
       { daysAgo: 1, sets: [[60, 8]] },
       { daysAgo: 1, sets: [[60, 8]] },
     ]);
-    expect(await main().findByText('62.5 kg × 8')).toBeInTheDocument();
+    expect(await main().findByText('62.5 Kg × 8')).toBeInTheDocument();
   });
 
   it('does not suggest from a pushed-up bodyweight exercise, and still lists it', async () => {
     await openHome([{ daysAgo: 1, exerciseId: PUSH_UP, sets: [[0, 20]] }]);
     expect(await main().findByText(/no weight to build on/)).toBeInTheDocument();
-    expect(main().getByText('0 kg × 20 · 1 set')).toBeInTheDocument();
+    expect(main().getByText('0 Kg × 20 · 1 set')).toBeInTheDocument();
   });
 
   it('shows pounds in the last-workout list and the suggestion for a pounds user without changing stored kg', async () => {
     const { seed } = await openHome([{ daysAgo: 1, sets: [[60, 8]] }], { unit: 'lb' });
-    expect(await main().findByText('132.3 lb × 8 · 1 set')).toBeInTheDocument();
+    expect(await main().findByText('132.3 Lb × 8 · 1 set')).toBeInTheDocument();
     const stored = await seed.store.allSets();
     expect(stored.map((x) => x.totalKg)).toEqual([60]);
   });
@@ -180,7 +180,7 @@ describe('Home with odd workouts', () => {
 
   it('gives each section a heading, and the page one h1', async () => {
     await openHome([{ daysAgo: 1, sets: [[60, 8]] }]);
-    await main().findByText('62.5 kg × 8');
+    await main().findByText('62.5 Kg × 8');
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { name: "Today's suggestion" })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Last workout' })).toBeInTheDocument();

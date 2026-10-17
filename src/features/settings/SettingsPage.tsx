@@ -29,7 +29,7 @@ export function SettingsPage() {
 
       <Section headingId="units-heading" title="Units">
         <p className="text-callout text-ink-muted">
-          Weights are shown and typed in this unit. They are always saved in kg.
+          Weights are shown and typed in this unit. They are always saved in Kg.
         </p>
         <div role="group" aria-label="Weight unit" className="flex gap-2">
           {(['kg', 'lb'] as const).map((choice) => (

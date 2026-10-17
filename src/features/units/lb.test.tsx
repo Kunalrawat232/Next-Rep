@@ -130,7 +130,7 @@ describe('every screen in lb shows no kg', () => {
     await openLb(path(), { past: history, open: [{ totalKg: fromDisplay(135, 'lb') }] });
     await screen.findAllByText(new RegExp(marker, 'i'));
     await new Promise((resolve) => setTimeout(resolve, 150));
-    const text = (document.body.textContent ?? '').replace('They are always saved in kg.', '');
+    const text = (document.body.textContent ?? '').replace('They are always saved in Kg.', '');
     expect(text).not.toMatch(kgWord);
   });
 
@@ -146,7 +146,7 @@ describe('every screen in lb shows no kg', () => {
     });
     await screen.findByRole('region', { name: 'Barbell Bench Press' });
     expect(document.body.textContent).not.toMatch(kgWord);
-    expect(document.body.textContent).toContain('135 lb × 8');
+    expect(document.body.textContent).toContain('135 Lb × 8');
   });
 
   it('the question about a weight below the bar', async () => {
@@ -155,32 +155,32 @@ describe('every screen in lb shows no kg', () => {
     await user.click(screen.getByRole('button', { name: 'Log set' }));
     const dialog = await screen.findByRole('dialog');
     expect(dialog.textContent).not.toMatch(kgWord);
-    expect(dialog.textContent).toContain('30 lb is less than the 45 lb bar');
+    expect(dialog.textContent).toContain('30 Lb is less than the 45 Lb bar');
   });
 
   it('still shows kg for a kg user', async () => {
     await openLb('/progress', { past: [[{ totalKg: 60 }]], unit: 'kg' });
-    expect(await screen.findByText(/Heaviest 60 kg/)).toBeInTheDocument();
+    expect(await screen.findByText(/Heaviest 60 Kg/)).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/\blb\b/);
   });
 });
 
 describe('logging a set in lb', () => {
-  it('shows 135 lb on a 45 lb bar as 45 lb on each side, and stores 61.23 kg', async () => {
+  it('shows 135 Lb on a 45 Lb bar as 45 Lb on each side, and stores 61.23 Kg', async () => {
     const { user, store, ids, router } = await openLb('/workout/log?exercise=' + BENCH, {
       open: [],
     });
     await user.type(await weight(), '135');
     const card = screen.getByRole('region', { name: 'Weight breakdown' });
-    expect(card).toHaveTextContent('45 lb each side × 2');
-    expect(card).toHaveTextContent('+ bar45 lb');
-    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('135 lb');
+    expect(card).toHaveTextContent('45 Lb each side × 2');
+    expect(card).toHaveTextContent('+ bar45 Lb');
+    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('135 Lb');
     await user.click(screen.getByRole('button', { name: 'Log set' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/workout'));
     const [set] = await store.listSets(ids[0]!);
     expect(set).toMatchObject({ totalKg: 61.23, barKg: BAR_45, source: 'tap' });
-    expect(await screen.findByText('135 lb × 8')).toBeInTheDocument();
-    expect(screen.getByText('45 lb bar + 45 lb each side')).toBeInTheDocument();
+    expect(await screen.findByText('135 Lb × 8')).toBeInTheDocument();
+    expect(screen.getByText('45 Lb bar + 45 Lb each side')).toBeInTheDocument();
   });
 
   it('stores a weight typed per side as the same kg as the same total', async () => {
@@ -194,7 +194,7 @@ describe('logging a set in lb', () => {
     const side = await openLb('/workout/log?exercise=' + BENCH, { open: [] });
     await side.user.click(await screen.findByRole('button', { name: 'Per side' }));
     await side.user.type(await weight(), '47.5');
-    expect(screen.getByRole('region', { name: 'Weight breakdown' })).toHaveTextContent('140 lb');
+    expect(screen.getByRole('region', { name: 'Weight breakdown' })).toHaveTextContent('140 Lb');
     await side.user.click(screen.getByRole('button', { name: 'Log set' }));
     await waitFor(() => expect(side.router.state.location.pathname).toBe('/workout'));
     const [viaSide] = await side.store.listSets(side.ids[0]!);
@@ -260,19 +260,19 @@ describe('logging a set in lb', () => {
     expect((await store.listSets(ids.at(-1)!))[0]!.totalKg).toBe(25);
   });
 
-  it('keeps 135.5 lb typed as 45.25 lb a side', async () => {
+  it('keeps 135.5 Lb typed as 45.25 Lb a side', async () => {
     const { user, router, store, ids } = await openLb('/workout/log?exercise=' + BENCH, {
       open: [],
     });
     await user.click(await screen.findByRole('button', { name: 'Per side' }));
     await user.type(await weight(), '45.25');
-    expect(screen.getByRole('region', { name: 'Weight breakdown' })).toHaveTextContent('135.5 lb');
+    expect(screen.getByRole('region', { name: 'Weight breakdown' })).toHaveTextContent('135.5 Lb');
     await user.click(screen.getByRole('button', { name: 'Log set' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/workout'));
     expect((await store.listSets(ids.at(-1)!))[0]!.totalKg).toBe(fromDisplay(135.5, 'lb'));
   });
 
-  it('steps by 5 lb for a total and 2.5 lb per side', async () => {
+  it('steps by 5 Lb for a total and 2.5 Lb per side', async () => {
     const { user } = await openLb('/workout/log?exercise=' + BENCH, { open: [] });
     await user.type(await weight(), '135');
     await user.click(screen.getByRole('button', { name: /increase weight/i }));
@@ -288,10 +288,10 @@ describe('logging a set in lb', () => {
   it('labels the field in lb', async () => {
     await openLb('/workout/log?exercise=' + BENCH, { open: [] });
     await weight();
-    expect(screen.getByText('lb', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getByText('Lb', { selector: 'span' })).toBeInTheDocument();
   });
 
-  it('warns about a weight that is not a whole 2.5 lb plate pair, and not about 135, 185 or 225', async () => {
+  it('warns about a weight that is not a whole 2.5 Lb plate pair, and not about 135, 185 or 225', async () => {
     const { user } = await openLb('/workout/log?exercise=' + BENCH, { open: [] });
     for (const total of ['135', '185', '225']) {
       await user.clear(await weight());
@@ -301,23 +301,23 @@ describe('logging a set in lb', () => {
     await user.clear(await weight());
     await user.type(await weight(), '137.5');
     expect(
-      await screen.findByText('46.3 lb per side is not a multiple of 2.5 lb. Check the plates.'),
+      await screen.findByText('46.3 Lb per side is not a multiple of 2.5 Lb. Check the plates.'),
     ).toBeInTheDocument();
   });
 });
 
 describe('the gym screen in lb', () => {
-  it('offers 45 and 35 lb presets for a new gym, and stores 45 lb as 20.41 kg', async () => {
+  it('offers 45 and 35 Lb presets for a new gym, and stores 45 Lb as 20.41 Kg', async () => {
     const { user, gyms } = await openLb('/gym', { unit: 'lb', gym: null });
     const group = await screen.findByRole('group', { name: 'Barbell presets' });
-    expect(group).toHaveTextContent('45 lb35 lb');
-    expect(await screen.findByLabelText('Barbell weight (lb)')).toHaveValue('45');
+    expect(group).toHaveTextContent('45 Lb35 Lb');
+    expect(await screen.findByLabelText('Barbell weight (Lb)')).toHaveValue('45');
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(gyms.service.save).toHaveBeenCalled());
     expect(gyms.service.save.mock.calls[0]![2]).toMatchObject({ barbellKg: 20.41 });
   });
 
-  it('shows a 15 kg bar as 33.1 lb, and saves the gym untouched with exactly 15 kg', async () => {
+  it('shows a 15 Kg bar as 33.1 Lb, and saves the gym untouched with exactly 15 Kg', async () => {
     const userId = 'gym-lb-user';
     const { user, gyms } = renderApp('/gym', {
       userId,
@@ -328,8 +328,8 @@ describe('the gym screen in lb', () => {
         bars: [{ id: 'ez', name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
       }),
     });
-    expect(await screen.findByLabelText('Barbell weight (lb)')).toHaveValue('33.1');
-    expect(screen.getByLabelText('EZ bar weight (lb)')).toHaveValue('16.5');
+    expect(await screen.findByLabelText('Barbell weight (Lb)')).toHaveValue('33.1');
+    expect(screen.getByLabelText('EZ bar weight (Lb)')).toHaveValue('16.5');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(gyms.service.save).toHaveBeenCalled());
     const input = gyms.service.save.mock.calls[0]![2];
@@ -339,23 +339,23 @@ describe('the gym screen in lb', () => {
 
   it('says what is wrong in lb', async () => {
     const { user } = await openLb('/gym', { unit: 'lb', gym: null });
-    const field = await screen.findByLabelText('Barbell weight (lb)');
+    const field = await screen.findByLabelText('Barbell weight (Lb)');
     await user.clear(field);
     await user.type(field, '300');
     await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(await screen.findByText('Use a weight between 0 and 220.4 lb.')).toBeInTheDocument();
+    expect(await screen.findByText('Use a weight between 0 and 220.4 Lb.')).toBeInTheDocument();
   });
 
   it('lists the bars in lb', async () => {
     await openLb('/workout', { unit: 'lb' });
-    expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
+    expect(await screen.findByText('Barbell 45 Lb · EZ bar 25 Lb')).toBeInTheDocument();
   });
 });
 
 describe('Settings in lb', () => {
   it('shows your bars in lb', async () => {
     await openLb('/settings', { unit: 'lb' });
-    expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
+    expect(await screen.findByText('Barbell 45 Lb · EZ bar 25 Lb')).toBeInTheDocument();
   });
 
   it('switches every screen at once, without a reload', async () => {
@@ -367,14 +367,14 @@ describe('Settings in lb', () => {
     expect(await screen.findByText(/1 set/)).toBeInTheDocument();
     await router.navigate('/settings');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    await user.click(within(group).getByRole('button', { name: 'lb' }));
-    expect(await screen.findByText('Barbell 45 lb · EZ bar 25 lb')).toBeInTheDocument();
+    await user.click(within(group).getByRole('button', { name: 'Lb' }));
+    expect(await screen.findByText('Barbell 45 Lb · EZ bar 25 Lb')).toBeInTheDocument();
     await user.click(
       within(await screen.findByRole('group', { name: 'Weight unit' })).getByRole('button', {
-        name: 'kg',
+        name: 'Kg',
       }),
     );
-    expect(await screen.findByText('Barbell 20.41 kg · EZ bar 11.34 kg')).toBeInTheDocument();
+    expect(await screen.findByText('Barbell 20.41 Kg · EZ bar 11.34 Kg')).toBeInTheDocument();
   });
 });
 
@@ -387,9 +387,9 @@ describe('records are the same in both units', () => {
       ],
     });
     const records = await screen.findByRole('region', { name: 'Records' });
-    expect(records).toHaveTextContent('Heaviest: 145 lb × 5');
-    expect(records).toHaveTextContent('Most reps at 135 lb: 8');
+    expect(records).toHaveTextContent('Heaviest: 145 Lb × 5');
+    expect(records).toHaveTextContent('Most reps at 135 Lb: 8');
     const table = screen.getByRole('table');
-    expect(within(table).getAllByRole('row')[1]).toHaveTextContent('145 lb × 5');
+    expect(within(table).getAllByRole('row')[1]).toHaveTextContent('145 Lb × 5');
   });
 });

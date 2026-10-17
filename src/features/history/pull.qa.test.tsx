@@ -43,7 +43,7 @@ describe('QA data that arrives from the server while a screen is open', () => {
     server.setOffline(false);
     act(() => void window.dispatchEvent(new Event('online')));
     const bench = await screen.findByRole('region', { name: 'Barbell Bench Press' });
-    expect(bench).toHaveTextContent('60 kg × 8');
+    expect(bench).toHaveTextContent('60 Kg × 8');
     expect(screen.queryByRole('heading', { name: 'Workout not found' })).not.toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe('QA data that arrives from the server while a screen is open', () => {
     const table = await screen.findByRole('table', { name: 'Top set per session' });
     await waitFor(() => expect(within(table).getAllByRole('row')).toHaveLength(4));
     const body = within(table).getAllByRole('row').slice(1);
-    expect(body[0]).toHaveTextContent('62.5 kg × 8');
+    expect(body[0]).toHaveTextContent('62.5 Kg × 8');
     await waitFor(() => expect(within(body[0]!).getByRole('img')).toHaveAccessibleName(/heaviest/));
     expect(within(body[1]!).queryByRole('img')).not.toBeInTheDocument();
     expect(within(body[2]!).queryByRole('img')).not.toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('QA a bad row from the server', () => {
   it.each([
     ['reps of 0', { reps: 0 }],
     ['reps of 101', { reps: 101 }],
-    ['a total of 500.01 kg', { totalKg: 500.01, barKg: null, perSideKg: null }],
+    ['a total of 500.01 Kg', { totalKg: 500.01, barKg: null, perSideKg: null }],
     ['a negative weight', { totalKg: -5, barKg: null, perSideKg: null }],
     ['an unknown input mode', { inputMode: 'voice' as never }],
   ])('keeps the good history and never shows the bad set when a set has %s', async (_name, bad) => {

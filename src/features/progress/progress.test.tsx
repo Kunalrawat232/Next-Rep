@@ -86,9 +86,9 @@ describe('the progress list', () => {
     const items = await within(await screen.findByRole('main')).findAllByRole('listitem');
     expect(items).toHaveLength(2);
     expect(items[0]).toHaveTextContent('Dumbbell Curl');
-    expect(items[0]).toHaveTextContent('Heaviest 12.5 kg × 10');
+    expect(items[0]).toHaveTextContent('Heaviest 12.5 Kg × 10');
     expect(items[1]).toHaveTextContent('Barbell Bench Press');
-    expect(items[1]).toHaveTextContent('Heaviest 70 kg × 3');
+    expect(items[1]).toHaveTextContent('Heaviest 70 Kg × 3');
   });
 
   it('opens an exercise, and is reached from the navigation', async () => {
@@ -121,22 +121,22 @@ describe('one exercise', () => {
     const table = await screen.findByRole('table', { name: 'Top set per session' });
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(3);
-    expect(rows[0]).toHaveTextContent('65 kg × 5');
+    expect(rows[0]).toHaveTextContent('65 Kg × 5');
     expect(within(rows[0]!).getByRole('img', { name: /heaviest weight/i })).toBeInTheDocument();
-    expect(rows[1]).toHaveTextContent('60 kg × 10');
+    expect(rows[1]).toHaveTextContent('60 Kg × 10');
     expect(
       within(rows[1]!).getByRole('img', { name: /most reps at this weight/i }),
     ).toBeInTheDocument();
-    expect(rows[2]).toHaveTextContent('60 kg × 8');
+    expect(rows[2]).toHaveTextContent('60 Kg × 8');
     expect(within(rows[2]!).queryByRole('img')).not.toBeInTheDocument();
   });
 
   it('lists the records: heaviest, and most reps at each weight', async () => {
     await openWith(history, `/progress/${BENCH}`);
     const records = await screen.findByRole('region', { name: 'Records' });
-    expect(records).toHaveTextContent('Heaviest: 65 kg × 5');
-    expect(records).toHaveTextContent('Most reps at 60 kg: 10');
-    expect(records).toHaveTextContent('Most reps at 55 kg: 12');
+    expect(records).toHaveTextContent('Heaviest: 65 Kg × 5');
+    expect(records).toHaveTextContent('Most reps at 60 Kg: 10');
+    expect(records).toHaveTextContent('Most reps at 55 Kg: 12');
   });
 
   it('draws the chart for sighted users only, without errors', async () => {
@@ -197,7 +197,7 @@ describe('record badges on the workout', () => {
     const list = await screen.findByRole('region', { name: 'Barbell Bench Press' });
     expect(await within(list).findByRole('img', { name: /heaviest weight/i })).toBeInTheDocument();
     expect(
-      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 kg × 5/),
+      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 Kg × 5/),
     ).toBeInTheDocument();
   });
 

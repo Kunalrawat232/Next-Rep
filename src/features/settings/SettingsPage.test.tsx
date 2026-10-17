@@ -74,7 +74,7 @@ describe('the weight unit', () => {
 
   it('says that weights are saved in kg', async () => {
     renderApp('/settings');
-    expect(await section('Units')).toHaveTextContent('always saved in kg');
+    expect(await section('Units')).toHaveTextContent('always saved in Kg');
   });
 });
 
@@ -156,7 +156,7 @@ describe('your bars', () => {
   it('shows your bars with a way to change them', async () => {
     renderApp('/settings');
     const gym = await section('Your bars');
-    expect(await within(gym).findByText('Barbell 15 kg · EZ bar 7.5 kg')).toBeInTheDocument();
+    expect(await within(gym).findByText('Barbell 15 Kg · EZ bar 7.5 Kg')).toBeInTheDocument();
     expect(within(gym).getByRole('link', { name: 'Change bars' })).toHaveAttribute('href', '/gym');
   });
 
@@ -175,17 +175,17 @@ describe('your bars', () => {
     const gym = await section('Your bars');
     expect(await within(gym).findByRole('alert')).toHaveTextContent('Could not load your gym');
     await user.click(within(gym).getByRole('button', { name: 'Try again' }));
-    expect(await within(gym).findByText(/Barbell 15 kg/)).toBeInTheDocument();
+    expect(await within(gym).findByText(/Barbell 15 Kg/)).toBeInTheDocument();
   });
 
   it('shows the saved gym when there is no connection', async () => {
     const first = renderApp('/settings', { userId: 'gym-cache-user' });
-    await within(await section('Your bars')).findByText(/Barbell 15 kg/);
+    await within(await section('Your bars')).findByText(/Barbell 15 Kg/);
     await waitFor(async () => expect(await first.store.cachedGym()).not.toBeNull());
     first.unmount();
     renderApp('/settings', { userId: 'gym-cache-user', gymsFail: 'offline' });
     expect(
-      await within(await section('Your bars')).findByText(/Barbell 15 kg/),
+      await within(await section('Your bars')).findByText(/Barbell 15 Kg/),
     ).toBeInTheDocument();
   });
 });

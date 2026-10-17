@@ -163,14 +163,14 @@ describe('QA history detail for every kind of weight', () => {
     const detail = await screen.findByRole('heading', { level: 1 });
     expect(detail).toBeInTheDocument();
     const curl = await screen.findByRole('region', { name: 'Dumbbell Curl' });
-    expect(within(curl).getByText('22.5 kg × 10')).toBeInTheDocument();
+    expect(within(curl).getByText('22.5 Kg × 10')).toBeInTheDocument();
     expect(curl).not.toHaveTextContent('bar');
     const pushUp = screen.getByRole('region', { name: 'Push-Up' });
-    expect(within(pushUp).getByText('0 kg × 12')).toBeInTheDocument();
-    expect(within(pushUp).getByText('10 kg × 6')).toBeInTheDocument();
+    expect(within(pushUp).getByText('0 Kg × 12')).toBeInTheDocument();
+    expect(within(pushUp).getByText('10 Kg × 6')).toBeInTheDocument();
     expect(pushUp).not.toHaveTextContent('bar');
     const bench = screen.getByRole('region', { name: 'Barbell Bench Press' });
-    expect(bench).toHaveTextContent('15 kg bar + 22.5 kg each side');
+    expect(bench).toHaveTextContent('15 Kg bar + 22.5 Kg each side');
     expect(ids).toHaveLength(1);
   });
 
@@ -178,16 +178,16 @@ describe('QA history detail for every kind of weight', () => {
     const { ids, db, user } = await openWith(seeds, '/history', 'lb');
     await user.click(within((await listRows())[0]!).getByRole('link'));
     const curl = await screen.findByRole('region', { name: 'Dumbbell Curl' });
-    expect(within(curl).getByText('49.6 lb × 10')).toBeInTheDocument();
+    expect(within(curl).getByText('49.6 Lb × 10')).toBeInTheDocument();
     const bench = screen.getByRole('region', { name: 'Barbell Bench Press' });
-    expect(bench).toHaveTextContent('132.3 lb × 8');
-    expect(bench).toHaveTextContent('33.1 lb bar');
+    expect(bench).toHaveTextContent('132.3 Lb × 8');
+    expect(bench).toHaveTextContent('33.1 Lb bar');
     const rows = await db.sets.toArray();
     expect(rows.map((r) => r.totalKg).sort((a, b) => a - b)).toEqual([0, 10, 22.5, 60]);
     expect(ids).toHaveLength(1);
   });
 
-  it('gives a bodyweight rep record and no weight record for 0 kg, across two workouts', async () => {
+  it('gives a bodyweight rep record and no weight record for 0 Kg, across two workouts', async () => {
     const { user } = await openWith(
       [
         {
@@ -224,7 +224,7 @@ describe('QA history detail for every kind of weight', () => {
 
 describe('QA kg to lb to kg changes nothing in the records', () => {
   it.each(['kg', 'lb'] as const)(
-    'in %s, a 60 kg set logged twice is not a record, while a heavier one is (positive control)',
+    'in %s, a 60 Kg set logged twice is not a record, while a heavier one is (positive control)',
     async (unit) => {
       const { user } = await openWith(
         [
@@ -241,7 +241,7 @@ describe('QA kg to lb to kg changes nothing in the records', () => {
       await user.click(screen.getByRole('link', { name: 'Back' }));
       await user.click(within((await listRows())[1]!).getByRole('link'));
       const same = await screen.findByRole('region', { name: 'Barbell Bench Press' });
-      expect(same).toHaveTextContent(unit === 'kg' ? '60 kg × 8' : '132.3 lb × 8');
+      expect(same).toHaveTextContent(unit === 'kg' ? '60 Kg × 8' : '132.3 Lb × 8');
       // Marks are read from the device after the first paint: give them time to show up.
       await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
       expect(within(same).queryAllByRole('img')).toHaveLength(0);

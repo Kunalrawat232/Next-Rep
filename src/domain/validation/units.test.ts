@@ -19,13 +19,13 @@ const codes = (r: ReturnType<typeof validateSet>) => r.issues.map((i) => i.code)
 
 describe('plate sizes in lb', () => {
   it.each([45, 95, 135, 185, 225, 275, 315, 405])(
-    'does not warn about %s lb on a 45 lb bar',
+    'does not warn about %s lb on a 45 Lb bar',
     (total) => {
       expect(validateSet(inLb(total), ctx).status).toBe('ok');
     },
   );
 
-  it.each([137.5, 142.5, 187.5])('warns about %s lb: not a whole 2.5 lb plate pair', (total) => {
+  it.each([137.5, 142.5, 187.5])('warns about %s lb: not a whole 2.5 Lb plate pair', (total) => {
     const r = validateSet(inLb(total), ctx);
     expect(r.status).toBe('warn');
     expect(codes(r)).toContain('PLATE_INCREMENT');
@@ -34,26 +34,26 @@ describe('plate sizes in lb', () => {
   it('says it in lb', () => {
     const r = validateSet(inLb(137.5), ctx);
     expect(r.issues[0]?.message).toBe(
-      '46.3 lb per side is not a multiple of 2.5 lb. Check the plates.',
+      '46.3 Lb per side is not a multiple of 2.5 Lb. Check the plates.',
     );
   });
 
-  it('accepts every total in 5 lb steps from the bar up to 800 lb on a 45 lb bar (property)', () => {
+  it('accepts every total in 5 Lb steps from the bar up to 800 Lb on a 45 Lb bar (property)', () => {
     for (let total = 45; total <= 800; total += 5)
-      expect(codes(validateSet(inLb(total), ctx)), `${total} lb`).not.toContain('PLATE_INCREMENT');
+      expect(codes(validateSet(inLb(total), ctx)), `${total} Lb`).not.toContain('PLATE_INCREMENT');
   });
 
-  it('accepts every weight per side in 2.5 lb steps, typed per side (property)', () => {
+  it('accepts every weight per side in 2.5 Lb steps, typed per side (property)', () => {
     for (let side = 0; side <= 350; side += 2.5) {
       const r = validateSet(
         inLb(side, { weight: { value: fromDisplay(side, 'lb'), unit: 'kg', mode: 'per_side' } }),
         ctx,
       );
-      expect(codes(r), `${side} lb a side`).not.toContain('PLATE_INCREMENT');
+      expect(codes(r), `${side} Lb a side`).not.toContain('PLATE_INCREMENT');
     }
   });
 
-  it('keeps 1.25 kg per side in kg', () => {
+  it('keeps 1.25 Kg per side in kg', () => {
     const kg = (value: number): SetCandidate => ({
       equipment: 'barbell',
       weight: { value, unit: 'kg', mode: 'total' },
@@ -78,17 +78,17 @@ describe('messages in the unit shown', () => {
     expect(r.status).toBe('ask');
     if (r.status !== 'ask') return;
     expect(r.issues[0]?.message).toBe(
-      '30 lb is less than the 45 lb bar. Is that the total or per side?',
+      '30 Lb is less than the 45 Lb bar. Is that the total or per side?',
     );
     expect(r.options.map((o) => o.label)).toEqual([
-      '30 lb per side (105 lb total)',
-      '30 lb total, without the 45 lb bar',
+      '30 Lb per side (105 Lb total)',
+      '30 Lb total, without the 45 Lb bar',
     ]);
   });
 
   it('writes a big jump in lb', () => {
     const r = validateSet(inLb(315), { ...ctx, lastTotalKg: fromDisplay(135, 'lb') });
-    expect(r.issues[0]?.message).toBe('315 lb is a big change from last time (135 lb).');
+    expect(r.issues[0]?.message).toBe('315 Lb is a big change from last time (135 Lb).');
   });
 
   it('uses the unit of the typed weight when no display unit is given', () => {
@@ -110,7 +110,7 @@ describe('messages in the unit shown', () => {
       },
       { lastTotalKg: fromDisplay(135, 'lb') },
     );
-    expect(big.issues[0]?.message).toContain('315 lb');
+    expect(big.issues[0]?.message).toContain('315 Lb');
   });
 
   it('writes the limits in lb', () => {
@@ -125,7 +125,7 @@ describe('messages in the unit shown', () => {
       ctx,
     );
     expect(r.status).toBe('reject');
-    expect(r.issues[0]?.message).toBe('Total weight must be at most 1102.3 lb.');
+    expect(r.issues[0]?.message).toBe('Total weight must be at most 1102.3 Lb.');
     const bar = validateSet(
       {
         equipment: 'barbell',
@@ -136,7 +136,7 @@ describe('messages in the unit shown', () => {
       },
       ctx,
     );
-    expect(bar.issues[0]?.message).toBe('Bar weight must be between 0 and 220.4 lb.');
+    expect(bar.issues[0]?.message).toBe('Bar weight must be between 0 and 220.4 Lb.');
   });
 
   it('is unchanged in kg', () => {
@@ -151,7 +151,7 @@ describe('messages in the unit shown', () => {
       { displayUnit: 'kg' },
     );
     expect(r.issues[0]?.message).toBe(
-      '10 kg is less than the 20 kg bar. Is that the total or per side?',
+      '10 Kg is less than the 20 Kg bar. Is that the total or per side?',
     );
   });
 });

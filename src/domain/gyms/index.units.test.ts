@@ -9,7 +9,7 @@ const form = (over: Partial<GymForm> = {}): GymForm => ({
 });
 
 describe('a gym form typed in lb', () => {
-  it('stores a 45 lb barbell as 20.41 kg', () => {
+  it('stores a 45 Lb barbell as 20.41 Kg', () => {
     const r = validateGymForm(form(), 'lb');
     expect(r.ok && r.value.barbellKg).toBe(20.41);
   });
@@ -23,10 +23,10 @@ describe('a gym form typed in lb', () => {
   });
 
   it.each([
-    ['', 'Enter a weight in lb.'],
+    ['', 'Enter a weight in Lb.'],
     ['abc', 'Use numbers only, for example 7.5.'],
     ['1,000', 'Use numbers only, for example 7.5.'],
-    ['221', 'Use a weight between 0 and 220.4 lb.'],
+    ['221', 'Use a weight between 0 and 220.4 Lb.'],
     ['-1', 'Use numbers only, for example 7.5.'],
   ])('refuses %j for the barbell, in lb', (text, message) => {
     const r = validateGymForm(form({ barbellKg: text }), 'lb');
@@ -65,7 +65,7 @@ describe('a gym form typed in lb', () => {
 
   it('says the limit in kg for kg', () => {
     const r = validateGymForm(form({ barbellKg: '101' }), 'kg');
-    expect(!r.ok && r.errors.barbellKg).toBe('Use a weight between 0 and 100 kg.');
+    expect(!r.ok && r.errors.barbellKg).toBe('Use a weight between 0 and 100 Kg.');
   });
 });
 
@@ -77,7 +77,7 @@ describe('summarizing the bars', () => {
   };
 
   it('writes them in the unit', () => {
-    expect(summarizeBars(gym, 'lb')).toBe('Barbell 45 lb · EZ bar 25 lb');
-    expect(summarizeBars(gym, 'kg')).toBe('Barbell 20.41 kg · EZ bar 11.34 kg');
+    expect(summarizeBars(gym, 'lb')).toBe('Barbell 45 Lb · EZ bar 25 Lb');
+    expect(summarizeBars(gym, 'kg')).toBe('Barbell 20.41 Kg · EZ bar 11.34 Kg');
   });
 });

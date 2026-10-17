@@ -17,7 +17,7 @@ import {
   type GymFormErrors,
   type GymInput,
 } from '../../domain/gyms';
-import { formatWeight } from '../../domain/units';
+import { formatWeight, unitLabel } from '../../domain/units';
 import type { Unit } from '../../domain/schemas';
 import { useAuth } from '../auth';
 import { useUnit } from '../settings/UnitProvider';
@@ -197,7 +197,7 @@ function GymForm({ unit, service, userId, existing }: FormProps) {
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <TextField
-            label={`Barbell weight (${unit})`}
+            label={`Barbell weight (${unitLabel(unit)})`}
             inputMode="decimal"
             value={barbellKg}
             onChange={(e) => {
@@ -209,7 +209,7 @@ function GymForm({ unit, service, userId, existing }: FormProps) {
             hint={
               existing
                 ? undefined
-                : `Not sure? Most gyms use a ${BARBELL_PRESETS[unit][0]} ${unit} barbell.`
+                : `Not sure? Most gyms use a ${BARBELL_PRESETS[unit][0]} ${unitLabel(unit)} barbell.`
             }
           />
           <div role="group" aria-label="Barbell presets" className="flex gap-2">
@@ -220,7 +220,7 @@ function GymForm({ unit, service, userId, existing }: FormProps) {
                 disabled={pending}
                 onClick={() => setBarbellKg(preset)}
               >
-                {preset} {unit}
+                {preset} {unitLabel(unit)}
               </Chip>
             ))}
           </div>
@@ -238,7 +238,7 @@ function GymForm({ unit, service, userId, existing }: FormProps) {
               <li key={bar.id} className={cardClasses('flex items-end gap-2')}>
                 <div className="flex-1">
                   <TextField
-                    label={`${bar.name} weight (${unit})`}
+                    label={`${bar.name} weight (${unitLabel(unit)})`}
                     inputMode="decimal"
                     value={bar.weightKg}
                     onChange={(e) => {
@@ -299,7 +299,7 @@ function GymForm({ unit, service, userId, existing }: FormProps) {
               error={draftErrors.name}
             />
             <TextField
-              label={`Bar weight (${unit})`}
+              label={`Bar weight (${unitLabel(unit)})`}
               inputMode="decimal"
               value={draftWeight}
               onChange={(e) => {

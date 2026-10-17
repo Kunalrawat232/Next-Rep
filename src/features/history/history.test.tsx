@@ -192,10 +192,10 @@ describe('a past workout', () => {
     const bench = screen.getByRole('region', { name: 'Barbell Bench Press' });
     const rows = within(bench).getAllByRole('listitem');
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveTextContent('60 kg × 8');
-    expect(rows[1]).toHaveTextContent('62.5 kg × 6');
-    expect(rows[0]).toHaveTextContent('15 kg bar + 22.5 kg each side');
-    expect(screen.getByRole('region', { name: 'Dumbbell Curl' })).toHaveTextContent('12.5 kg × 10');
+    expect(rows[0]).toHaveTextContent('60 Kg × 8');
+    expect(rows[1]).toHaveTextContent('62.5 Kg × 6');
+    expect(rows[0]).toHaveTextContent('15 Kg bar + 22.5 Kg each side');
+    expect(screen.getByRole('region', { name: 'Dumbbell Curl' })).toHaveTextContent('12.5 Kg × 10');
     expect(ids).toHaveLength(1);
   });
 

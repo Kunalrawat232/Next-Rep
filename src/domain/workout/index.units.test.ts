@@ -83,24 +83,24 @@ describe('the weight on each side', () => {
 });
 
 describe('how a weight is made up, in lb', () => {
-  it('shows a 225 lb squat as 90 lb on each side of a 45 lb bar', () => {
+  it('shows a 225 Lb squat as 90 Lb on each side of a 45 Lb bar', () => {
     const b = breakdownFor(
       { totalKg: fromDisplay(225, 'lb'), barKg: BAR_45_LB, perSideKg: null },
       'lb',
     );
-    expect(b.total).toBe('225 lb');
+    expect(b.total).toBe('225 Lb');
     expect(b.lines).toEqual([
-      { label: '90 lb each side × 2', value: '180 lb' },
-      { label: '+ bar', value: '45 lb' },
+      { label: '90 Lb each side × 2', value: '180 Lb' },
+      { label: '+ bar', value: '45 Lb' },
     ]);
   });
 
   it('says the same thing as kg for kg', () => {
     expect(breakdownFor({ totalKg: 60, barKg: 20, perSideKg: 20 }, 'kg')).toEqual({
-      total: '60 kg',
+      total: '60 Kg',
       lines: [
-        { label: '20 kg each side × 2', value: '40 kg' },
-        { label: '+ bar', value: '20 kg' },
+        { label: '20 Kg each side × 2', value: '40 Kg' },
+        { label: '+ bar', value: '20 Kg' },
       ],
     });
   });
@@ -110,21 +110,21 @@ describe('how a weight is made up, in lb', () => {
       breakdownFor({ totalKg: fromDisplay(25, 'lb'), barKg: null, perSideKg: null }, 'lb'),
     ).toEqual({
       lines: [],
-      total: '25 lb',
+      total: '25 Lb',
     });
   });
 });
 
 describe('a logged set, in lb', () => {
-  it('reads "135 lb × 8" and "45 lb bar + 45 lb each side"', () => {
+  it('reads "135 Lb × 8" and "45 Lb bar + 45 Lb each side"', () => {
     expect(
       setSummary(
         { totalKg: fromDisplay(135, 'lb'), barKg: BAR_45_LB, perSideKg: null, reps: 8 },
         'lb',
       ),
     ).toEqual({
-      headline: '135 lb × 8',
-      detail: '45 lb bar + 45 lb each side',
+      headline: '135 Lb × 8',
+      detail: '45 Lb bar + 45 Lb each side',
     });
   });
 
@@ -132,7 +132,7 @@ describe('a logged set, in lb', () => {
     expect(
       setSummary({ totalKg: fromDisplay(50, 'lb'), barKg: null, perSideKg: null, reps: 10 }, 'lb'),
     ).toEqual({
-      headline: '50 lb × 10',
+      headline: '50 Lb × 10',
       detail: null,
     });
   });
@@ -206,7 +206,7 @@ describe('what the validator is given', () => {
     expect(BAR_45_LB + 2 * kgAs(47.5, 'lb')).not.toBe(fromDisplay(140, 'lb'));
   });
 
-  it('agrees for every bar and every per-side weight in 2.5 lb steps (property)', () => {
+  it('agrees for every bar and every per-side weight in 2.5 Lb steps (property)', () => {
     for (const bar of [35, 45, 25, 55]) {
       for (let side = 0; side <= 450; side += 2.5) {
         const barKg = fromDisplay(bar, 'lb');
@@ -223,7 +223,7 @@ describe('what the validator is given', () => {
     }
   });
 
-  it('keeps two decimals typed per side: 45.25 lb a side on a 45 lb bar is 135.5 lb', () => {
+  it('keeps two decimals typed per side: 45.25 Lb a side on a 45 Lb bar is 135.5 Lb', () => {
     const r = weightForValidation(
       { mode: 'per_side', valueKg: kgAs(45.25, 'lb'), valueShown: 45.25, barKg: BAR_45_LB },
       'lb',
@@ -231,7 +231,7 @@ describe('what the validator is given', () => {
     expect(r.kg).toBe(fromDisplay(135.5, 'lb'));
   });
 
-  it('is the stored total when nothing was changed, however it was entered (lb)', () => {
+  it('is the stored total when nothing was changed, however it was entered (Lb)', () => {
     // 60 kg on a 20 kg bar, entered per side, shown as 44.1 lb a side: 132.3 lb would be 60.01 kg.
     const r = weightForValidation(
       {
@@ -303,7 +303,7 @@ describe('switching between a total and a weight per side', () => {
     [185, 'total', 70],
     [45, 'total', 0],
   ] as const)(
-    'turns a total of %s lb (%s) into %s lb a side on a 45 lb bar',
+    'turns a total of %s lb (%s) into %s lb a side on a 45 Lb bar',
     (value, from, side) => {
       expect(convertEntry(value, from, BAR_45_LB, 'lb')).toBe(side);
     },

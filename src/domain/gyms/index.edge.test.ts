@@ -64,7 +64,7 @@ describe('validateGymForm: odd numeric input', () => {
     ['negative', '-5'],
     ['explicit plus', '+5'],
     ['unit suffix', '20kg'],
-    ['unit with space', '20 kg'],
+    ['unit with space', '20 Kg'],
     ['two decimal points', '7.5.1'],
     ['two commas', '7,5,1'],
     ['dot and comma', '7.5,1'],
@@ -94,7 +94,7 @@ describe('validateGymForm: odd numeric input', () => {
     expect(barbellOutcome('15.' + '0'.repeat(10000))).toBe(15);
   });
 
-  it('refuses a thousands separator instead of reading it as a decimal point (1,000 is not 1 kg)', () => {
+  it('refuses a thousands separator instead of reading it as a decimal point (1,000 is not 1 Kg)', () => {
     // "1,000" is 1000 in en-IN / en-GB. Silently storing 1 kg is a wrong number reaching storage.
     expect(barbellOutcome('1,000')).toEqual(expect.any(String));
   });
@@ -186,7 +186,7 @@ describe('validateGymForm: many bars and shape', () => {
       ok: false,
       errors: {
         barbellKg: 'Use numbers only, for example 7.5.',
-        bars: { 0: { name: 'Give the bar a name.', weightKg: 'Enter a weight in kg.' } },
+        bars: { 0: { name: 'Give the bar a name.', weightKg: 'Enter a weight in Kg.' } },
       },
     });
   });
@@ -269,7 +269,7 @@ describe('summarizeBars', () => {
         { id: 'c', name: 'Safety', weightKg: 0.1 + 0.2, kind: 'other' },
       ],
     });
-    expect(summarizeBars(g)).toBe('Barbell 20 kg · EZ bar 7.5 kg · Trap 25 kg · Safety 0.3 kg');
+    expect(summarizeBars(g)).toBe('Barbell 20 Kg · EZ bar 7.5 Kg · Trap 25 Kg · Safety 0.3 Kg');
   });
 
   it('handles 100 bars without dropping any', () => {
@@ -284,7 +284,7 @@ describe('summarizeBars', () => {
 
   it('prints bar names as given, including markup and a separator dot', () => {
     const g = gym({ bars: [{ id: 'a', name: '<i>x</i> · y', weightKg: 1, kind: 'other' }] });
-    expect(summarizeBars(g)).toBe('Barbell 15 kg · <i>x</i> · y 1 kg');
+    expect(summarizeBars(g)).toBe('Barbell 15 Kg · <i>x</i> · y 1 Kg');
   });
 });
 

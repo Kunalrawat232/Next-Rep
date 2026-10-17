@@ -68,13 +68,13 @@ async function openWith(seeds: WorkoutSeed[], path: string, beforeRender?: () =>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('bodyweight (0 kg) exercise', () => {
+describe('bodyweight (0 Kg) exercise', () => {
   const pushUps: WorkoutSeed[] = [
     { daysAgo: 3, sets: [{ exerciseId: PUSH_UP, totalKg: 0, reps: 10 }] },
     { daysAgo: 1, sets: [{ exerciseId: PUSH_UP, totalKg: 0, reps: 12 }] },
   ];
 
-  it('claims no heaviest weight on the exercise page (a PR is never at 0 kg)', async () => {
+  it('claims no heaviest weight on the exercise page (a PR is never at 0 Kg)', async () => {
     await openWith(pushUps, `/progress/${PUSH_UP}`);
     const records = await screen.findByRole('region', { name: 'Records' });
     expect(
@@ -132,7 +132,7 @@ describe('what the screens do with odd data', () => {
       .getAllByRole('row')
       .slice(1);
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveTextContent('22.5 kg × 5');
+    expect(rows[0]).toHaveTextContent('22.5 Kg × 5');
   });
 
   it('still charts sets whose workout is gone, without crashing', async () => {
@@ -153,7 +153,7 @@ describe('what the screens do with odd data', () => {
       .slice(1);
     expect(rows).toHaveLength(2);
     expect(await screen.findByRole('region', { name: 'Records' })).toHaveTextContent(
-      'Heaviest: 65 kg × 5',
+      'Heaviest: 65 Kg × 5',
     );
   });
 
@@ -166,7 +166,7 @@ describe('what the screens do with odd data', () => {
       `/progress/${DUMBBELL_CURL}`,
     );
     const records = await screen.findByRole('region', { name: 'Records' });
-    expect(records).toHaveTextContent('Most reps at 0.3 kg: 100');
+    expect(records).toHaveTextContent('Most reps at 0.3 Kg: 100');
     expect(within(records).getAllByRole('listitem')).toHaveLength(1);
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(
@@ -248,13 +248,13 @@ describe('moving between exercise pages', () => {
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Dumbbell Curl' })).toBeInTheDocument(),
     );
-    await screen.findByText('15 kg × 8');
+    await screen.findByText('15 Kg × 8');
     observer.disconnect();
-    expect(seen.some((text) => text.includes('Dumbbell Curl') && text.includes('70 kg × 3'))).toBe(
+    expect(seen.some((text) => text.includes('Dumbbell Curl') && text.includes('70 Kg × 3'))).toBe(
       false,
     );
     expect(screen.getByRole('region', { name: 'Records' })).toHaveTextContent(
-      'Heaviest: 15 kg × 8',
+      'Heaviest: 15 Kg × 8',
     );
   });
 
@@ -272,8 +272,8 @@ describe('moving between exercise pages', () => {
     await act(async () => {
       await router.navigate(`/progress/${BENCH}`);
     });
-    expect(await screen.findByText('70 kg × 3')).toBeInTheDocument();
-    expect(screen.queryByText('15 kg × 8')).not.toBeInTheDocument();
+    expect(await screen.findByText('70 Kg × 3')).toBeInTheDocument();
+    expect(screen.queryByText('15 Kg × 8')).not.toBeInTheDocument();
   });
 
   it('leaving the page while it is still loading does not break the next screen', async () => {
@@ -300,13 +300,13 @@ describe('undo and personal records', () => {
       `/workout?exercise=${BENCH}`,
     );
     expect(
-      await screen.findByText(/New personal record: Barbell Bench Press, 65 kg × 5/),
+      await screen.findByText(/New personal record: Barbell Bench Press, 65 Kg × 5/),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Undo last' }));
     expect(
-      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 kg × 5/),
+      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 Kg × 5/),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/65 kg × 5/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/65 Kg × 5/)).not.toBeInTheDocument();
     // The button stays disabled until the first undo has finished, a moment after the banner moves.
     await waitFor(() => expect(screen.getByRole('button', { name: 'Undo last' })).toBeEnabled());
     await user.click(screen.getByRole('button', { name: 'Undo last' }));
@@ -328,7 +328,7 @@ describe('undo and personal records', () => {
     expect(screen.queryByText(/New personal record/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Undo last' }));
     expect(
-      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 kg × 5/),
+      await screen.findByText(/New personal record: Barbell Bench Press, 62.5 Kg × 5/),
     ).toBeInTheDocument();
   });
 
@@ -344,7 +344,7 @@ describe('undo and personal records', () => {
       await router.navigate(`/progress/${BENCH}`);
     });
     expect(await screen.findByRole('region', { name: 'Records' })).toHaveTextContent(
-      'Heaviest: 60 kg × 8',
+      'Heaviest: 60 Kg × 8',
     );
     expect(screen.queryByRole('img', { name: /personal record/i })).not.toBeInTheDocument();
   });
@@ -364,7 +364,7 @@ describe('record badges in a past workout', () => {
       await seeded.router.navigate(`/history/${seeded.ids[2]!.workout}`);
     });
     const regions = await screen.findAllByRole('region', { name: 'Barbell Bench Press' });
-    await within(regions.at(-1)!).findByText(/65 kg/);
+    await within(regions.at(-1)!).findByText(/65 Kg/);
     expect(screen.queryByRole('img', { name: /personal record/i })).not.toBeInTheDocument();
     await act(async () => {
       await seeded.router.navigate(`/history/${seeded.ids[1]!.workout}`);

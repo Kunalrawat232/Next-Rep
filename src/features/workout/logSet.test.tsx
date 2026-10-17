@@ -50,9 +50,9 @@ describe('logging a barbell set by tapping', () => {
     await user.click(await screen.findByRole('button', { name: 'Per side' }));
     await user.type(await weight(), '22.5');
     const card = screen.getByRole('region', { name: 'Weight breakdown' });
-    expect(card).toHaveTextContent('15 kg');
-    expect(card).toHaveTextContent('22.5 kg');
-    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('60 kg');
+    expect(card).toHaveTextContent('15 Kg');
+    expect(card).toHaveTextContent('22.5 Kg');
+    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('60 Kg');
   });
 
   it('saves the total including the bar, the bar used, the mode and source tap', async () => {
@@ -84,7 +84,7 @@ describe('logging a barbell set by tapping', () => {
     expect(screen.getByRole('textbox', { name: /total/i })).toHaveValue('60');
   });
 
-  it('steps a total by 2.5 kg, a weight per side by 1.25 kg, and reps by one', async () => {
+  it('steps a total by 2.5 Kg, a weight per side by 1.25 Kg, and reps by one', async () => {
     const { user } = await openLog(BENCH);
     await user.type(await weight(), '60');
     await user.click(screen.getByRole('button', { name: /increase weight/i }));

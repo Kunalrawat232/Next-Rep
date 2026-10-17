@@ -323,7 +323,7 @@ describe('the Coach screen', () => {
 
   it('is reached from the tab bar', async () => {
     const { router, user } = renderApp('/');
-    await user.click(await screen.findByRole('link', { name: COACH_NAME }));
+    await user.click(await screen.findByRole('link', { name: 'Ai coach' }));
     expect(router.state.location.pathname).toBe('/coach');
   });
 

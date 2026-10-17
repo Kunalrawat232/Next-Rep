@@ -4,7 +4,10 @@
 import type { Unit } from '../schemas';
 import { LB_TO_KG, roundKg } from '../weight';
 
-export const unitLabel = (unit: Unit): string => unit;
+const UNIT_LABEL: Record<Unit, string> = { kg: 'Kg', lb: 'Lb' };
+
+/** How a unit is written on screen: "Kg" and "Lb". The stored value of a unit stays "kg" or "lb". */
+export const unitLabel = (unit: Unit): string => UNIT_LABEL[unit];
 
 const round = (value: number, decimals: number): number => {
   const factor = 10 ** decimals;
@@ -37,7 +40,7 @@ export function formatWeight(kg: number, unit: Unit): string {
   return String(toDisplay(kg, unit));
 }
 
-/** A weight with its unit: "60 kg", "132.3 lb". */
+/** A weight with its unit: "60 Kg", "132.3 Lb". */
 export function withUnit(kg: number, unit: Unit): string {
   return `${formatWeight(kg, unit)} ${unitLabel(unit)}`;
 }

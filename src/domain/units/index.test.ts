@@ -39,14 +39,14 @@ describe('toDisplay and fromDisplay', () => {
     expect(fromDisplay(value, unit)).toBe(kg);
   });
 
-  it('shows every lb weight typed to one decimal exactly as typed (0 to 1102.3 lb)', () => {
+  it('shows every lb weight typed to one decimal exactly as typed (0 to 1102.3 Lb)', () => {
     for (let tenths = 0; tenths <= 11023; tenths += 1) {
       const lb = tenths / 10;
       expect(toDisplay(fromDisplay(lb, 'lb'), 'lb')).toBe(lb);
     }
   });
 
-  it('shows every kg weight typed to two decimals exactly as typed (0 to 500 kg)', () => {
+  it('shows every kg weight typed to two decimals exactly as typed (0 to 500 Kg)', () => {
     for (let hundredths = 0; hundredths <= 50000; hundredths += 7) {
       const kg = hundredths / 100;
       expect(toDisplay(fromDisplay(kg, 'kg'), 'kg')).toBe(kg);
@@ -73,8 +73,8 @@ describe('formatting', () => {
   });
 
   it('adds the unit', () => {
-    expect(withUnit(60, 'kg')).toBe('60 kg');
-    expect(withUnit(61.23, 'lb')).toBe('135 lb');
+    expect(withUnit(60, 'kg')).toBe('60 Kg');
+    expect(withUnit(61.23, 'lb')).toBe('135 Lb');
   });
 });
 
@@ -131,7 +131,7 @@ describe('a field that starts from a stored weight', () => {
     expect(kgFromField(fieldFromKg(kg, 'kg'), 'kg')).toBe(kg);
   });
 
-  it('would change 60 kg to 60.01 kg without the stored value', () => {
+  it('would change 60 Kg to 60.01 Kg without the stored value', () => {
     expect(fromDisplay(toDisplay(60, 'lb'), 'lb')).toBe(60.01);
     expect(kgFromField(fieldFromKg(60, 'lb'), 'lb')).toBe(60);
   });
@@ -169,7 +169,7 @@ describe('maxDisplay', () => {
     expect(maxDisplay(kg, unit)).toBe(shown);
   });
 
-  it('never shows a limit that is over the limit once converted back (0 to 1000 kg)', () => {
+  it('never shows a limit that is over the limit once converted back (0 to 1000 Kg)', () => {
     for (let kg = 1; kg <= 1000; kg += 1) {
       expect(fromDisplay(maxDisplay(kg, 'lb'), 'lb')).toBeLessThanOrEqual(kg);
       // And it is the largest such number to one decimal.

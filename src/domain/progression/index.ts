@@ -1,7 +1,7 @@
 // "What to lift today" (ADR-005). Simple, explainable, never coaching. Pure: no React, network or storage.
 import type { BodyPart } from '../exercises';
 import { TOTAL_KG_RANGE, usesBar, type EquipmentType, type Unit } from '../schemas';
-import { ENTRY_STEP, fromDisplay, maxDisplay, toDisplay, withUnit } from '../units';
+import { ENTRY_STEP, fromDisplay, maxDisplay, toDisplay, unitLabel, withUnit } from '../units';
 import { roundKg } from '../weight';
 
 export type SessionSet = { totalKg: number; barKg: number | null; reps: number; loggedAt: string };
@@ -166,7 +166,7 @@ export function describeSuggestion(suggestion: Suggestion, unit: Unit): string {
   const last = withUnit(basis.lastTotalKg, unit);
   if (kind === 'increase') {
     const more = roundKg(toDisplay(suggestion.totalKg, unit) - toDisplay(basis.lastTotalKg, unit));
-    return `You hit ${basis.workingSets} × ${basis.targetReps} at ${last} last time, so try ${more} ${unit} more.`;
+    return `You hit ${basis.workingSets} × ${basis.targetReps} at ${last} last time, so try ${more} ${unitLabel(unit)} more.`;
   }
   if (kind === 'decrease')
     return `You did not reach ${basis.targetReps} reps on every set at ${last} twice in a row, so try about 10% less.`;

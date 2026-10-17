@@ -148,31 +148,31 @@ describe('breakdownFor and setSummary with awkward numbers', () => {
   it('shows a zero bar plainly', () => {
     expect(breakdownFor({ totalKg: 50, barKg: 0, perSideKg: 25 })).toEqual({
       lines: [
-        { label: '25 kg each side × 2', value: '50 kg' },
-        { label: '+ bar', value: '0 kg' },
+        { label: '25 Kg each side × 2', value: '50 Kg' },
+        { label: '+ bar', value: '0 Kg' },
       ],
-      total: '50 kg',
+      total: '50 Kg',
     });
   });
 
   it('does not show floating point dust in plates', () => {
     const { lines } = breakdownFor({ totalKg: 60.3, barKg: 20.1, perSideKg: null });
-    expect(lines[0]).toEqual({ label: 'Plates', value: '40.2 kg' });
+    expect(lines[0]).toEqual({ label: 'Plates', value: '40.2 Kg' });
   });
 
   it('describes an empty bar', () => {
     expect(setSummary({ totalKg: 15, barKg: 15, perSideKg: 0, reps: 12 })).toEqual({
-      headline: '15 kg × 12',
-      detail: '15 kg bar + 0 kg each side',
+      headline: '15 Kg × 12',
+      detail: '15 Kg bar + 0 Kg each side',
     });
   });
 
   it('keeps the headline readable at the limits', () => {
     expect(setSummary({ totalKg: 500, barKg: null, perSideKg: null, reps: 100 }).headline).toBe(
-      '500 kg × 100',
+      '500 Kg × 100',
     );
     expect(setSummary({ totalKg: 0, barKg: null, perSideKg: null, reps: 1 }).headline).toBe(
-      '0 kg × 1',
+      '0 Kg × 1',
     );
   });
 });

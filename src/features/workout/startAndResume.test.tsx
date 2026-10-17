@@ -8,9 +8,9 @@ afterEach(() => vi.unstubAllGlobals());
 describe('starting a workout', () => {
   it('sets the gym up with a standard barbell on the first workout, then starts', async () => {
     const { user, store, gyms } = renderApp('/workout', { gym: null });
-    expect(await screen.findByText(/standard 20 kg barbell/i)).toBeInTheDocument();
+    expect(await screen.findByText(/standard 20 Kg barbell/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
-    expect(await screen.findByText('20 kg bar')).toBeInTheDocument();
+    expect(await screen.findByText('20 Kg bar')).toBeInTheDocument();
     expect(gyms.service.save).toHaveBeenCalledTimes(1);
     expect(gyms.service.save.mock.calls[0]![2]).toEqual({ barbellKg: 20, bars: [] });
     const workout = await store.activeWorkout();
@@ -18,9 +18,9 @@ describe('starting a workout', () => {
     expect(workout?.gymSnapshot).toEqual({ barbellKg: 20, bars: [] });
   });
 
-  it('starts a user who works in pounds with a 45 lb barbell', async () => {
+  it('starts a user who works in pounds with a 45 Lb barbell', async () => {
     const { user, gyms } = renderApp('/workout', { gym: null, unit: 'lb' });
-    expect(await screen.findByText(/standard 45 lb barbell/i)).toBeInTheDocument();
+    expect(await screen.findByText(/standard 45 Lb barbell/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
     await waitFor(() => expect(gyms.service.save).toHaveBeenCalled());
     expect(gyms.service.save.mock.calls[0]![2]).toMatchObject({ barbellKg: 20.41 });
@@ -28,13 +28,13 @@ describe('starting a workout', () => {
 
   it('needs a connection once to set the gym up, and a retry makes the same gym, not a second', async () => {
     const { user, store, gyms } = renderApp('/workout', { gym: null });
-    await screen.findByText(/standard 20 kg barbell/i);
+    await screen.findByText(/standard 20 Kg barbell/i);
     gyms.failNext('save', 'offline');
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
     expect(await screen.findByText(/setting up your gym needs a connection/i)).toBeInTheDocument();
     expect(await store.activeWorkout()).toBeUndefined();
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
-    expect(await screen.findByText('20 kg bar')).toBeInTheDocument();
+    expect(await screen.findByText('20 Kg bar')).toBeInTheDocument();
     expect(gyms.service.save).toHaveBeenCalledTimes(2);
     expect(gyms.service.save.mock.calls[0]![1]).toBe(gyms.service.save.mock.calls[1]![1]);
     expect(await store.activeWorkout()).toMatchObject({ gymId: gyms.current()?.id });
@@ -42,7 +42,7 @@ describe('starting a workout', () => {
 
   it('says so when the gym was set up on another device in the meantime', async () => {
     const { user, gyms } = renderApp('/workout', { gym: null });
-    await screen.findByText(/standard 20 kg barbell/i);
+    await screen.findByText(/standard 20 Kg barbell/i);
     gyms.failNext('save', 'conflict');
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
     expect(await screen.findByText(/set up on another device/i)).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('starting a workout', () => {
   it('starts at your gym, keeping the gym and its bars on the workout', async () => {
     const { user, store, server, gyms } = renderApp('/workout');
     await user.click(await screen.findByRole('button', { name: 'Start workout' }));
-    expect(await screen.findByText('15 kg bar')).toBeInTheDocument();
+    expect(await screen.findByText('15 Kg bar')).toBeInTheDocument();
     const workout = await store.activeWorkout();
     expect(workout).toMatchObject({ gymId: HOME_GYM.id, endedAt: null });
     expect(workout?.gymSnapshot).toEqual({ barbellKg: 15, bars: HOME_GYM.bars });
@@ -62,7 +62,7 @@ describe('starting a workout', () => {
   it('shows your bars and a way to change them', async () => {
     renderApp('/workout');
     const bars = await screen.findByRole('region', { name: 'Your bars' });
-    expect(within(bars).getByText(/barbell 15 kg · ez bar 7.5 kg/i)).toBeInTheDocument();
+    expect(within(bars).getByText(/barbell 15 Kg · ez bar 7.5 Kg/i)).toBeInTheDocument();
     expect(within(bars).getByRole('link', { name: 'Change bars' })).toHaveAttribute('href', '/gym');
   });
 
@@ -82,7 +82,7 @@ describe('starting a workout', () => {
     const { user, store } = renderApp('/workout', { userId: 'cached-user', gymsFail: 'offline' });
     expect(await screen.findByText(/using the gym saved on this device/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start workout' }));
-    expect(await screen.findByText('15 kg bar')).toBeInTheDocument();
+    expect(await screen.findByText('15 Kg bar')).toBeInTheDocument();
     expect((await store.activeWorkout())?.gymSnapshot?.barbellKg).toBe(15);
   });
 
@@ -119,7 +119,7 @@ describe('resuming', () => {
   it('shows the open workout instead of starting a second one', async () => {
     const { workout, userId } = await withOpenWorkout();
     const { db } = renderApp('/workout', { userId });
-    expect(await screen.findByText('15 kg bar')).toBeInTheDocument();
+    expect(await screen.findByText('15 Kg bar')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Start workout' })).not.toBeInTheDocument();
     expect(await db.workouts.count()).toBe(1);
     expect((await db.workouts.toArray())[0]?.id).toBe(workout.id);
@@ -147,9 +147,9 @@ describe('resuming', () => {
       await screen.findByRole('region', { name: 'Barbell Bench Press' }),
     ).findAllByRole('listitem');
     expect(list).toHaveLength(2);
-    expect(list[0]).toHaveTextContent('60 kg × 8');
-    expect(list[0]).toHaveTextContent('15 kg bar + 22.5 kg each side');
-    expect(list[1]).toHaveTextContent('62.5 kg × 6');
+    expect(list[0]).toHaveTextContent('60 Kg × 8');
+    expect(list[0]).toHaveTextContent('15 Kg bar + 22.5 Kg each side');
+    expect(list[1]).toHaveTextContent('62.5 Kg × 6');
     second.unmount();
   });
 });

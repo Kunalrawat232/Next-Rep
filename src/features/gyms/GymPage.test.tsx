@@ -50,18 +50,18 @@ describe('your gym: there is one, with no name, list, default or delete', () => 
 });
 
 describe('setting it up for the first time', () => {
-  it('starts with a 20 kg barbell and offers 20 and 15 kg presets', async () => {
+  it('starts with a 20 Kg barbell and offers 20 and 15 Kg presets', async () => {
     const { user } = renderPage();
-    const barbell = await screen.findByLabelText('Barbell weight (kg)');
+    const barbell = await screen.findByLabelText('Barbell weight (Kg)');
     expect(barbell).toHaveValue('20');
-    expect(screen.getByRole('button', { name: '20 kg' })).toHaveAttribute('aria-pressed', 'true');
-    await user.click(screen.getByRole('button', { name: '15 kg' }));
+    expect(screen.getByRole('button', { name: '20 Kg' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: '15 Kg' }));
     expect(barbell).toHaveValue('15');
   });
 
   it('saves the gym and goes back to Settings', async () => {
     const { fake, router, user } = renderPage();
-    await user.click(await screen.findByRole('button', { name: '15 kg' }));
+    await user.click(await screen.findByRole('button', { name: '15 Kg' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/settings'));
     expect(fake.service.save).toHaveBeenCalledWith('u1', expect.any(String), {
@@ -73,7 +73,7 @@ describe('setting it up for the first time', () => {
 
   it('shows the error, focuses the bad field and saves nothing', async () => {
     const { fake, user } = renderPage();
-    const barbell = await screen.findByLabelText('Barbell weight (kg)');
+    const barbell = await screen.findByLabelText('Barbell weight (Kg)');
     await user.clear(barbell);
     await user.type(barbell, '500');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -112,14 +112,14 @@ describe('setting it up for the first time', () => {
 describe('changing the bars', () => {
   it('loads the gym into the form', async () => {
     renderPage(createFakeGymService(ezGym));
-    expect(await screen.findByLabelText('Barbell weight (kg)')).toHaveValue('15');
-    expect(screen.getByLabelText('EZ bar weight (kg)')).toHaveValue('7.5');
-    expect(screen.getByLabelText('Trap bar weight (kg)')).toHaveValue('25');
+    expect(await screen.findByLabelText('Barbell weight (Kg)')).toHaveValue('15');
+    expect(screen.getByLabelText('EZ bar weight (Kg)')).toHaveValue('7.5');
+    expect(screen.getByLabelText('Trap bar weight (Kg)')).toHaveValue('25');
   });
 
   it('saves changes under the same gym id, keeping the ids of bars that stay', async () => {
     const { fake, user } = renderPage(createFakeGymService(ezGym));
-    const barbell = await screen.findByLabelText('Barbell weight (kg)');
+    const barbell = await screen.findByLabelText('Barbell weight (Kg)');
     await user.clear(barbell);
     await user.type(barbell, '20');
     await user.click(screen.getByRole('button', { name: 'Remove Trap bar' }));
@@ -135,7 +135,7 @@ describe('changing the bars', () => {
     const { fake, user } = renderPage(createFakeGymService(sampleGym()));
     await user.click(await screen.findByRole('button', { name: 'Smith bar' }));
     expect(screen.getByLabelText('Bar name')).toHaveValue('Smith bar');
-    await user.type(screen.getByLabelText('Bar weight (kg)'), '15');
+    await user.type(screen.getByLabelText('Bar weight (Kg)'), '15');
     await user.click(screen.getByRole('button', { name: 'Add bar' }));
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => expect(fake.service.save).toHaveBeenCalled());
@@ -153,14 +153,14 @@ describe('changing the bars', () => {
   it('refuses a bar name that is already used, even in another case', async () => {
     const { user } = renderPage(createFakeGymService(ezGym));
     await user.type(await screen.findByLabelText('Bar name'), '  trap BAR ');
-    await user.type(screen.getByLabelText('Bar weight (kg)'), '20');
+    await user.type(screen.getByLabelText('Bar weight (Kg)'), '20');
     await user.click(screen.getByRole('button', { name: 'Add bar' }));
     expect(await screen.findByText(/already exists/i)).toBeInTheDocument();
   });
 
   it('does not silently drop a bar that was typed but never added', async () => {
     const { fake, user } = renderPage(createFakeGymService(sampleGym()));
-    await user.type(await screen.findByLabelText('Bar weight (kg)'), '12');
+    await user.type(await screen.findByLabelText('Bar weight (Kg)'), '12');
     await user.click(screen.getByRole('button', { name: 'Save changes' }));
     expect(await screen.findByText(/tap add bar to include this bar/i)).toBeInTheDocument();
     expect(fake.service.save).not.toHaveBeenCalled();
@@ -169,8 +169,8 @@ describe('changing the bars', () => {
   it('adds the bar when Enter is pressed in the add-bar fields, and does not save', async () => {
     const { fake, user } = renderPage(createFakeGymService(sampleGym()));
     await user.type(await screen.findByLabelText('Bar name'), 'Trap bar');
-    await user.type(screen.getByLabelText('Bar weight (kg)'), '25{Enter}');
-    expect(await screen.findByLabelText('Trap bar weight (kg)')).toHaveValue('25');
+    await user.type(screen.getByLabelText('Bar weight (Kg)'), '25{Enter}');
+    expect(await screen.findByLabelText('Trap bar weight (Kg)')).toHaveValue('25');
     expect(fake.service.save).not.toHaveBeenCalled();
   });
 
@@ -192,7 +192,7 @@ describe('loading', () => {
     const { user } = renderPage(fake);
     expect(await screen.findByText(/you're offline/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Try again' }));
-    expect(await screen.findByLabelText('Barbell weight (kg)')).toHaveValue('15');
+    expect(await screen.findByLabelText('Barbell weight (Kg)')).toHaveValue('15');
   });
 
   it('shows the error state when get rejects instead of staying on loading', async () => {
@@ -206,6 +206,6 @@ describe('loading', () => {
     const { fake } = renderPage(createFakeGymService(ezGym), false);
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Your gym' })).toBeNull());
     expect(fake.service.save).not.toHaveBeenCalled();
-    expect(within(document.body).queryByLabelText('Barbell weight (kg)')).toBeNull();
+    expect(within(document.body).queryByLabelText('Barbell weight (Kg)')).toBeNull();
   });
 });

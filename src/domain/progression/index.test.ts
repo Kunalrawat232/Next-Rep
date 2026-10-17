@@ -22,7 +22,7 @@ const ask = (
 ) => suggest({ sessions, bodyPart: 'upper', equipment: 'barbell', unit: 'kg', ...over });
 
 describe('after a session where every working set reached the target', () => {
-  it('suggests 2.5 kg more for upper body, with the same reps', () => {
+  it('suggests 2.5 Kg more for upper body, with the same reps', () => {
     const r = ask([session(...sets(3, 60, 8))]);
     expect(r).toMatchObject({ kind: 'increase', totalKg: 62.5, reps: 8 });
     expect(r!.basis).toMatchObject({
@@ -34,7 +34,7 @@ describe('after a session where every working set reached the target', () => {
     });
   });
 
-  it('suggests 5 kg more for lower body', () => {
+  it('suggests 5 Kg more for lower body', () => {
     expect(ask([session(...sets(3, 100, 5))], { bodyPart: 'lower' })).toMatchObject({
       kind: 'increase',
       totalKg: 105,
@@ -89,7 +89,7 @@ describe('after a session where every working set reached the target', () => {
     expect(ask([session(...sets(3, 497.5, 3))])).toMatchObject({ kind: 'increase', totalKg: 500 });
     expect(ask([session(...sets(3, 499, 3))])).toMatchObject({ kind: 'increase', totalKg: 500 });
     expect(describeSuggestion(ask([session(...sets(3, 500, 3))])!, 'kg')).toBe(
-      'You hit 3 × 3 at 500 kg last time, and that is as heavy as can be logged.',
+      'You hit 3 × 3 at 500 Kg last time, and that is as heavy as can be logged.',
     );
   });
 });
@@ -170,7 +170,7 @@ describe('when there is nothing to suggest', () => {
     ['no sessions', []],
     ['a session with no sets', [session()]],
     ['only empty sessions', [session(), session()]],
-    ['a session at 0 kg', [session(set(0, 10, null))]],
+    ['a session at 0 Kg', [session(set(0, 10, null))]],
   ])('says nothing for %s', (_n, sessions) => {
     expect(ask(sessions, { equipment: 'dumbbell' })).toBeNull();
   });
@@ -200,14 +200,14 @@ describe('in lb', () => {
     expect(toDisplay(r!.totalKg, 'lb')).toBe(to);
   });
 
-  it('puts the plates on a 35 lb bar: the loads are 35, 40, 45 ...', () => {
+  it('puts the plates on a 35 Lb bar: the loads are 35, 40, 45 ...', () => {
     // 135 lb on a 35 lb bar: the grid is 35 + 5k, so 135 is on it, and 140 is next.
     const bar35 = fromDisplay(35, 'lb');
     const r = ask([session(...lbSets(3, 135, 8, bar35))], { unit: 'lb' });
     expect(toDisplay(r!.totalKg, 'lb')).toBe(140);
   });
 
-  it('puts the plates on a 15 kg bar shown as 33.1 lb', () => {
+  it('puts the plates on a 15 Kg bar shown as 33.1 Lb', () => {
     // The loads are 33.1, 38.1 ... 133.1, 138.1: 135 lb + 5 = 140, nearest is 138.1.
     const r = ask([session(...sets(3, fromDisplay(135, 'lb'), 8, 15))], { unit: 'lb' });
     expect(toDisplay(r!.totalKg, 'lb')).toBe(138.1);
@@ -218,7 +218,7 @@ describe('in lb', () => {
     expect(r).toMatchObject({ kind: 'same', totalKg: 60 });
   });
 
-  it('takes 10% off in lb, on a 5 lb pair', () => {
+  it('takes 10% off in lb, on a 5 Lb pair', () => {
     const miss = session(...lbSets(1, 225, 8), ...lbSets(1, 225, 5));
     const r = ask([miss, miss], { unit: 'lb' });
     // 10% off 225 is 202.5; the loads are 45 + 5k, so 200.
@@ -234,7 +234,7 @@ describe('in lb', () => {
 describe('the reason, in words', () => {
   it('says what was hit and how much more', () => {
     expect(describeSuggestion(ask([session(...sets(3, 60, 8))])!, 'kg')).toBe(
-      'You hit 3 × 8 at 60 kg last time, so try 2.5 kg more.',
+      'You hit 3 × 8 at 60 Kg last time, so try 2.5 Kg more.',
     );
   });
 
@@ -243,20 +243,20 @@ describe('the reason, in words', () => {
       unit: 'lb',
     });
     expect(describeSuggestion(r!, 'lb')).toBe(
-      'You hit 3 × 8 at 135 lb last time, so try 5 lb more.',
+      'You hit 3 × 8 at 135 Lb last time, so try 5 Lb more.',
     );
   });
 
   it('says why the weight stays', () => {
     expect(describeSuggestion(ask([session(set(60, 8), set(60, 5))])!, 'kg')).toBe(
-      'You did not reach 8 reps on every set at 60 kg last time, so stay at that weight.',
+      'You did not reach 8 reps on every set at 60 Kg last time, so stay at that weight.',
     );
   });
 
   it('says why the weight comes down', () => {
     const miss = session(set(60, 8), set(60, 5));
     expect(describeSuggestion(ask([miss, miss])!, 'kg')).toBe(
-      'You did not reach 8 reps on every set at 60 kg twice in a row, so try about 10% less.',
+      'You did not reach 8 reps on every set at 60 Kg twice in a row, so try about 10% less.',
     );
   });
 });

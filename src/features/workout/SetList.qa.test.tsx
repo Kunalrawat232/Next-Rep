@@ -50,18 +50,18 @@ describe('SetList', () => {
     [
       'kg',
       { totalKg: 60, reps: 8, barKg: 20, perSideKg: 20 },
-      '60 kg × 8',
-      '20 kg bar + 20 kg each side',
+      '60 Kg × 8',
+      '20 Kg bar + 20 Kg each side',
     ],
-    ['kg', { totalKg: 61.23, reps: 1, barKg: null, perSideKg: null }, '61.23 kg × 1', null],
-    ['kg', { totalKg: 0, reps: 20, barKg: null, perSideKg: null }, '0 kg × 20', null],
+    ['kg', { totalKg: 61.23, reps: 1, barKg: null, perSideKg: null }, '61.23 Kg × 1', null],
+    ['kg', { totalKg: 0, reps: 20, barKg: null, perSideKg: null }, '0 Kg × 20', null],
     [
       'kg',
       { totalKg: 500, reps: 100, barKg: 20, perSideKg: 240 },
-      '500 kg × 100',
-      '20 kg bar + 240 kg each side',
+      '500 Kg × 100',
+      '20 Kg bar + 240 Kg each side',
     ],
-    ['lb', { totalKg: 60, reps: 8, barKg: null, perSideKg: null }, '132.3 lb × 8', null],
+    ['lb', { totalKg: 60, reps: 8, barKg: null, perSideKg: null }, '132.3 Lb × 8', null],
   ])('shows %s: %j as %j with detail %j', (u, over, headline, detail) => {
     unit = u;
     render(<SetList title="X" sets={[stored(over)]} />);
@@ -83,7 +83,7 @@ describe('SetList', () => {
     const same = { totalKg: 60, reps: 8, loggedAt: '2026-10-10T10:00:00.000Z' };
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<SetList title="X" sets={[stored(same), stored(same)]} />);
-    expect(screen.getAllByText('60 kg × 8')).toHaveLength(2);
+    expect(screen.getAllByText('60 Kg × 8')).toHaveLength(2);
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
@@ -99,7 +99,7 @@ describe('SetList', () => {
     expect(document.querySelector('img')).toBeNull();
   });
 
-  // BUG (low, needs a stored total below its bar): src/domain/workout/index.ts:116 the detail line reads "+ -5 kg plates" instead of hiding or explaining.
+  // BUG (low, needs a stored total below its bar): src/domain/workout/index.ts:116 the detail line reads "+ -5 Kg plates" instead of hiding or explaining.
   it('never shows a negative plate weight', () => {
     render(
       <SetList title="X" sets={[stored({ totalKg: 15, barKg: 20, perSideKg: null, reps: 5 })]} />,

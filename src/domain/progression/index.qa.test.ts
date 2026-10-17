@@ -100,7 +100,7 @@ describe('the limit of what can be logged', () => {
       ),
     ),
   )(
-    'last %j kg in %s (bar: %s) never suggests more than 500 kg or a falling weight after a hit',
+    'last %j kg in %s (bar: %s) never suggests more than 500 Kg or a falling weight after a hit',
     (kg, unit, bar) => {
       const r = ask([{ sets: [s(kg, 5, 1, bar ? 20 : null)] }], {
         unit,
@@ -114,7 +114,7 @@ describe('the limit of what can be logged', () => {
     },
   );
 
-  it('says it is as heavy as can be logged at exactly 500 kg', () => {
+  it('says it is as heavy as can be logged at exactly 500 Kg', () => {
     const r = ask([{ sets: [s(500, 3, 1)] }])!;
     expect(r.kind).toBe('same');
     expect(describeSuggestion(r, 'kg')).toContain('as heavy as can be logged');
@@ -192,7 +192,7 @@ describe('describeSuggestion', () => {
     const r = ask([{ sets: [s(61, 8, 1)] }])!;
     expect(r.totalKg).toBe(62.5);
     expect(describeSuggestion(r, 'kg')).toBe(
-      'You hit 1 × 8 at 61 kg last time, so try 1.5 kg more.',
+      'You hit 1 × 8 at 61 Kg last time, so try 1.5 Kg more.',
     );
   });
 

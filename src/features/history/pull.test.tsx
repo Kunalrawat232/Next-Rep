@@ -51,7 +51,7 @@ describe('signing in on a device with no history', () => {
     const { user } = renderApp('/progress', { server });
     await user.click(await screen.findByRole('link', { name: /Barbell Bench Press/ }));
     const records = await screen.findByRole('region', { name: 'Records' });
-    expect(records).toHaveTextContent('Heaviest: 65 kg × 8');
+    expect(records).toHaveTextContent('Heaviest: 65 Kg × 8');
     const table = screen.getByRole('table');
     expect(within(table).getByRole('img', { name: /heaviest weight/i })).toBeInTheDocument();
   });

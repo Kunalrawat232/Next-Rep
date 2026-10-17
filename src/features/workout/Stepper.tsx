@@ -1,4 +1,6 @@
 import { useId } from 'react';
+import type { Unit } from '../../domain/schemas';
+import { unitLabel } from '../../domain/units';
 
 type Props = {
   /** Names the field and its buttons: "Decrease <label>". */
@@ -6,7 +8,7 @@ type Props = {
   value: string;
   onChange(value: string): void;
   onStep(direction: 1 | -1): void;
-  unit?: string;
+  unit?: Unit;
   error?: string;
   inputMode?: 'decimal' | 'numeric';
 };
@@ -70,7 +72,7 @@ export function Stepper({
             onChange={(e) => onChange(e.target.value)}
             className="w-28 min-w-0 rounded-sm bg-transparent text-center text-metric font-semibold tabular-nums text-ink"
           />
-          {unit && <span className="text-headline text-ink-muted">{unit}</span>}
+          {unit && <span className="text-headline text-ink-muted">{unitLabel(unit)}</span>}
         </div>
         <button
           type="button"

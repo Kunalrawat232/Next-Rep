@@ -28,7 +28,7 @@ describe('QA parseNumber: hostile typed text', () => {
     ['1,000', null],
     ['+5', null],
     ['-5', null],
-    ['5 kg', null],
+    ['5 Kg', null],
     ['1 000', null],
     ['1.2.3', null],
     ['NaN', null],
@@ -61,7 +61,7 @@ describe('QA round trips never drift a stored weight', () => {
     expect(drifted).toEqual([]);
   });
 
-  it('a lb weight typed to one decimal always shows back as typed (0 to 1102.3 lb)', () => {
+  it('a lb weight typed to one decimal always shows back as typed (0 to 1102.3 Lb)', () => {
     const bad: number[] = [];
     for (let tenths = 0; tenths <= 11_023; tenths += 1) {
       const lb = tenths / 10;
@@ -102,12 +102,12 @@ describe('QA round trips never drift a stored weight', () => {
   it('never shows "-0"', () => {
     expect(formatWeight(-0.004, 'kg')).toBe('0');
     expect(formatWeight(-0.004, 'lb')).toBe('0');
-    expect(withUnit(0, 'lb')).toBe('0 lb');
+    expect(withUnit(0, 'lb')).toBe('0 Lb');
   });
 });
 
 describe('QA maxDisplay', () => {
-  it('shows 250 kg as 551.1 lb (rounded down) and 500 kg as 1102.3 lb', () => {
+  it('shows 250 Kg as 551.1 Lb (rounded down) and 500 Kg as 1102.3 Lb', () => {
     expect(maxDisplay(250, 'lb')).toBe(551.1);
     expect(maxDisplay(500, 'lb')).toBe(1102.3);
     expect(maxDisplay(100, 'lb')).toBe(220.4);

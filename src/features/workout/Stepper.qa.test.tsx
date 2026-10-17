@@ -54,7 +54,7 @@ describe('Stepper accessibility', () => {
   it('keeps the unit out of the field name', () => {
     setup({ label: 'Weight', unit: 'lb' });
     expect(screen.getByRole('textbox', { name: 'Weight' })).toBeInTheDocument();
-    expect(screen.getByText('lb')).toBeInTheDocument();
+    expect(screen.getByText('Lb')).toBeInTheDocument();
   });
 
   it('puts the buttons in tab order before and after the field, and hides the icons from readers', () => {

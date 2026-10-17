@@ -66,7 +66,7 @@ describe('starting twice', () => {
   it('opens one workout on a double tap', async () => {
     const { db } = renderApp('/workout');
     tapTogether(await screen.findByRole('button', { name: 'Start workout' }));
-    await screen.findByText('15 kg bar');
+    await screen.findByText('15 Kg bar');
     expect(await db.workouts.count()).toBe(1);
   });
 });

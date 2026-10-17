@@ -69,7 +69,7 @@ describe('Home', () => {
     expect(
       await screen.findByRole('heading', { name: 'Welcome to Next Rep', level: 1 }),
     ).toBeInTheDocument();
-    expect(main().getByText(/standard 20 kg barbell/i)).toBeInTheDocument();
+    expect(main().getByText(/standard 20 Kg barbell/i)).toBeInTheDocument();
     expect(main().getAllByRole('link', { name: 'Start workout' })).toHaveLength(1);
     expect(main().getByRole('link', { name: 'Start workout' })).toHaveAttribute('href', '/workout');
     expect(main().queryByText(/add your gym/i)).not.toBeInTheDocument();
@@ -80,7 +80,7 @@ describe('Home', () => {
     expect(
       await screen.findByRole('heading', { name: 'Ready to lift?', level: 1 }),
     ).toBeInTheDocument();
-    expect(await main().findByText('15 kg bar')).toBeInTheDocument();
+    expect(await main().findByText('15 Kg bar')).toBeInTheDocument();
     expect(main().getByText(/after your first workout/i)).toBeInTheDocument();
     expect(main().getByRole('link', { name: 'Start workout' })).toHaveAttribute('href', '/workout');
     expect(main().getByText('Your workouts will show up here.')).toBeInTheDocument();
@@ -96,12 +96,12 @@ describe('Home', () => {
         ],
       },
     ]);
-    expect(await main().findByText('62.5 kg × 8')).toBeInTheDocument();
+    expect(await main().findByText('62.5 Kg × 8')).toBeInTheDocument();
     expect(
-      main().getByText(/you hit 2 × 8 at 60 kg last time, so try 2.5 kg more\./i),
+      main().getByText(/you hit 2 × 8 at 60 Kg last time, so try 2.5 Kg more\./i),
     ).toBeInTheDocument();
     expect(main().getByText(/it is a suggestion, you decide\./i)).toBeInTheDocument();
-    expect(main().getByText('60 kg × 8 · 2 sets')).toBeInTheDocument();
+    expect(main().getByText('60 Kg × 8 · 2 sets')).toBeInTheDocument();
     await user.click(main().getByRole('link', { name: 'Start workout' }));
     expect(router.state.location.pathname).toBe('/workout');
     expect(router.state.location.search).toBe(`?exercise=${BENCH}`);
@@ -117,16 +117,16 @@ describe('Home', () => {
         ],
       },
     ]);
-    expect(await main().findByText('60 kg × 8')).toBeInTheDocument();
+    expect(await main().findByText('60 Kg × 8')).toBeInTheDocument();
     expect(main().getByText(/stay at that weight/i)).toBeInTheDocument();
   });
 
   it('shows the suggestion in pounds for a pounds user', async () => {
     await openHome([{ daysAgo: 1, sets: [[60, 8]] }], { unit: 'lb' });
     const text = (await main().findByText(/last time, so try/i)).textContent ?? '';
-    expect(text).toMatch(/lb/);
+    expect(text).toMatch(/Lb/);
     expect(text).not.toMatch(/kg/);
-    expect(await main().findByText(/33\.1 lb bar/)).toBeInTheDocument();
+    expect(await main().findByText(/33\.1 Lb bar/)).toBeInTheDocument();
   });
 
   it('suggests nothing for a bodyweight exercise', async () => {
@@ -151,14 +151,14 @@ describe('Home', () => {
         ],
       },
     ]);
-    expect(await main().findByText('52.5 kg × 8')).toBeInTheDocument();
+    expect(await main().findByText('52.5 Kg × 8')).toBeInTheDocument();
     expect(main().getByText(/twice in a row, so try about 10% less/i)).toBeInTheDocument();
   });
 
-  it('gives exact pounds: 132.3 lb last time, 138.1 lb next', async () => {
+  it('gives exact pounds: 132.3 Lb last time, 138.1 Lb next', async () => {
     await openHome([{ daysAgo: 1, sets: [[60, 8]] }], { unit: 'lb' });
-    expect(await main().findByText('138.1 lb × 8')).toBeInTheDocument();
-    expect(main().getByText(/at 132\.3 lb last time/)).toBeInTheDocument();
+    expect(await main().findByText('138.1 Lb × 8')).toBeInTheDocument();
+    expect(main().getByText(/at 132\.3 Lb last time/)).toBeInTheDocument();
   });
 
   it('ignores the open workout for the suggestion and the last workout', async () => {
@@ -166,9 +166,9 @@ describe('Home', () => {
       { daysAgo: 2, sets: [[60, 8]] },
       { daysAgo: 0, sets: [[100, 5]], open: true },
     ]);
-    expect(await main().findByText('62.5 kg × 8')).toBeInTheDocument();
-    expect(main().getByText('60 kg × 8 · 1 set')).toBeInTheDocument();
-    expect(main().queryByText(/100 kg/)).not.toBeInTheDocument();
+    expect(await main().findByText('62.5 Kg × 8')).toBeInTheDocument();
+    expect(main().getByText('60 Kg × 8 · 1 set')).toBeInTheDocument();
+    expect(main().queryByText(/100 Kg/)).not.toBeInTheDocument();
   });
 
   it('never shows the ready state for a moment to a user with no gym', async () => {
@@ -191,7 +191,7 @@ describe('Home', () => {
 
   it('no longer holds the account card', async () => {
     await openHome([]);
-    await main().findByText('15 kg bar');
+    await main().findByText('15 Kg bar');
     expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
   });
 });

@@ -60,7 +60,7 @@ describe('validateGymForm', () => {
     'NaN',
     'Infinity',
     '1e2',
-    '12 kg',
+    '12 Kg',
     '--5',
     '0x10',
   ])('rejects the barbell weight %j', (barbellKg) => {
@@ -130,22 +130,22 @@ describe('summarizeBars', () => {
           ],
         }),
       ),
-    ).toBe('Barbell 15 kg · EZ bar 7.5 kg · Smith bar 12 kg');
+    ).toBe('Barbell 15 Kg · EZ bar 7.5 Kg · Smith bar 12 Kg');
   });
 
   it('shows just the barbell when there are no other bars', () => {
-    expect(summarizeBars(gym({ barbellKg: 20 }))).toBe('Barbell 20 kg');
+    expect(summarizeBars(gym({ barbellKg: 20 }))).toBe('Barbell 20 Kg');
   });
 });
 
 describe('defaultBarbellKg', () => {
-  it('is a 20 kg bar for kg', () => expect(defaultBarbellKg('kg')).toBe(20));
+  it('is a 20 Kg bar for kg', () => expect(defaultBarbellKg('kg')).toBe(20));
 
-  it('is the stored kg of a 45 lb bar for lb', () => {
+  it('is the stored kg of a 45 Lb bar for lb', () => {
     expect(Math.round(defaultBarbellKg('lb') * 100) / 100).toBe(20.41);
   });
 
-  it('shows as 45 lb', () => expect(formatWeight(defaultBarbellKg('lb'), 'lb')).toBe('45'));
+  it('shows as 45 Lb', () => expect(formatWeight(defaultBarbellKg('lb'), 'lb')).toBe('45'));
 });
 
 describe('barFor', () => {

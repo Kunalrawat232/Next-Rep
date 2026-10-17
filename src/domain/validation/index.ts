@@ -3,7 +3,7 @@
 // through here and being shown to the user. Rules: docs/domain/weight-rules.md. Thresholds: ./config.
 import { usesBar, type EquipmentType, type InputMode, type Unit } from '../schemas';
 import { isMultipleOf, perSideFromTotal, roundKg, toKg } from '../weight';
-import { formatWeight, maxDisplay, toDisplay, withUnit } from '../units';
+import { formatWeight, maxDisplay, toDisplay, unitLabel, withUnit } from '../units';
 import { VALIDATION_CONFIG } from './config';
 
 export type WeightMode = 'total' | 'per_side' | 'unspecified';
@@ -132,7 +132,7 @@ function sanityIssues(
   if (barKg !== null && !(barKg >= ranges.barKg.min && barKg <= ranges.barKg.max)) {
     issues.push({
       code: 'INVALID_NUMBER',
-      message: `Bar weight must be between ${formatWeight(ranges.barKg.min, display)} and ${maxDisplay(ranges.barKg.max, display)} ${display}.`,
+      message: `Bar weight must be between ${formatWeight(ranges.barKg.min, display)} and ${maxDisplay(ranges.barKg.max, display)} ${unitLabel(display)}.`,
     });
   }
   return issues;
@@ -142,11 +142,11 @@ function outOfRangeIssue(kind: 'total' | 'per_side', valueKg: number, display: U
   return kind === 'per_side' && valueKg > ranges.perSideKg.max
     ? {
         code: 'PER_SIDE_OUT_OF_RANGE',
-        message: `Weight per side must be at most ${maxDisplay(ranges.perSideKg.max, display)} ${display}.`,
+        message: `Weight per side must be at most ${maxDisplay(ranges.perSideKg.max, display)} ${unitLabel(display)}.`,
       }
     : {
         code: 'WEIGHT_OUT_OF_RANGE',
-        message: `Total weight must be at most ${maxDisplay(ranges.totalKg.max, display)} ${display}.`,
+        message: `Total weight must be at most ${maxDisplay(ranges.totalKg.max, display)} ${unitLabel(display)}.`,
       };
 }
 
@@ -318,7 +318,7 @@ function plateWarning(p: Prepared): Issue | null {
   if (isMultipleOf(shown, step)) return null;
   return {
     code: 'PLATE_INCREMENT',
-    message: `${shown} ${p.display} per side is not a multiple of ${step} ${p.display}. Check the plates.`,
+    message: `${shown} ${unitLabel(p.display)} per side is not a multiple of ${step} ${unitLabel(p.display)}. Check the plates.`,
   };
 }
 
