@@ -87,7 +87,7 @@ export function CoachPage() {
           <CoachAvatar size={44} />
           <div className="flex flex-col">
             <h1 className="text-title font-semibold">{COACH_NAME}</h1>
-            <span className="text-caption text-ink-muted">Your gym and diet coach</span>
+            <span className="text-caption text-ink-muted">Your Personal Trainer</span>
           </div>
         </div>
         {messages.length > 0 &&
@@ -192,7 +192,7 @@ export function CoachPage() {
             }
             className="block max-h-40 min-h-12 w-full resize-none bg-transparent px-4 pb-9 pr-16 pt-3 text-body text-ink placeholder:text-ink-muted focus-visible:outline-none disabled:opacity-60"
           />
-          <span className="pointer-events-none absolute bottom-3 left-4 text-caption text-ink-muted">
+          <span className="pointer-events-none absolute bottom-3 left-4 text-[10px] leading-none text-ink-muted">
             {draft.length}/{COACH_QUESTION_MAX}
           </span>
           <button

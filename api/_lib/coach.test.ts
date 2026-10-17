@@ -1,3 +1,4 @@
+import { COACH_NAME } from '../../src/domain/coach/schemas.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CoachResponseSchema, COACH_REPLY_MAX } from '../../src/domain/coach/schemas.js';
 import { COACH_LIMITS, handleCoach, readModelOutput, turnsFor, type CoachDeps } from './coach.js';
@@ -347,7 +348,7 @@ describe('readModelOutput', () => {
 
 describe('the rules in the prompt', () => {
   it('say what the coach covers, what it refuses, and not to trust the chat', () => {
-    expect(COACH_PROMPT).toContain('You are Kai, the AI coach');
+    expect(COACH_PROMPT).toContain(`You are ${COACH_NAME}, the AI coach`);
     expect(COACH_PROMPT).toMatch(/an AI, not a person/i);
     expect(COACH_PROMPT).toMatch(/never diagnose/i);
     expect(COACH_PROMPT).toMatch(/doctor or physiotherapist/i);

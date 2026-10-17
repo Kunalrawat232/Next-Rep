@@ -1,3 +1,4 @@
+import { COACH_NAME } from '../domain/coach';
 import { useRef, type ReactNode } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
 import { useLiquidGlass } from '../lib/useGlassEffect';
@@ -66,12 +67,13 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    label: 'Coach',
+    label: COACH_NAME,
     to: '/coach',
     icon: (
       <Icon>
-        <path d="M4 5h16v11H10l-4 4v-4H4z" />
-        <path d="M8 9.5h8M8 12.5h5" />
+        <circle cx="10" cy="9" r="3.2" />
+        <path d="M3.5 20c0-3.4 2.9-5.4 6.5-5.4s6.5 2 6.5 5.4" />
+        <path d="M19 3.5v5M16.5 6h5" />
       </Icon>
     ),
   },

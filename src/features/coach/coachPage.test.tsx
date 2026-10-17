@@ -1,3 +1,4 @@
+import { COACH_NAME } from '../../domain/coach';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CoachRequest } from '../../domain/coach';
@@ -24,14 +25,14 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const box = () => screen.findByRole('textbox', { name: 'Message Kai' });
+const box = () => screen.findByRole('textbox', { name: `Message ${COACH_NAME}` });
 const askButton = () => screen.getByRole('button', { name: 'Send' });
 
 describe('the Coach screen', () => {
-  it('gives the coach a name, a person for a picture, and a plain way to say what it is', async () => {
+  it('gives the coach a name and a person for a picture', async () => {
     renderApp('/coach', { coach: fakeCoach().service });
-    expect(await screen.findByRole('heading', { level: 1, name: 'Kai' })).toBeInTheDocument();
-    expect(screen.getByText('Your gym and diet coach')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: COACH_NAME })).toBeInTheDocument();
+    expect(screen.getByText('Your Personal Trainer')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Coach' })).not.toBeInTheDocument();
   });
 
@@ -54,7 +55,7 @@ describe('the Coach screen', () => {
     await user.click(askButton());
     const chat = await screen.findByRole('list', { name: 'Chat with the coach' });
     const reply = (await within(chat).findByText('Add 2.5 kg.')).closest('li')!;
-    expect(reply).toHaveTextContent('Kai: ');
+    expect(reply).toHaveTextContent(`${COACH_NAME}: `);
   });
 
   it('starts with ideas, and tapping one puts it in the box without sending it', async () => {
@@ -147,7 +148,7 @@ describe('the Coach screen', () => {
 
   it.each([
     ['offline', /you're offline/i],
-    ['limited', /asked Kai a lot/i],
+    ['limited', new RegExp(`asked ${COACH_NAME} a lot`, 'i')],
     ['unavailable', /can't answer right now/i],
   ] as const)(
     'says so when the coach is %s, keeps nothing, and gives the question back',
@@ -190,7 +191,7 @@ describe('the Coach screen', () => {
     const { user } = renderApp('/coach', { coach: service });
     await user.type(await box(), 'Slow one');
     await user.click(askButton());
-    const typing = await screen.findByRole('status', { name: 'Kai is typing' });
+    const typing = await screen.findByRole('status', { name: `${COACH_NAME} is typing` });
     // Three bouncing dots in the coach's bubble, like a chat app, not a skeleton.
     expect(within(typing).getAllByTestId('typing-dot')).toHaveLength(3);
     expect(typing.querySelector('.skeleton')).toBeNull();
@@ -199,7 +200,9 @@ describe('the Coach screen', () => {
     expect(askButton()).toHaveAttribute('aria-busy', 'true');
     act(() => finish({ status: 'ok', text: 'Done.' }));
     expect(await screen.findByText('Done.')).toBeInTheDocument();
-    expect(screen.queryByRole('status', { name: 'Kai is typing' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: `${COACH_NAME} is typing` }),
+    ).not.toBeInTheDocument();
   });
 
   it("puts the coach's picture beside its messages and squares off the bubble corners nearest the speaker", async () => {
@@ -320,7 +323,7 @@ describe('the Coach screen', () => {
 
   it('is reached from the tab bar', async () => {
     const { router, user } = renderApp('/');
-    await user.click(await screen.findByRole('link', { name: 'Coach' }));
+    await user.click(await screen.findByRole('link', { name: COACH_NAME }));
     expect(router.state.location.pathname).toBe('/coach');
   });
 
