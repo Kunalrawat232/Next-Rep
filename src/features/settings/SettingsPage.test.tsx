@@ -175,7 +175,10 @@ describe('your bars', () => {
     const gym = await section('Your bars');
     expect(await within(gym).findByRole('alert')).toHaveTextContent('Could not load your gym');
     await user.click(within(gym).getByRole('button', { name: 'Try again' }));
-    expect(await within(gym).findByText(/Barbell 15 Kg/)).toBeInTheDocument();
+    // The page shows its loader while it retries, so the section is a new element afterwards.
+    expect(
+      await within(await section('Your bars')).findByText(/Barbell 15 Kg/),
+    ).toBeInTheDocument();
   });
 
   it('shows the saved gym when there is no connection', async () => {

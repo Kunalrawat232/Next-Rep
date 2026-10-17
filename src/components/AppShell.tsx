@@ -66,7 +66,7 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    label: 'Ai coach',
+    label: 'AI Coach',
     to: '/coach',
     icon: (
       <Icon>
