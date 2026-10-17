@@ -12,7 +12,7 @@ function sourceOf(path: string): string {
   return existsSync(ts) ? ts : path;
 }
 
-describe('the /api/parse function imports', () => {
+describe('the /api functions imports', () => {
   it('give every relative import in the files it reaches an extension that exists', () => {
     const seen = new Set<string>();
     const problems: string[] = [];
@@ -31,6 +31,7 @@ describe('the /api/parse function imports', () => {
       }
     };
     visit(resolve(root, 'api/parse.ts'));
+    visit(resolve(root, 'api/coach.ts'));
     expect(problems).toEqual([]);
     expect(seen.size).toBeGreaterThan(5);
   });
