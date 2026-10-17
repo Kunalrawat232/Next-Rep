@@ -7,7 +7,6 @@ import {
   cardClasses,
   EmptyState,
   ErrorMessage,
-  LoadingMessage,
   NotFound,
   PageHeader,
   RetryMessage,
@@ -64,20 +63,6 @@ describe('Card', () => {
       'rounded-md border border-glass-line glass-flat p-4 flex gap-2',
     );
     expect(cardClasses('', 'danger')).toContain('border-danger');
-  });
-});
-
-describe('LoadingMessage', () => {
-  it('is a status that says Loading…, or what it is given', () => {
-    render(
-      <>
-        <LoadingMessage />
-        <LoadingMessage>Loading your history…</LoadingMessage>
-      </>,
-    );
-    const [first, second] = screen.getAllByRole('status');
-    expect(first).toHaveTextContent('Loading…');
-    expect(second).toHaveTextContent('Loading your history…');
   });
 });
 

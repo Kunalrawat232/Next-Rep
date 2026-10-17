@@ -102,7 +102,9 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
       <PageHeader back="/" title="Workout" />
       <OfflineBanner />
 
-      {catalog.status === 'loading' && <LoadingMessage>Loading your gym…</LoadingMessage>}
+      {catalog.status === 'loading' && (
+        <LoadingMessage variant="inline">Loading your gym…</LoadingMessage>
+      )}
       {catalog.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
           <ErrorMessage>

@@ -361,3 +361,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: glass tokens for both themes with a contrast test, `glass-flat` and `glass` classes, the ambient layer, glass on `Card`, `Button`, `Chip`, the bars and the dialog panel, a dumbbell icon, `liquidGlass.ts` (one config, capability checks, load on demand, never throws), a Settings switch, a hand-written type declaration, notices and ADR-016.
 - How validated: _(developer to fill)_ Evidence: full unit run green; a contrast test for text on glass in both themes (a first version failed for warning text in the light theme, so the light fill was made more opaque). Not done: the real app in a real phone browser (my test page used software rendering and the app needs your env file), battery and frame rate on a phone.
 - Lesson: look at the effect with the real palette before building on it; a library demo on a colourful background says little about a dark app.
+
+## 2026-10-17: Loaders (skeletons, spinner, start-up screen)
+
+- Tool: Claude Code, with a throwaway page and headless Chromium to see the look before building.
+- Asked: replace the small "Loading…" text everywhere with a good, industry-level loader.
+- AI produced: `Loading.tsx` with `Skeleton` (shimmering placeholder), `Spinner` (a ring), `LoadingMessage` (a page-shaped skeleton in the glass look, or a small inline form) and `FullPageLoader` (the mark inside a turning ring, used while the app starts). All of the 15 places that said "Loading…" now use them through the same component. Each fades in after 200 ms so a fast load shows nothing, stands still under reduced motion, and is one polite status with a hidden label, so screen readers hear the same text as before.
+- How validated: _(developer to fill)_ Evidence: full unit run green (4062 tests) with new tests for each loader. Not done: watching it on a slow connection on a real phone (throttle the network in DevTools to see it).
+- Lesson: a skeleton in the shape of the page reads as progress; a word reads as a pause.

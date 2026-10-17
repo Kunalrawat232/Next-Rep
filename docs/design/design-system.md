@@ -30,6 +30,10 @@ Type: Geist (self-hosted, variable). Styles `display` 40/44, `title` 28/34, `hea
 
 Surfaces are translucent glass over a soft colour layer (`#ambient`, fixed behind the app), set in the tokens block of `src/index.css` for both themes: `--glass-fill`, `--glass-fill-strong`, `--glass-line` (the `border-glass-line` colour), `--glass-highlight`, `--glass-shadow`, `--glass-blur`, `--ambient-a/b/c`. Use `glass-flat` for cards, buttons, chips and pills (no blur, so cheap in long lists) and `glass` for the few overlays that sit over scrolling content (bars, dialogs). `Card`, `Button` and `Chip` already do. Text colours must keep 4.5:1 on the glass over the brightest ambient glow; `tests/design/tokens.test.ts` checks it. The floating Workout button is also a liquid glass lens (liquid-gl, one config in `src/lib/liquidGlass.ts`, a Settings switch). See [ADR-016](../architecture/decisions/016-liquid-glass.md).
 
+## Loaders
+
+A screen waiting for data shows a skeleton of what is coming (a title and glass cards of shimmering blocks), not a word: `LoadingMessage` (`variant="page"`, the default). Inside a card, `LoadingMessage variant="inline"` is a ring with two short blocks. While the app starts and finds out who is signed in, `FullPageLoader` shows the mark inside a turning ring. Every loader fades in after 200 ms (`.loader-in`), so data that arrives at once shows no loader at all; the shimmer and the ring stand still when the person asked for less motion; and each is one announced status with a hidden label (the visible picture is not read out). Build any new loader from `Skeleton` and `Spinner` in `src/components/Loading.tsx`.
+
 ## Shared components
 
 Keep these names identical in code and in Claude Design.

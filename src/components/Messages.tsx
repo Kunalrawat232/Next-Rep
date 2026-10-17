@@ -2,15 +2,6 @@ import type { ReactNode } from 'react';
 import { Button } from './Button';
 import { cardClasses } from './Card';
 
-/** "Loading…" while a screen waits for its data. */
-export function LoadingMessage({ children = 'Loading…' }: { children?: ReactNode }) {
-  return (
-    <p role="status" className="text-ink-muted">
-      {children}
-    </p>
-  );
-}
-
 const error = cardClasses('', 'danger');
 
 /**

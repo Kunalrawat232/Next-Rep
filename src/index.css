@@ -179,3 +179,42 @@ input[type='search']::-webkit-search-cancel-button {
     radial-gradient(70% 55% at 35% 100%, var(--ambient-c), transparent 70%),
     var(--color-surface-100);
 }
+
+/* Loaders. They fade in after a moment, so something that loads at once never flashes a loader. */
+@keyframes loader-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.loader-in {
+  opacity: 0;
+  animation: loader-in 0.3s ease-out 0.2s forwards;
+}
+
+/* A placeholder block with a soft light sweeping across it. */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--color-surface-300) 30%,
+    color-mix(in srgb, var(--color-ink) 14%, var(--color-surface-300)) 50%,
+    var(--color-surface-300) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

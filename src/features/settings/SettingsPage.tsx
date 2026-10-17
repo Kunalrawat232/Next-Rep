@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Button, buttonClasses, Section, Switch } from '../../components';
+import { Button, buttonClasses, LoadingMessage, Section, Switch } from '../../components';
 import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { summarizeBars } from '../../domain/gyms';
 import { useGlassEffect } from '../../lib/useGlassEffect';
@@ -44,11 +44,7 @@ export function SettingsPage() {
       </Section>
 
       <Section headingId="gym-heading" title="Your bars">
-        {catalog.status === 'loading' && (
-          <p role="status" className="text-callout text-ink-muted">
-            Loading…
-          </p>
-        )}
+        {catalog.status === 'loading' && <LoadingMessage variant="inline" />}
         {catalog.status === 'error' && (
           <div role="alert" className="flex flex-col items-start gap-2">
             <p className="text-callout">Could not load your gym.</p>
