@@ -33,12 +33,12 @@ describe('the weight unit', () => {
   it('starts on kg, and saves lb to the profile', async () => {
     const { user, profile } = renderApp('/settings');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    expect(within(group).getByRole('button', { name: 'kg' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Kg' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    await user.click(within(group).getByRole('button', { name: 'lb' }));
-    expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    await user.click(within(group).getByRole('button', { name: 'Lb' }));
+    expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -49,7 +49,7 @@ describe('the weight unit', () => {
     renderApp('/settings', { savedUnit: 'lb' });
     const group = await screen.findByRole('group', { name: 'Weight unit' });
     await waitFor(() =>
-      expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+      expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
         'aria-pressed',
         'true',
       ),
@@ -60,13 +60,13 @@ describe('the weight unit', () => {
     const first = renderApp('/settings', { userId: 'reload-user' });
     await first.user.click(
       within(await screen.findByRole('group', { name: 'Weight unit' })).getByRole('button', {
-        name: 'lb',
+        name: 'Lb',
       }),
     );
     first.unmount();
     renderApp('/settings', { userId: 'reload-user' });
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -115,8 +115,8 @@ describe('the unit buttons', () => {
   it('look like the other buttons on the page, with the chosen unit filled', async () => {
     renderApp('/settings');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    const kg = within(group).getByRole('button', { name: 'kg' });
-    const lb = within(group).getByRole('button', { name: 'lb' });
+    const kg = within(group).getByRole('button', { name: 'Kg' });
+    const lb = within(group).getByRole('button', { name: 'Lb' });
     for (const button of [kg, lb])
       expect(button).toHaveClass('rounded-md', 'min-h-touch', 'font-semibold');
     expect(kg).toHaveClass('bg-accent');
@@ -230,9 +230,9 @@ describe('the page without a connection', () => {
     const { user, profile } = renderApp('/settings', { gymsFail: 'offline' });
     profile.failNext('setUnit', 'offline');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    await user.click(within(group).getByRole('button', { name: 'lb' }));
+    await user.click(within(group).getByRole('button', { name: 'Lb' }));
     await user.click(screen.getByRole('switch', { name: 'Light mode' }));
-    expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );

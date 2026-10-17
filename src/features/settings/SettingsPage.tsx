@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
 import { Button, buttonClasses, LoadingMessage, Section, Switch } from '../../components';
-import { DEMO_MEDIA, PHOTO_MEDIA } from '../../domain/exercises/demoMedia';
 import { summarizeBars } from '../../domain/gyms';
 import { useGlassEffect } from '../../lib/useGlassEffect';
 import { useAuth } from '../auth';
@@ -8,6 +7,8 @@ import { useMyGym } from '../workout';
 import { SignOutPanel } from './SignOutPanel';
 import { useTheme } from './useTheme';
 import { useUnit } from './UnitProvider';
+
+const UNIT_BUTTON = { kg: 'Kg', lb: 'Lb' } as const;
 
 /** Weight unit, your bars, appearance and the account. */
 export function SettingsPage() {
@@ -39,7 +40,7 @@ export function SettingsPage() {
               className="flex-1"
               onClick={() => setUnit(choice)}
             >
-              {choice}
+              {UNIT_BUTTON[choice]}
             </Button>
           ))}
         </div>
@@ -98,40 +99,6 @@ export function SettingsPage() {
           </div>
           <Switch label="Liquid glass effect" checked={glass.enabled} onChange={glass.setEnabled} />
         </div>
-      </Section>
-
-      <Section headingId="credits-heading" title="About and credits">
-        <p className="text-callout text-ink-muted">{DEMO_MEDIA.credit.note}</p>
-        <p className="text-callout">
-          Exercise demonstrations ©{' '}
-          <a
-            href={DEMO_MEDIA.credit.ownerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-accent"
-          >
-            {DEMO_MEDIA.credit.owner}
-          </a>
-          . Exercise data from{' '}
-          <a
-            href={DEMO_MEDIA.credit.datasetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-accent"
-          >
-            {DEMO_MEDIA.credit.dataset}
-          </a>{' '}
-          (MIT licence). {PHOTO_MEDIA.credit.note} See{' '}
-          <a
-            href={PHOTO_MEDIA.credit.datasetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-accent"
-          >
-            {PHOTO_MEDIA.credit.dataset}
-          </a>
-          .
-        </p>
       </Section>
 
       <Section headingId="account-heading" title="Account">

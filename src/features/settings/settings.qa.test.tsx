@@ -100,11 +100,11 @@ describe('QA unit and theme controls', () => {
         .getAllByRole('button')
         .filter((b) => b.getAttribute('aria-pressed') === 'true')
         .map((b) => b.textContent);
-    expect(pressed()).toEqual(['kg']);
-    await user.click(within(group).getByRole('button', { name: 'lb' }));
-    expect(pressed()).toEqual(['lb']);
-    await user.click(within(group).getByRole('button', { name: 'lb' }));
-    expect(pressed()).toEqual(['lb']);
+    expect(pressed()).toEqual(['Kg']);
+    await user.click(within(group).getByRole('button', { name: 'Lb' }));
+    expect(pressed()).toEqual(['Lb']);
+    await user.click(within(group).getByRole('button', { name: 'Lb' }));
+    expect(pressed()).toEqual(['Lb']);
   });
 
   it('keeps the unit on the screen when the save is refused for any reason, and resends after a reload if it was only a fault', async () => {
@@ -112,10 +112,10 @@ describe('QA unit and theme controls', () => {
     const first = renderApp('/settings', { userId });
     first.profile.failNext('setUnit', 'unknown');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    await first.user.click(within(group).getByRole('button', { name: 'lb' }));
+    await first.user.click(within(group).getByRole('button', { name: 'Lb' }));
     await waitFor(() => expect(first.profile.service.setUnit).toHaveBeenCalledTimes(1));
     expect(first.profile.saved()).toBeNull();
-    expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -123,7 +123,7 @@ describe('QA unit and theme controls', () => {
 
     const second = renderApp('/settings', { userId });
     const again = await screen.findByRole('group', { name: 'Weight unit' });
-    expect(within(again).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    expect(within(again).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -169,7 +169,7 @@ describe('QA unit and theme controls', () => {
     localStorage.setItem(`next-rep-unit-${userId}`, 'LB');
     renderApp('/settings', { userId });
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    expect(within(group).getByRole('button', { name: 'kg' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Kg' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -178,9 +178,9 @@ describe('QA unit and theme controls', () => {
   it('a unit change that arrives from the keyboard (Enter on a focused chip) works like a tap', async () => {
     const { user } = renderApp('/settings');
     const group = await screen.findByRole('group', { name: 'Weight unit' });
-    within(group).getByRole('button', { name: 'lb' }).focus();
+    within(group).getByRole('button', { name: 'Lb' }).focus();
     await user.keyboard('{Enter}');
-    expect(within(group).getByRole('button', { name: 'lb' })).toHaveAttribute(
+    expect(within(group).getByRole('button', { name: 'Lb' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
