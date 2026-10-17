@@ -387,3 +387,52 @@ describe('turnsFor', () => {
     ).toEqual([{ role: 'user', text: 'first\nsecond\nthird' }]);
   });
 });
+
+describe('what the server does not take on trust', () => {
+  it('cleans hidden characters from the question and every earlier turn, and holds earlier questions to 500 characters', async () => {
+    const { deps: d, calls } = deps();
+    const long = 'x'.repeat(1500);
+    const response = await handleCoach(
+      request({
+        question: 'Bench\u202E tips\u200B',
+        history: [
+          { role: 'user', text: `hid\u2066den ${long}` },
+          { role: 'coach', text: 'ok\u200F answer' },
+        ],
+      }),
+      d,
+    );
+    expect(response.status).toBe(200);
+    const sent = calls.ask[0]!.turns;
+    expect(sent.at(-1)!.text).toBe('Bench tips');
+    expect(sent[0]!.text.startsWith('hidden x')).toBe(true);
+    expect(sent[0]!.text.length).toBeLessThanOrEqual(500);
+    expect(sent[1]!.text).toBe('ok answer');
+  });
+
+  it('refuses a question that is nothing but hidden characters, without asking the model', async () => {
+    const { deps: d, calls } = deps();
+    const response = await handleCoach(request({ question: '\u200B\u200B', history: [] }), d);
+    expect(response.status).toBe(400);
+    expect(calls.ask).toHaveLength(0);
+  });
+
+  it.each([
+    'See https://example.com for more.',
+    'Try www.example.com.',
+    '```js\nalert(1)\n```',
+    'Use <b>bold</b> here.',
+  ])('does not pass on a reply with a link, code or an HTML tag: %s', async (text) => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { deps: d } = deps({ ask: async () => model(true, text) });
+    const response = await handleCoach(request(valid), d);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ status: 'unavailable' });
+  });
+
+  it('still passes on a reply that uses < or > as signs', async () => {
+    const { deps: d } = deps({ ask: async () => model(true, 'Keep RPE < 9 and reps > 5.') });
+    const response = await handleCoach(request(valid), d);
+    expect(await response.json()).toEqual({ status: 'ok', text: 'Keep RPE < 9 and reps > 5.' });
+  });
+});

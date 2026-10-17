@@ -37,6 +37,9 @@ describe('isObviouslyOffTopic', () => {
     'Is a 10% jump too much?',
     'Write me a workout plan',
     'Write a 4 day split for me',
+    'Write me a training program',
+    'Write me a program for chest day',
+    'Write a bulking meal plan',
     '',
   ])('lets "%s" through to the model', (question) => {
     expect(isObviouslyOffTopic(question)).toBe(false);

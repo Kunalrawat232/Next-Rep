@@ -430,3 +430,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: a round send button and the `n/500` count inside an auto-growing box (Enter sends, Shift+Enter makes a new line, Enter while an input method is composing does nothing); the name Kai as one constant used by the screen, the error messages, the typing label and the prompt (which says Kai is an AI, not a person); a person glyph avatar.
 - How validated: _(developer to fill)_ Evidence: the coach screen and handler tests pass (109, run on the coach tests only). Not done: seeing it on a phone.
 - Lesson: put a persona's name in one constant so renaming is one edit, and keep the prompt honest that it is an AI.
+
+## 2026-10-17: Review fixes for the coach
+
+- Tool: Claude Code, with the read-only `security-auditor` and `code-reviewer` agents.
+- Found by the reviewers: Clear during a question brought the old chat back; a gym request ("write me a training program") was refused by our own prefilter; a failed save of the reply left the question stuck; the browser could forge earlier turns; nothing checked the reply's form; the training summary started on.
+- AI produced: Clear is disabled while a question is out and is guarded and reports a failure; the question is taken back out when anything fails; the server cleans every turn and refuses links, code and tags in a reply; the prefilter no longer catches "program"; the summary starts off. 17 new tests.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4250). Not done: rate-limit buckets and a daily ceiling (need a migration), the 48 px send button and `PageHeader`, the real-schema check script.
+- Lesson: an agent review of your own feature finds bugs that your own tests were written around.

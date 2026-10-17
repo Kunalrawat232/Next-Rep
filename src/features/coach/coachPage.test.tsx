@@ -1,3 +1,4 @@
+import type { Table } from 'dexie';
 import { COACH_NAME } from '../../domain/coach';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -102,6 +103,11 @@ describe('the Coach screen', () => {
     });
   });
 
+  it('starts with sharing off, and says so on the switch', async () => {
+    renderApp('/coach', { coach: fakeCoach().service });
+    expect(await screen.findByRole('switch', { name: 'Use my last 3 workouts' })).not.toBeChecked();
+  });
+
   it('sends a summary of the last workouts, with no ids and no account details', async () => {
     const userId = `coach-${Math.random()}`;
     const seed = renderApp('/', { userId, server: offlineServer() });
@@ -119,6 +125,7 @@ describe('the Coach screen', () => {
 
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { userId, coach: coach.service, server: offlineServer() });
+    await user.click(await screen.findByRole('switch', { name: 'Use my last 3 workouts' }));
     await user.type(await box(), 'How am I doing?');
     await user.click(askButton());
     await waitFor(() => expect(coach.asked).toHaveLength(1));
@@ -136,10 +143,9 @@ describe('the Coach screen', () => {
     expect(sent).not.toContain('ada@example.com');
   });
 
-  it('sends no summary when the switch is off', async () => {
+  it('sends no summary unless the switch is turned on', async () => {
     const coach = fakeCoach();
     const { user } = renderApp('/coach', { coach: coach.service });
-    await user.click(await screen.findByRole('switch', { name: 'Use my last 3 workouts' }));
     await user.type(await box(), 'General question');
     await user.click(askButton());
     await waitFor(() => expect(coach.asked).toHaveLength(1));
@@ -323,7 +329,7 @@ describe('the Coach screen', () => {
 
   it('is reached from the tab bar', async () => {
     const { router, user } = renderApp('/');
-    await user.click(await screen.findByRole('link', { name: 'Ai coach' }));
+    await user.click(await screen.findByRole('link', { name: 'AI Coach' }));
     expect(router.state.location.pathname).toBe('/coach');
   });
 
@@ -332,5 +338,89 @@ describe('the Coach screen', () => {
     await user.type(await box(), 'Anyone there?');
     await user.click(askButton());
     expect(await screen.findByRole('alert')).toHaveTextContent(/can't answer right now/i);
+  });
+});
+
+/** The shared methods of Dexie tables: the app opens its own copy of the database, so they are patched here. */
+const tableProto = (db: { coachMessages: Table<unknown, string> }) => {
+  let proto: object | null = Object.getPrototypeOf(db.coachMessages);
+  while (proto && !Object.prototype.hasOwnProperty.call(proto, 'put'))
+    proto = Object.getPrototypeOf(proto);
+  return proto as Table<unknown, string>;
+};
+
+describe('the chat while a question is out, and when the device store fails', () => {
+  /** A coach whose answer is held until the test lets it go. */
+  function heldCoach() {
+    let release: (answer: CoachAnswer) => void = () => undefined;
+    const service: CoachService = {
+      ask: vi.fn<CoachService['ask']>(
+        () =>
+          new Promise<CoachAnswer>((resolve) => {
+            release = resolve;
+          }),
+      ),
+    };
+    return { service, release: (answer: CoachAnswer) => release(answer) };
+  }
+
+  it('cannot be cleared while a question is out, so the answer never brings an old chat back', async () => {
+    const held = heldCoach();
+    const { user } = renderApp('/coach', { coach: held.service });
+    await user.type(await box(), 'First question');
+    await user.click(askButton());
+    const clear = await screen.findByRole('button', { name: 'Clear chat' });
+    expect(clear).toBeDisabled();
+    act(() => held.release({ status: 'ok', text: 'The answer' }));
+    await screen.findByText('The answer');
+    expect(screen.getByText('First question')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Clear chat' })).toBeEnabled();
+  });
+
+  it('takes the question back out of the chat and gives it back when the answer cannot be kept', async () => {
+    const { user, store, db } = renderApp('/coach', { coach: fakeCoach().service });
+    const put = tableProto(db).put;
+    let calls = 0;
+    vi.spyOn(tableProto(db), 'put').mockImplementation(function (this: Table, ...args) {
+      if (this.name !== 'coachMessages') return put.apply(this, args);
+      calls += 1;
+      if (calls === 2)
+        return Promise.reject(new Error('quota')) as unknown as ReturnType<typeof put>;
+      return put.apply(this, args);
+    });
+    await user.type(await box(), 'Will this be kept?');
+    await user.click(askButton());
+    expect(await screen.findByRole('alert')).toHaveTextContent(/can't answer right now/i);
+    expect(screen.queryByRole('list', { name: 'Chat with the coach' })).not.toBeInTheDocument();
+    expect(await box()).toHaveValue('Will this be kept?');
+    expect(await store.coachMessages()).toHaveLength(0);
+  });
+
+  it('clears once when tapped twice at the same instant', async () => {
+    const { user, db } = renderApp('/coach', { coach: fakeCoach().service });
+    await user.type(await box(), 'Hello');
+    await user.click(askButton());
+    await screen.findByText('Add 2.5 kg.');
+    const clear = tableProto(db).clear;
+    let cleared = 0;
+    vi.spyOn(tableProto(db), 'clear').mockImplementation(function (this: Table) {
+      if (this.name === 'coachMessages') cleared += 1;
+      return clear.call(this);
+    });
+    await user.click(await screen.findByRole('button', { name: 'Clear chat' }));
+    await tapTogether(await screen.findByRole('button', { name: 'Clear it' }));
+    await waitFor(() => expect(cleared).toBe(1));
+  });
+
+  it('says so when the chat cannot be cleared, and keeps it', async () => {
+    const { user, db } = renderApp('/coach', { coach: fakeCoach().service });
+    await user.type(await box(), 'Hello');
+    await user.click(askButton());
+    await screen.findByText('Add 2.5 kg.');
+    vi.spyOn(tableProto(db), 'clear').mockRejectedValue(new Error('closed'));
+    await user.click(await screen.findByRole('button', { name: 'Clear chat' }));
+    await user.click(await screen.findByRole('button', { name: 'Clear it' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not clear the chat/i);
+    expect(screen.getByText('Hello')).toBeInTheDocument();
   });
 });

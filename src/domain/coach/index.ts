@@ -1,31 +1,18 @@
+import { cleanText } from './clean';
 import { groupByExercise, topSet } from '../history';
 import type { Unit } from '../schemas';
 import { toDisplay } from '../units';
 import {
   COACH_HISTORY_MAX,
-  COACH_QUESTION_MAX,
   CoachContextSchema,
   type CoachContext,
   type CoachTurn,
 } from './schemas';
 
 export * from './schemas';
+export { cleanQuestion, cleanText } from './clean';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** Control characters and the invisible ones that can hide text, which a question or a name never needs. */
-// eslint-disable-next-line no-control-regex -- stripping control characters is the point
-const HIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u200B-\u200D\u2060\uFEFF]/g;
-
-/** A question as it is sent: no hidden characters, spaces tidied, and no longer than the limit. */
-export function cleanQuestion(text: string): string {
-  return text
-    .replace(HIDDEN, '')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-    .slice(0, COACH_QUESTION_MAX);
-}
-
 /** The last few turns of a chat, the most recent ones. */
 export function lastTurns<T>(turns: readonly T[], max: number = COACH_HISTORY_MAX): T[] {
   return turns.slice(Math.max(0, turns.length - max));
@@ -46,8 +33,7 @@ export type CoachInput = {
 };
 
 const shown = (kg: number, unit: Unit) => Math.round(toDisplay(kg, unit) * 10) / 10;
-const tidyName = (name: string) =>
-  name.replace(HIDDEN, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+const tidyName = (name: string) => cleanText(name, 200).replace(/\s+/g, ' ').trim().slice(0, 40);
 
 /**
  * What the coach is told: the last three finished workouts and the suggestion, as small numbers in the user's

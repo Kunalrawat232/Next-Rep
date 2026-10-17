@@ -1,6 +1,8 @@
 // POST /api/coach: the AI coach. Pure of Vercel and the network: everything it talks to is passed in, so the
 // tests use fakes. The coach only answers in text. It never writes data and never decides a number (see ADR-017).
+import { cleanText } from '../../src/domain/coach/clean.js';
 import {
+  COACH_QUESTION_MAX,
   COACH_REPLY_MAX,
   CoachModelOutputSchema,
   CoachRequestSchema,
@@ -39,6 +41,28 @@ function logFailure(step: string, error?: unknown) {
   const kind = error instanceof Error ? error.name : error === undefined ? '' : 'unknown';
   const status = (error as { status?: unknown } | null)?.status;
   console.error(`coach: ${step}`, kind, typeof status === 'number' ? `HTTP ${status}` : '');
+}
+
+/**
+ * The request with every piece of text cleaned on the server (the browser's own cleaning cannot be trusted), and
+ * with the person's earlier turns held to the same length as a question, so history cannot carry a long prompt.
+ */
+export function cleanRequest(request: CoachRequest): CoachRequest {
+  const history = request.history
+    .map((turn) => ({
+      role: turn.role,
+      text: cleanText(turn.text, turn.role === 'user' ? COACH_QUESTION_MAX : COACH_REPLY_MAX),
+    }))
+    .filter((turn) => turn.text !== '');
+  return { ...request, history, question: cleanText(request.question, COACH_QUESTION_MAX) };
+}
+
+/**
+ * Whether a reply looks like what a coach says: plain text. A link, a code block or an HTML tag is not, whatever the
+ * model decided about the topic, so it is not passed on.
+ */
+export function isPlainReply(text: string): boolean {
+  return !/https?:\/\/|www\.|```|<\/?[a-z!]/i.test(text);
 }
 
 /**
@@ -96,6 +120,8 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
   }
   const parsed = CoachRequestSchema.safeParse(body);
   if (!parsed.success) return reply(400, { status: 'invalid' });
+  const cleaned = cleanRequest(parsed.data);
+  if (cleaned.question === '') return reply(400, { status: 'invalid' });
 
   try {
     const perMinute = await deps.consume(token, 60);
@@ -116,12 +142,12 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
   }
 
   // A question that is plainly not about the gym or diet is turned away without asking the model.
-  if (isObviouslyOffTopic(parsed.data.question)) return reply(200, { status: 'off_topic' });
+  if (isObviouslyOffTopic(cleaned.question)) return reply(200, { status: 'off_topic' });
 
   try {
     const answer = await deps.ask({
-      system: `${COACH_PROMPT}\n\n${factsFor(parsed.data.context)}`,
-      turns: turnsFor(parsed.data),
+      system: `${COACH_PROMPT}\n\n${factsFor(cleaned.context)}`,
+      turns: turnsFor(cleaned),
       signal: AbortSignal.timeout(COACH_TIMEOUT_MS),
     });
     const output = readModelOutput(answer);
@@ -134,6 +160,10 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
     const textOut = output.reply.trim().slice(0, COACH_REPLY_MAX);
     if (textOut === '') {
       logFailure('the model answered with nothing');
+      return unavailable(503);
+    }
+    if (!isPlainReply(textOut)) {
+      logFailure('the model answered with a link, code or markup');
       return unavailable(503);
     }
     return reply(200, { status: 'ok', text: textOut });

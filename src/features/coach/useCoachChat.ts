@@ -40,6 +40,7 @@ export function useCoachChat() {
   const [state, setState] = useState<ChatState>({ status: 'loading' });
   const [problem, setProblem] = useState<string | null>(null);
   const { pending: sending, begin, end } = usePending();
+  const sendingRef = useRef(false);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -112,10 +113,12 @@ export function useCoachChat() {
     async (text: string, shareTraining: boolean): Promise<'sent' | 'failed' | 'ignored'> => {
       const question = cleanQuestion(text);
       if (question === '' || state.status !== 'ready' || !begin()) return 'ignored';
+      sendingRef.current = true;
       setProblem(null);
+      let asked: ChatMessage | null = null;
       try {
         const before = state.messages;
-        const asked = await store.addCoachMessage({ role: 'user', text: question });
+        asked = await store.addCoachMessage({ role: 'user', text: question });
         if (mounted.current) setState({ status: 'ready', messages: [...before, asked] });
         const context = shareTraining ? await summary() : null;
         const answer = await service.ask({
@@ -127,7 +130,7 @@ export function useCoachChat() {
           // The question is taken back out of the chat, so the person can edit it and send it again.
           await store.removeCoachMessage(asked.id);
           if (mounted.current) {
-            setState({ status: 'ready', messages: before });
+            setState({ status: 'ready', messages: await store.coachMessages() });
             setProblem(COACH_PROBLEM[answer.status]);
           }
           return 'failed';
@@ -138,21 +141,35 @@ export function useCoachChat() {
         if (mounted.current) setState({ status: 'ready', messages: [...before, asked, reply] });
         return 'sent';
       } catch {
+        // Whatever failed, the question must not stay in the chat: it goes back to the person to send again.
+        if (asked) {
+          try {
+            await store.removeCoachMessage(asked.id);
+            if (mounted.current)
+              setState({ status: 'ready', messages: await store.coachMessages() });
+          } catch {
+            // The device store is not usable; the notice below still tells the person.
+          }
+        }
         if (mounted.current) setProblem(COACH_PROBLEM.unavailable);
         return 'failed';
       } finally {
+        sendingRef.current = false;
         end();
       }
     },
     [state, store, service, summary, begin, end],
   );
 
-  const clear = useCallback(async () => {
+  /** Forgets the chat. Not while a question is out: its answer would bring the old chat back. Returns whether it was cleared. */
+  const clear = useCallback(async (): Promise<boolean> => {
+    if (sendingRef.current) return false;
     await store.clearCoachMessages();
     if (mounted.current) {
       setState({ status: 'ready', messages: [] });
       setProblem(null);
     }
+    return true;
   }, [store]);
 
   return { state, sending, problem, send, clear };

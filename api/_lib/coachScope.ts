@@ -13,7 +13,7 @@ const OBVIOUS: RegExp[] = [
   /\b(?:stock|share|bitcoin|crypto|ethereum)\s+price\b/i,
   /\bcapital\s+(?:city\s+)?of\b/i,
   /\b(?:who is|who's)\s+the\s+(?:president|prime minister)\b/i,
-  /\bwrite\s+(?:me\s+)?(?:a|an|some)\s+(?:python|javascript|java|sql|code|program|script|poem|story|essay|song|email|letter)\b/i,
+  /\bwrite\s+(?:me\s+)?(?:a|an|some)\s+(?:python|javascript|java|sql|code|script|poem|story|essay|song|email|letter)\b/i,
 ];
 
 /** True for a question that plainly has nothing to do with the gym or diet. */

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { Button, Card, Chip, ErrorMessage, LoadingMessage, Switch } from '../../components';
 import { COACH_NAME, COACH_QUESTION_MAX } from '../../domain/coach';
 import { useOnline } from '../../lib/useOnline';
+import { usePending } from '../../lib/usePending';
 import { useSettled } from '../../lib/useSettled';
 import { CoachAvatar, CoachBubble, TypingBubble } from './ChatParts';
 import { CoachText } from './CoachText';
@@ -31,9 +32,11 @@ export function CoachPage() {
   const online = useOnline();
   const settled = useSettled(chat.state.status === 'ready');
   const [draft, setDraft] = useState('');
-  const [share, setShare] = useState(true);
+  const [share, setShare] = useState(false);
   const [seen, setSeen] = useState(noticeSeen);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const [clearFailed, setClearFailed] = useState(false);
+  const clearing = usePending();
   const end = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
   const count = chat.state.status === 'ready' ? chat.state.messages.length : 0;
@@ -95,9 +98,18 @@ export function CoachPage() {
             <div className="flex gap-2">
               <Button
                 variant="danger"
+                disabled={chat.sending || clearing.pending}
                 onClick={async () => {
-                  await chat.clear();
-                  setConfirmingClear(false);
+                  if (!clearing.begin()) return;
+                  try {
+                    await chat.clear();
+                    setClearFailed(false);
+                    setConfirmingClear(false);
+                  } catch {
+                    setClearFailed(true);
+                  } finally {
+                    clearing.end();
+                  }
                 }}
               >
                 Clear it
@@ -107,7 +119,14 @@ export function CoachPage() {
               </Button>
             </div>
           ) : (
-            <Button variant="secondary" onClick={() => setConfirmingClear(true)}>
+            <Button
+              variant="secondary"
+              disabled={chat.sending}
+              onClick={() => {
+                setClearFailed(false);
+                setConfirmingClear(true);
+              }}
+            >
               Clear chat
             </Button>
           ))}
@@ -117,7 +136,7 @@ export function CoachPage() {
         <Card role="note" tone="accent" className="flex flex-col gap-3">
           <p className="text-callout">
             {COACH_NAME} is an AI coach that gives training tips, not medical advice. Your question,
-            and a short summary of your recent workouts if you leave that on, go to Google&apos;s
+            and a short summary of your recent workouts if you turn that on, go to Google&apos;s
             free AI service, which may use it to improve its products. Your chat stays on this
             device.
           </p>
@@ -171,6 +190,7 @@ export function CoachPage() {
       )}
       <div ref={end} />
 
+      {clearFailed && <ErrorMessage>Could not clear the chat. Try again.</ErrorMessage>}
       {chat.problem && <ErrorMessage>{chat.problem}</ErrorMessage>}
 
       <form onSubmit={submit} className="flex flex-col gap-3">
