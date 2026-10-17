@@ -397,3 +397,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Decisions kept in the code, not the prompt alone: the coach cannot write anything; the suggested weight comes from Next Rep's rules and is given to the coach as a fact; replies are never shown as markup.
 - How validated: _(developer to fill)_ Evidence: new tests for the summary builder, the schemas, the handler (auth, limits, injection, every failure), the client service, the device chat store and the screen all pass (only the new tests were run; the full suite was not, at the developer's earlier request). Not done: a call to the live function, and reading real answers for quality and safety, which only the developer can judge.
 - Lesson: when an AI feature is added to a data app, make it read-only and hand it the numbers instead of letting it produce them.
+
+## 2026-10-17: Keeping the coach to the gym and diet
+
+- Tool: Claude Code.
+- Asked: the coach must not answer things like the weather or a maths equation; for anything outside gym and diet it should say it cannot answer.
+- Decision: do not rely on the prompt alone. Three layers: the prompt (a strict scope, now including diet and nutrition for fitness); a structured answer, `{onTopic, reply}`, where the server uses `onTopic` only to refuse and the refusal text is ours (a model cannot add a partial answer, and an unreadable answer shows nothing); and a short exact filter for plain cases (sums, "solve … =", the weather, prices, code and poem requests) that skips the model. The filter is tested against gym phrases that look similar ("5x5", "hot weather training", "solve a plateau") so it never catches a real question.
+- Also changed: diet and nutrition questions are now allowed (no crash diets, no drugs, medical conditions go to a doctor or dietitian); the screen says it only answers gym and diet questions and has a diet starter idea.
+- How validated: _(developer to fill)_ Evidence: new tests for the filter (14 turned away, 16 let through), the handler (off topic from the model, unreadable output, fenced JSON, limits still counted) and the screen all pass (only these tests were run). Not done: trying real off-topic and tricky questions against the live model, which is the real test of the prompt.
+- Lesson: let code own the refusal; a model can only be asked nicely.
