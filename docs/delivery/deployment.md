@@ -133,7 +133,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] Supabase project created (free); URL and publishable key saved (in use since 2026-10-08)
 - [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase` (2026-10-08)
 - [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises; checked 2026-10-11)
-- [ ] `0005_rate_limit_scopes.sql` written (2026-10-17) and tested in PGlite; apply it to the hosted project BEFORE deploying the coach (it keeps the one-argument `consume_rate_limit` so an older `/api/parse` keeps working).
+- [x] `0005_rate_limit_scopes.sql` written (2026-10-17), tested in PGlite and applied through the Supabase plugin on 2026-10-18 (it cleared 11 old counter rows; `api_rate_limits` has `scope` and `window_seconds`, `api_daily_totals` exists with RLS on, the three functions are executable by `authenticated` only; the one-argument `consume_rate_limit` stays so an older `/api/parse` keeps working). The security advisor shows only the by-design notices for these tables and functions.
 - [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin on 2026-10-16 (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in, 2026-10-08)
