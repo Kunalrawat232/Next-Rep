@@ -105,7 +105,7 @@ describe('counters per endpoint and window', () => {
 });
 
 describe('the daily ceiling', () => {
-  const ceiling = (max: number) => `select public.consume_daily_ceiling('gemini', ${max}) as c`;
+  const ceiling = "select public.consume_daily_ceiling('gemini') as c";
   const total = async () =>
     (
       (
@@ -115,33 +115,38 @@ describe('the daily ceiling', () => {
       ).rows[0] as { n: number }
     ).n;
 
-  it('allows calls up to the ceiling and refuses the next one', async () => {
-    expect(await count(A, ceiling(2))).toBe(true);
-    expect(await count(B, ceiling(2))).toBe(true);
-    expect(await count(A, ceiling(2))).toBe(false);
+  it('is fixed in the database: it allows 1000 calls a day and refuses the 1001st', async () => {
+    await q(
+      "insert into public.api_daily_totals (scope, day, request_count) values ('gemini', (now() at time zone 'utc')::date, 998) on conflict (scope, day) do update set request_count = 998",
+    );
+    expect(await count(A, ceiling)).toBe(true);
+    expect(await count(B, ceiling)).toBe(true);
+    expect(await count(A, ceiling)).toBe(false);
+  });
+
+  it('cannot be given a higher maximum by the caller: there is no such argument', async () => {
+    await expect(
+      as(A, () => q("select public.consume_daily_ceiling('gemini', 1000000)")),
+    ).rejects.toThrow(/does not exist/i);
   });
 
   it('does not let one account use up the project: past its own hourly cap it stops being counted', async () => {
-    const before = await total();
-    let lastA: boolean | number = true;
-    for (let i = 0; i < 101; i++) lastA = await count(A, ceiling(1_000_000));
-    expect(lastA).toBe(false);
-    // A was counted at most up to its own cap (some of the 100 were already used above), and B still gets in.
-    const afterA = await total();
-    expect(afterA - before).toBeLessThanOrEqual(100);
-    expect(await count(B, ceiling(1_000_000))).toBe(true);
-    expect(await total()).toBe(afterA + 1);
+    await q("delete from public.api_daily_totals where scope = 'gemini'");
+    await q("delete from public.api_rate_limits where scope = 'ceiling'");
+    let last: boolean | number = true;
+    for (let i = 0; i < 105; i++) last = await count(A, ceiling);
+    expect(last).toBe(false);
+    expect(await total()).toBe(100);
+    expect(await count(B, ceiling)).toBe(true);
+    expect(await total()).toBe(101);
   });
 
-  it('rejects a bad scope or maximum, signed-out callers and anon, and keeps its table closed', async () => {
-    await expect(
-      as(A, () => q("select public.consume_daily_ceiling('No Good', 5)")),
-    ).rejects.toThrow(/invalid scope/i);
-    await expect(
-      as(A, () => q("select public.consume_daily_ceiling('gemini', 0)")),
-    ).rejects.toThrow(/invalid maximum/i);
-    await expect(as(null, () => q(ceiling(5)))).rejects.toThrow(/not authenticated/i);
-    await expect(as(null, () => q(ceiling(5)), 'anon')).rejects.toThrow(/permission denied/i);
+  it('rejects another scope, signed-out callers and anon, and keeps its table closed', async () => {
+    await expect(as(A, () => q("select public.consume_daily_ceiling('No Good')"))).rejects.toThrow(
+      /invalid scope/i,
+    );
+    await expect(as(null, () => q(ceiling))).rejects.toThrow(/not authenticated/i);
+    await expect(as(null, () => q(ceiling), 'anon')).rejects.toThrow(/permission denied/i);
     await expect(as(A, () => q('select * from public.api_daily_totals'))).rejects.toThrow(
       /permission denied/i,
     );

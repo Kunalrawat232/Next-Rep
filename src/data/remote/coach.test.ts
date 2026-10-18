@@ -49,7 +49,6 @@ describe('the coach service', () => {
 
   it.each([
     ['a server error', answer({ status: 'unavailable' }, 503)],
-    ['an unauthorized answer', answer({ status: 'unauthorized' }, 401)],
     ['a refused request', answer({ status: 'invalid' }, 400)],
     ['an ok status with no text', answer({ status: 'ok' })],
     ['an ok status with empty text', answer({ status: 'ok', text: '' })],
@@ -59,6 +58,12 @@ describe('the coach service', () => {
     expect(await make((async () => response) as never).ask(request)).toEqual({
       status: 'unavailable',
     });
+  });
+
+  it('says the session has ended for a 401, so the person is told to sign in again', async () => {
+    expect(
+      await make((async () => answer({ status: 'unauthorized' }, 401)) as never).ask(request),
+    ).toEqual({ status: 'signed_out' });
   });
 
   it('says offline when the network fails and the device is offline, unavailable when it is online', async () => {
@@ -71,7 +76,7 @@ describe('the coach service', () => {
 
   it('gives no answer without a session, and never calls the network', async () => {
     const send = vi.fn();
-    expect(await make(send as never, null, true).ask(request)).toEqual({ status: 'unavailable' });
+    expect(await make(send as never, null, true).ask(request)).toEqual({ status: 'signed_out' });
     expect(await make(send as never, null, false).ask(request)).toEqual({ status: 'offline' });
     expect(send).not.toHaveBeenCalled();
   });

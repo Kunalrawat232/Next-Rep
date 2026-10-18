@@ -128,6 +128,13 @@ describe('POST /api/coach', () => {
     expect((await handleCoach(request('x'.repeat(30_000)), d)).status).toBe(413);
   });
 
+  it('refuses a body that says it is huge before reading any of it', async () => {
+    const { deps: d, calls } = deps();
+    const big = request(valid, { authorization: 'Bearer tok', 'content-length': '500000' });
+    expect((await handleCoach(big, d)).status).toBe(413);
+    expect(calls.ask).toHaveLength(0);
+  });
+
   it('limits a user per minute and per hour, answering "limited"', async () => {
     const minute = deps({ consume: async (_t, w) => (w === 60 ? COACH_LIMITS.perMinute + 1 : 1) });
     const first = await handleCoach(request(valid), minute.deps);

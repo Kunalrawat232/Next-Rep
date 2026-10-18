@@ -34,17 +34,13 @@ export async function consumeLimit(
   return error || typeof data !== 'number' ? null : data;
 }
 
-/** The most model calls the whole project makes in a day (UTC), so one busy day cannot use up the free tier. */
-export const MODEL_CALLS_PER_DAY = 1000;
-
 /**
- * Counts one model call against the project's day and says whether it is still allowed; null when it cannot be
- * counted. Shared by /api/parse and /api/coach, because they share one free quota.
+ * Counts one model call against the project's day (the ceiling is set in the database, in
+ * `consume_daily_ceiling`) and says whether it is still allowed; null when it cannot be counted. Shared by /api/parse and /api/coach, because they share one free quota.
  */
 export async function consumeModelCall(token: string): Promise<boolean | null> {
   const { data, error } = await supabaseFor(token).rpc('consume_daily_ceiling', {
     p_scope: 'gemini',
-    p_max: MODEL_CALLS_PER_DAY,
   });
   return error || typeof data !== 'boolean' ? null : data;
 }

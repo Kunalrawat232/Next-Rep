@@ -106,6 +106,13 @@ describe('POST /api/parse', () => {
     expect((await handleParse(request('x'.repeat(5000)), d)).status).toBe(413);
   });
 
+  it('refuses a body that says it is huge before reading any of it', async () => {
+    const { deps: d, calls } = deps();
+    const big = request(valid, { authorization: 'Bearer tok', 'content-length': '500000' });
+    expect((await handleParse(big, d)).status).toBe(413);
+    expect(calls.ask).toHaveLength(0);
+  });
+
   it('accepts a transcript of exactly 300 characters and a last set as context', async () => {
     const { deps: d } = deps();
     const body = {

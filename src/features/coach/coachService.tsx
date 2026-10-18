@@ -10,7 +10,9 @@ export type CoachAnswer =
   | { status: 'limited' }
   /** No connection, or the server could not be reached. */
   | { status: 'offline' }
-  /** The coach could not answer right now (a slow or failing model, or no signed-in session). */
+  /** The session has ended: signing in again is the fix, and trying again will not help. */
+  | { status: 'signed_out' }
+  /** The coach could not answer right now (a slow or failing model). */
   | { status: 'unavailable' };
 
 /** The AI coach, as the screens see it. Implemented over `/api/coach` in src/data/remote/coach.ts. */

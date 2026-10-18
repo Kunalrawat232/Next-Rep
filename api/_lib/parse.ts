@@ -37,6 +37,9 @@ export async function handleParse(request: Request, deps: ParseDeps): Promise<Re
     return unavailable(503);
   }
 
+  // A body that says it is far too big is refused before it is read (a character is at most 4 bytes).
+  if (Number(request.headers.get('content-length')) > BODY_MAX_CHARS * 4)
+    return reply(413, { status: 'invalid' });
   const text = await request.text();
   if (text.length > BODY_MAX_CHARS) return reply(413, { status: 'invalid' });
   let body: unknown;

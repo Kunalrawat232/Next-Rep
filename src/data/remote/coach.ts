@@ -27,14 +27,17 @@ export function createFetchCoachService(client: Client, options: Options = {}): 
           client.auth.getSession(),
           new Promise<null>((resolve) => signal.addEventListener('abort', () => resolve(null))),
         ]);
-        const token = session?.data.session?.access_token;
-        if (!token) return { status: online() ? 'unavailable' : 'offline' };
+        // No answer from getSession at all is a slow or missing connection; an answer with no session is a signed-out user.
+        if (session === null) return { status: online() ? 'unavailable' : 'offline' };
+        const token = session.data.session?.access_token;
+        if (!token) return { status: online() ? 'signed_out' : 'offline' };
         const response = await send(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify(request),
           signal,
         });
+        if (response.status === 401) return { status: 'signed_out' };
         if (response.status === 429) return { status: 'limited' };
         if (!response.ok) return { status: 'unavailable' };
         const body = CoachResponseSchema.safeParse(await response.json());

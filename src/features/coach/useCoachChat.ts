@@ -23,6 +23,7 @@ export type ChatState = { status: 'loading' } | { status: 'ready'; messages: Cha
 export const COACH_PROBLEM: Record<Exclude<CoachAnswer['status'], 'ok' | 'off_topic'>, string> = {
   offline: `You're offline. ${COACH_NAME} needs an internet connection.`,
   limited: `You've asked ${COACH_NAME} a lot in a short time. Give it a few minutes and try again.`,
+  signed_out: `Your session has ended. Sign in again to talk to ${COACH_NAME}.`,
   unavailable: `${COACH_NAME} can't answer right now. Please try again in a moment.`,
 };
 

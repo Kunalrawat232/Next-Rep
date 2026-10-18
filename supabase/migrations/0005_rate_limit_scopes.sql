@@ -70,26 +70,26 @@ create table public.api_daily_totals (
 );
 alter table public.api_daily_totals enable row level security;
 
--- Counts one model call and says whether it is still under the day's ceiling. A caller who is not under the
--- per-hour cap below is turned away without touching the shared count, so one account cannot use up the day.
-create function public.consume_daily_ceiling(p_scope text, p_max integer)
+-- Counts one model call and says whether it is still under the day's ceiling. The ceiling is fixed here, not
+-- passed in by the caller. A caller who is over the per-hour cap below is turned away without touching the shared
+-- count, so one account cannot use up the day.
+create function public.consume_daily_ceiling(p_scope text)
 returns boolean
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
+  -- Model calls the whole project may make in a day (UTC): about what the free tier gives. Change it here.
+  v_max constant integer := 1000;
   v_today date := (now() at time zone 'utc')::date;
   v_count integer;
 begin
   if (select auth.uid()) is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
-  if p_scope is null or p_scope !~ '^[a-z]{1,20}$' then
+  if p_scope is null or p_scope <> 'gemini' then
     raise exception 'invalid scope' using errcode = '22023';
-  end if;
-  if p_max is null or p_max not between 1 and 1000000 then
-    raise exception 'invalid maximum' using errcode = '22023';
   end if;
 
   if public.consume_rate_limit('ceiling', 3600) > 100 then
@@ -103,9 +103,9 @@ begin
   on conflict (scope, day) do update set request_count = t.request_count + 1
   returning t.request_count into v_count;
 
-  return v_count <= p_max;
+  return v_count <= v_max;
 end;
 $$;
 
-revoke execute on function public.consume_daily_ceiling(text, integer) from public, anon;
-grant execute on function public.consume_daily_ceiling(text, integer) to authenticated;
+revoke execute on function public.consume_daily_ceiling(text) from public, anon;
+grant execute on function public.consume_daily_ceiling(text) to authenticated;

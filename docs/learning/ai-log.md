@@ -446,3 +446,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: migration 0005 (counters per scope and window, the old one-argument function kept for an older deployment, a daily ceiling table and function with a per-account hourly cap), the two endpoints counting under their own scope and checking the ceiling just before the model call, and the names of the person's own exercises left out of the summary. PGlite tests for the database part and fake-based tests for the endpoints.
 - How validated: _(developer to fill)_ Evidence: `npm run test:db` and the api and coach tests pass. Not done: applying the migration to the hosted project, which needs the developer's go; email confirmation and CAPTCHA at sign-up.
 - Lesson: a shared counter needs the endpoint in its key, and a global limit needs a per-account cap or one account can switch it off for everyone.
+
+## 2026-10-18: Ceiling fixed in the database, and the rest of the review
+
+- Tool: Claude Code, from a background commit review, the security audit and the code review.
+- Found: the daily ceiling took its maximum from the caller; the check script used a hand-written schema; a 401 looked like "can't answer right now"; the send button was 44 px; the body size was checked only after reading it.
+- AI produced: the maximum moved into the database function (and its tests changed to match: there is no argument to raise it); a 401 and a missing session now say "sign in again"; the 48 px button; a content-length precheck in both endpoints; the check script builds its schema with the same Zod call as the function and a test keeps their numbers equal; a bigger token budget for the coach so a thinking model cannot cut the JSON.
+- How validated: _(developer to fill)_ Evidence: the whole suite (4262) and the database tests (117) pass. Not done: running `check:coach` against live Gemini, applying migration 0005 to the hosted project, and email confirmation and CAPTCHA at sign-up.
+- Lesson: a limit that the caller can set is not a limit.

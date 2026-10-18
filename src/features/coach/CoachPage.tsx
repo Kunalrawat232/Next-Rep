@@ -220,7 +220,7 @@ export function CoachPage() {
             aria-label="Send"
             aria-busy={chat.sending}
             disabled={!online || chat.sending || draft.trim() === ''}
-            className="absolute bottom-2 right-2 flex size-11 items-center justify-center rounded-full bg-accent text-on-accent disabled:opacity-40"
+            className="absolute bottom-2 right-2 flex size-12 items-center justify-center rounded-full bg-accent text-on-accent disabled:opacity-40"
           >
             <svg
               width="22"

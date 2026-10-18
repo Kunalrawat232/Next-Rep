@@ -37,6 +37,12 @@ describe('the Coach screen', () => {
     expect(screen.queryByRole('heading', { name: 'Coach' })).not.toBeInTheDocument();
   });
 
+  it('has a send button of at least 48 px', async () => {
+    renderApp('/coach', { coach: fakeCoach().service });
+    await box();
+    expect(askButton().className).toMatch(/\bsize-12\b/);
+  });
+
   it('has the send button and the character count inside the text box', async () => {
     const { user } = renderApp('/coach', { coach: fakeCoach().service });
     const field = await box();
@@ -205,6 +211,7 @@ describe('the Coach screen', () => {
   it.each([
     ['offline', /you're offline/i],
     ['limited', new RegExp(`asked ${COACH_NAME} a lot`, 'i')],
+    ['signed_out', /sign in again/i],
     ['unavailable', /can't answer right now/i],
   ] as const)(
     'says so when the coach is %s, keeps nothing, and gives the question back',

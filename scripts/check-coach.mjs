@@ -3,6 +3,7 @@
 // key, password, token, question or reply). It makes one tiny Gemini call (free tier) and one call to
 // consume_rate_limit() as the test user, which adds one row to that user's own counter.
 import { GoogleGenAI } from '@google/genai';
+import { z } from 'zod';
 
 const env = process.env;
 const placeholder = (value) => !value || /^your-/.test(value);
@@ -42,13 +43,12 @@ if (!placeholder(env.GEMINI_API_KEY) && !placeholder(model)) {
         systemInstruction:
           'You are a gym coach. Answer with JSON only: {"onTopic": true, "reply": "..."} for a gym or diet question, or {"onTopic": false, "reply": ""} otherwise.',
         temperature: 0.6,
-        maxOutputTokens: 300,
+        maxOutputTokens: 1200,
         responseMimeType: 'application/json',
-        responseJsonSchema: {
-          type: 'object',
-          properties: { onTopic: { type: 'boolean' }, reply: { type: 'string' } },
-          required: ['onTopic', 'reply'],
-        },
+        // The same schema api/coach.ts sends (CoachModelOutputSchema), made the same way.
+        responseJsonSchema: z.toJSONSchema(
+          z.object({ onTopic: z.boolean(), reply: z.string().max(4000) }),
+        ),
         abortSignal: AbortSignal.timeout(20000),
       },
     });
