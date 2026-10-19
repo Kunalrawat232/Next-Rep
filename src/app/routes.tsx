@@ -6,7 +6,7 @@ import { CustomExercisePage, ExerciseDetailPage, ExercisesPage } from '../featur
 import { GymPage } from '../features/gyms';
 import { HistoryPage, WorkoutDetailPage } from '../features/history';
 import { HomePage } from '../features/home';
-import { SettingsPage } from '../features/settings';
+import { AboutPage, SettingsPage } from '../features/settings';
 import { ChooseExercisePage, LogSetPage, WorkoutPage } from '../features/workout';
 
 export const appRoutes: RouteObject[] = [
@@ -27,6 +27,7 @@ export const appRoutes: RouteObject[] = [
           { path: '/exercises/:exerciseId', element: <ExerciseDetailPage /> },
           { path: '/coach', element: <CoachPage /> },
           { path: '/settings', element: <SettingsPage /> },
+          { path: '/about', element: <AboutPage /> },
           { path: '/history', element: <HistoryPage /> },
           { path: '/history/:workoutId', element: <WorkoutDetailPage /> },
           {

@@ -101,6 +101,10 @@ export function SettingsPage() {
         </div>
       </Section>
 
+      <Link to="/about" className="min-h-touch content-center font-semibold text-accent">
+        About and credits
+      </Link>
+
       <Section headingId="account-heading" title="Account">
         <div className="flex flex-col">
           <span className="text-body font-semibold">{state.user.email ?? 'Your account'}</span>
