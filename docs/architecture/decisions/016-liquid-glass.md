@@ -1,6 +1,6 @@
 # ADR-016: Glass surfaces in CSS, and one liquid glass lens
 
-- **Status:** proposed (2026-10-16), on branch `feat/liquid-glass`. To revert, delete the branch.
+- **Status:** accepted (2026-10-19; proposed 2026-10-16), on branch `feat/liquid-glass`. To revert, delete the branch.
 
 ## Context
 
@@ -26,6 +26,8 @@ The developer asked to use [liquidGL](https://github.com/naughtyduk/liquidGL) ac
 - **No liquidGL at all:** viable (the CSS glass carries the look); the lens is a small, removable extra.
 
 ## Consequences
+
+- **The library turns off pointer events on the element it lenses** (it treats it as decoration), which made the whole tab bar and the Workout button unclickable on a phone. One rule in `src/index.css` (`[data-liquid] { pointer-events: auto !important }`, tested in `tests/design/tokens.test.ts`) turns them back on. Any new lens on a control needs that rule to keep applying. The round Workout button is not shown on the `/workout` screens, where it covered their buttons.
 
 - The glass effect is only as visible as the colour behind it. The ambient layer is deliberately soft, so text contrast stays above 4.5:1; a stronger background would show more refraction but fail the contrast rules.
 - Reverting: delete the branch, or set `LIQUID_GLASS.enabled` to false, or remove `liquid-gl` and the `.liquidGL` class; the CSS glass does not depend on it.

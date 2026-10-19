@@ -2,6 +2,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } fro
 import type { Unit } from '../../domain/schemas';
 import { toDisplay } from '../../domain/units';
 import { dayLabel } from '../../domain/history';
+import { niceAxis } from '../../domain/progress';
 import type { SessionBest } from '../../domain/records';
 
 const ink = 'var(--color-ink-muted)';
@@ -30,6 +31,10 @@ export function ProgressChart({
     label: dayLabel(p.at, now),
     value: metric === 'reps' ? p.reps : toDisplay(p.totalKg, unit),
   }));
+  const axis = niceAxis(
+    data.map((d) => d.value),
+    pad,
+  );
   return (
     <div aria-hidden="true" className="h-60 w-full">
       <ResponsiveContainer
@@ -47,7 +52,8 @@ export function ProgressChart({
           />
           <YAxis
             width={40}
-            domain={[(min: number) => Math.max(0, min - pad), (max: number) => max + pad]}
+            domain={[axis.min, axis.max]}
+            ticks={axis.ticks}
             tickFormatter={(v: number) => String(Math.round(v * 10) / 10)}
             tick={{ fill: ink, fontSize: 12 }}
             stroke="var(--color-line)"

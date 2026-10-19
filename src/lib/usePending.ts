@@ -5,7 +5,13 @@ import { useCallback, useRef, useState } from 'react';
  * at once from a ref, so two taps in the same instant cannot both pass: the state alone is
  * still the old value until the next render.
  */
-export function usePending(): { pending: boolean; begin: () => boolean; end: () => void } {
+export function usePending(): {
+  pending: boolean;
+  begin: () => boolean;
+  end: () => void;
+  /** Whether something began and has not ended: answers at once, unlike `pending`, which waits for a render. */
+  active: () => boolean;
+} {
   const started = useRef(false);
   const [pending, setPending] = useState(false);
 
@@ -21,5 +27,7 @@ export function usePending(): { pending: boolean; begin: () => boolean; end: () 
     setPending(false);
   }, []);
 
-  return { pending, begin, end };
+  const active = useCallback(() => started.current, []);
+
+  return { pending, begin, end, active };
 }

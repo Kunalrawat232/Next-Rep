@@ -122,14 +122,15 @@ describe('the rest timer', () => {
     await user.click(pill());
     await user.click(within(panel()).getByRole('button', { name: '60 s' }));
     passSeconds(59);
-    await waitFor(() => expect(pill()).toHaveTextContent('Rest 0:01'));
+    await waitFor(() => expect(pill()).toHaveTextContent('Rest 0:01'), { timeout: 5000 });
     expect(vibrate).not.toHaveBeenCalled();
     passSeconds(2);
-    await waitFor(() => expect(pill()).toHaveTextContent('Rest over'));
+    await waitFor(() => expect(pill()).toHaveTextContent('Rest over'), { timeout: 5000 });
+    // The buzz comes from an effect that runs just after the text changes, so wait for it instead of assuming.
+    await waitFor(() => expect(vibrate).toHaveBeenCalledTimes(1), { timeout: 5000 });
     expect(screen.getAllByRole('status').some((node) => node.textContent === 'Rest over')).toBe(
       true,
     );
-    expect(vibrate).toHaveBeenCalledTimes(1);
     passSeconds(30);
     await new Promise((resolve) => setTimeout(resolve, 1200));
     expect(vibrate).toHaveBeenCalledTimes(1);

@@ -30,4 +30,15 @@ describe('usePending', () => {
     act(() => result.current.end());
     expect(result.current.pending).toBe(false);
   });
+
+  it('says at once whether something is under way, before a render', () => {
+    const { result } = renderHook(() => usePending());
+    expect(result.current.active()).toBe(false);
+    act(() => {
+      result.current.begin();
+      expect(result.current.active()).toBe(true);
+    });
+    act(() => result.current.end());
+    expect(result.current.active()).toBe(false);
+  });
 });

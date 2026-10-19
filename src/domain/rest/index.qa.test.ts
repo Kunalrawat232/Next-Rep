@@ -64,10 +64,8 @@ describe('extendRest with a clock that moved', () => {
       30,
       NOW + REST_MAX * 1000,
     ],
-    ['a custom length is honoured', NOW + 10_000, 45, NOW + 55_000],
-    ['zero seconds on a running rest changes nothing', NOW + 10_000, 0, NOW + 10_000],
-  ])('%s', (_name, endsAt, seconds, expected) => {
-    expect(extendRest(endsAt, NOW, seconds)).toBe(expected);
+  ])('%s', (_name, endsAt, _seconds, expected) => {
+    expect(extendRest(endsAt, NOW)).toBe(expected);
   });
 
   it('never moves a rest earlier than where it was, while it is under the cap', () => {

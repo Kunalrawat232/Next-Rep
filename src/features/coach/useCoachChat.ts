@@ -40,8 +40,7 @@ export function useCoachChat() {
   const home = useHomeData();
   const [state, setState] = useState<ChatState>({ status: 'loading' });
   const [problem, setProblem] = useState<string | null>(null);
-  const { pending: sending, begin, end } = usePending();
-  const sendingRef = useRef(false);
+  const { pending: sending, begin, end, active: sendActive } = usePending();
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -127,7 +126,6 @@ export function useCoachChat() {
     async (text: string, shareTraining: boolean): Promise<'sent' | 'failed' | 'ignored'> => {
       const question = cleanText(text);
       if (question === '' || state.status !== 'ready' || !begin()) return 'ignored';
-      sendingRef.current = true;
       setProblem(null);
       let asked: ChatMessage | null = null;
       try {
@@ -156,7 +154,6 @@ export function useCoachChat() {
         if (mounted.current) setProblem(COACH_PROBLEM.unavailable);
         return 'failed';
       } finally {
-        sendingRef.current = false;
         end();
       }
     },
@@ -165,14 +162,14 @@ export function useCoachChat() {
 
   /** Forgets the chat. Not while a question is out: its answer would bring the old chat back. Returns whether it was cleared. */
   const clear = useCallback(async (): Promise<boolean> => {
-    if (sendingRef.current) return false;
+    if (sendActive()) return false;
     await store.clearCoachMessages();
     if (mounted.current) {
       setState({ status: 'ready', messages: [] });
       setProblem(null);
     }
     return true;
-  }, [store]);
+  }, [store, sendActive]);
 
   return { state, sending, problem, send, clear };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SessionBest } from '../records';
-import { chartPoints, trendOf, trendText, workoutsPerWeek } from '.';
+import { chartPoints, niceAxis, trendOf, trendText, workoutsPerWeek } from '.';
 
 /** Local noon, so the day is the same in any time zone. */
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12).toISOString();
@@ -123,5 +123,31 @@ describe('chartPoints', () => {
   it('uses each session when the exercise was only trained in one week', () => {
     const sameWeek = [point(at(2026, 10, 12), 40), point(at(2026, 10, 14), 42.5)];
     expect(chartPoints(sameWeek, 'kg')).toEqual(sameWeek);
+  });
+});
+
+describe('niceAxis', () => {
+  it('puts the ticks on round numbers around the values, with room on each side', () => {
+    expect(niceAxis([40, 42.5, 45], 5)).toEqual({ min: 35, max: 50, ticks: [35, 40, 45, 50] });
+  });
+
+  it('uses whole steps for reps, so a flat 12 reps still has a readable axis', () => {
+    expect(niceAxis([12, 12, 12], 1)).toEqual({ min: 11, max: 13, ticks: [11, 12, 13] });
+  });
+
+  it('widens the step for a wide range, never going below zero', () => {
+    const axis = niceAxis([20, 180], 5);
+    expect(axis.min).toBe(0);
+    expect(axis.ticks.length).toBeLessThanOrEqual(7);
+    expect(axis.ticks.every((tick) => tick % 50 === 0)).toBe(true);
+    expect(axis.max).toBeGreaterThanOrEqual(185);
+  });
+
+  it('does not go below zero for a light weight', () => {
+    expect(niceAxis([5, 5, 5], 5).min).toBe(0);
+  });
+
+  it('copes with no values at all', () => {
+    expect(niceAxis([], 5)).toEqual({ min: 0, max: 1, ticks: [0, 1] });
   });
 });

@@ -54,7 +54,7 @@ describe('extendRest', () => {
   });
 
   it('never leaves more than 900 seconds to go', () => {
-    expect(extendRest(890_000, 0, 30)).toBe(REST_MAX * 1000);
+    expect(extendRest(890_000, 0)).toBe(REST_MAX * 1000);
     expect(extendRest(REST_MAX * 1000, 0)).toBe(REST_MAX * 1000);
   });
 });

@@ -26,8 +26,8 @@ export function isRestOver(endsAt: number, now: number): boolean {
 }
 
 /** Adds time to a rest, counted from now if it is already over, and never leaving more than the longest rest to go. */
-export function extendRest(endsAt: number, now: number, seconds: number = REST_EXTEND): number {
-  return Math.min(Math.max(endsAt, now) + seconds * 1000, now + REST_MAX * 1000);
+export function extendRest(endsAt: number, now: number): number {
+  return Math.min(Math.max(endsAt, now) + REST_EXTEND * 1000, now + REST_MAX * 1000);
 }
 
 /** A stored end time that cannot be a real rest: further ahead than the longest rest, or over for more than an hour. */

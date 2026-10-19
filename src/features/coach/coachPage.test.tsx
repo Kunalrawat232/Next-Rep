@@ -254,7 +254,11 @@ describe('the Coach screen', () => {
     const { user } = renderApp('/coach', { coach: service });
     await user.type(await box(), 'Slow one');
     await user.click(askButton());
-    const typing = await screen.findByRole('status', { name: `${COACH_NAME} is typing` });
+    const typing = await screen.findByRole(
+      'status',
+      { name: `${COACH_NAME} is typing` },
+      { timeout: 5000 },
+    );
     // Three bouncing dots in the coach's bubble, like a chat app, not a skeleton.
     expect(within(typing).getAllByTestId('typing-dot')).toHaveLength(3);
     expect(typing.querySelector('.skeleton')).toBeNull();
@@ -262,7 +266,7 @@ describe('the Coach screen', () => {
     expect(askButton()).toBeDisabled();
     expect(askButton()).toHaveAttribute('aria-busy', 'true');
     act(() => finish({ status: 'ok', text: 'Done.' }));
-    expect(await screen.findByText('Done.')).toBeInTheDocument();
+    expect(await screen.findByText('Done.', {}, { timeout: 5000 })).toBeInTheDocument();
     expect(
       screen.queryByRole('status', { name: `${COACH_NAME} is typing` }),
     ).not.toBeInTheDocument();

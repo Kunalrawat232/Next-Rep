@@ -93,6 +93,29 @@ export function chartPoints(points: SessionBest[], unit: Unit): SessionBest[] {
   return weekly.length >= 2 ? weekly : points;
 }
 
+/** Round steps for a chart's axis, so its numbers read 35, 40, 45, not 39, 43, 47. */
+const AXIS_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 250, 500];
+
+/**
+ * The range and tick marks for a chart axis around `values`, with `pad` of room on each side: ticks on round
+ * numbers (never below 0), at most about five gaps. A chart of reps or weights has the same need.
+ */
+export function niceAxis(
+  values: number[],
+  pad: number,
+): { min: number; max: number; ticks: number[] } {
+  const finite = values.filter(Number.isFinite);
+  if (finite.length === 0) return { min: 0, max: 1, ticks: [0, 1] };
+  const low = Math.max(0, Math.min(...finite) - pad);
+  const high = Math.max(...finite) + pad;
+  const step = AXIS_STEPS.find((s) => (high - low) / s <= 5) ?? 1000;
+  const min = Math.max(0, Math.floor(low / step) * step);
+  const max = Math.ceil(high / step) * step;
+  const ticks: number[] = [];
+  for (let tick = min; tick <= max + step / 2; tick += step) ticks.push(tick);
+  return { min, max, ticks };
+}
+
 export type Trend = {
   /** Change in the top weight from the first point to the latest, in the shown unit, to 2 decimals (1.25 Kg is 1.25, not 1.3). */
   change: number;
