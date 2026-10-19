@@ -10,9 +10,13 @@ import {
   type EquipmentFilter,
   type Exercise,
 } from '../../domain/exercises';
+import { dayLabel } from '../../domain/history';
 import type { Failure } from '../../lib/result';
+import type { HistoryEntry } from './useExerciseHistory';
 
 const PAGE = 40;
+/** How many exercises of the history show before "Show all". */
+const HISTORY_SHOWN = 6;
 
 type Props = {
   exercises: Exercise[];
@@ -23,16 +27,21 @@ type Props = {
   onSelect?: (exercise: Exercise) => void;
   /** Where a plain row leads (the exercise's page). Ignored when `onSelect` is given. */
   detailHref?: (exercise: Exercise) => string;
+  /** The exercises done before, most recent first. Shown above the others while not searching. */
+  history?: HistoryEntry[];
 };
 
 function Row({
   exercise,
   query,
+  note,
   onSelect,
   detailHref,
 }: {
   exercise: Exercise;
   query: string;
+  /** A line under the equipment, such as when it was last done. */
+  note?: string;
   onSelect?: Props['onSelect'];
   detailHref?: Props['detailHref'];
 }) {
@@ -51,6 +60,7 @@ function Row({
         )}
       </span>
       <span className="block text-callout text-ink-muted">{subtitleFor(exercise)}</span>
+      {note && <span className="block text-callout text-ink-muted">{note}</span>}
     </>
   );
   const box = cardClasses('flex min-h-touch w-full flex-col justify-center text-left');
@@ -74,11 +84,13 @@ function Row({
 function List({
   items,
   query,
+  notes,
   onSelect,
   detailHref,
 }: {
   items: Exercise[];
   query: string;
+  notes?: Record<string, string>;
   onSelect?: Props['onSelect'];
   detailHref?: Props['detailHref'];
 }) {
@@ -89,6 +101,7 @@ function List({
           key={exercise.id}
           exercise={exercise}
           query={query}
+          note={notes?.[exercise.id]}
           onSelect={onSelect}
           detailHref={detailHref}
         />
@@ -103,8 +116,10 @@ export function ExercisePicker({
   onRetryCustom,
   onSelect,
   detailHref,
+  history = [],
 }: Props) {
   const [query, setQuery] = useState('');
+  const [allHistory, setAllHistory] = useState(false);
   const [equipment, setEquipment] = useState<EquipmentFilter>('all');
   const [shown, setShown] = useState(PAGE);
 
@@ -115,6 +130,11 @@ export function ExercisePicker({
   const custom = exercises.filter((e) => e.tier === 'custom');
   const popular = exercises.filter((e) => e.tier === 'curated');
   const moreToFind = exercises.filter((e) => e.tier === 'imported').length;
+  const now = new Date();
+  const doneNotes = Object.fromEntries(
+    history.map(({ exercise, last }) => [exercise.id, `Last done ${dayLabel(last, now)}`]),
+  );
+  const doneShown = allHistory ? history : history.slice(0, HISTORY_SHOWN);
 
   function change(next: { query?: string; equipment?: EquipmentFilter }) {
     if (next.query !== undefined) setQuery(next.query);
@@ -205,6 +225,25 @@ export function ExercisePicker({
 
       {browsing ? (
         <>
+          {history.length > 0 && (
+            <section aria-labelledby="history-heading" className="flex flex-col gap-2">
+              <h2 id="history-heading" className="text-headline font-semibold">
+                History
+              </h2>
+              <List
+                items={doneShown.map((entry) => entry.exercise)}
+                query=""
+                notes={doneNotes}
+                onSelect={onSelect}
+                detailHref={detailHref}
+              />
+              {history.length > HISTORY_SHOWN && (
+                <Button variant="secondary" onClick={() => setAllHistory(!allHistory)}>
+                  {allHistory ? 'Show fewer' : `Show all ${history.length}`}
+                </Button>
+              )}
+            </section>
+          )}
           {custom.length > 0 && (
             <section className="flex flex-col gap-2">
               <h2 className="text-headline font-semibold">Your exercises</h2>

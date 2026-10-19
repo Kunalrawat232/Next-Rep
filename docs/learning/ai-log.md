@@ -479,3 +479,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: a `counted()` helper and a loop in the coach function, `cleanText` with a default length, one `takeBack` in the chat hook, two small `readStored`/`writeStored` helpers for the rest timer, a constant eight weeks, a private `weeklyBests` (tested through `chartPoints`), a shared `ChevronDown`, and the comment moved. Left alone on purpose: `extendRest`'s seconds parameter (its tests use it), the chat's sending flag (changing `usePending` for four lines is not worth it), and the old one-argument rate-limit function (a deploy-order shim).
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4286). The cut is smaller than the 69 lines estimated, because the helpers replace code rather than only removing it.
 - Lesson: a review that only lists what to delete is cheap; check that each cut still has its tests before applying it.
+
+## 2026-10-19: A history section in the exercise list
+
+- Tool: Claude Code.
+- Asked: show the exercises done before, above the popular ones.
+- AI produced: `exercisesByRecency` (domain), `useExerciseHistory`, a "History" section in the shared exercise list (so it is on both the Exercises screen and the workout's picker): six rows with "Last done ...", "Show all N", hidden while searching. 12 new tests; the older Exercises page tests now render inside a signed-in sync session because the page reads the sets.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4297); in Chrome at phone size the section shows above Popular with the dates and "Show all" opens the rest.
+- Lesson: when a shared screen starts reading the local store, tests that render it alone need the session it reads from.

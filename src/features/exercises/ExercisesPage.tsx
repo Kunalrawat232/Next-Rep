@@ -2,13 +2,18 @@ import { Link } from 'react-router';
 import { Button, ErrorMessage, LoadingMessage, PageHeader } from '../../components';
 import { useExerciseService } from './ExerciseServiceContext';
 import { ExercisePicker } from './ExercisePicker';
+import { useExerciseHistory } from './useExerciseHistory';
 import { useExercises } from './useExercises';
+
+const NONE: never[] = [];
 
 export function ExercisesPage() {
   const { state, reload } = useExercises(useExerciseService());
+  const history = useExerciseHistory(state.status === 'ready' ? state.exercises : NONE);
 
   // One loader until the exercise list (including your own, from the server) has settled.
-  if (state.status === 'loading') return <LoadingMessage>Loading exercises…</LoadingMessage>;
+  if (state.status === 'loading' || history === null)
+    return <LoadingMessage>Loading exercises…</LoadingMessage>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -39,6 +44,7 @@ export function ExercisesPage() {
           customProblem={state.customProblem}
           onRetryCustom={reload}
           detailHref={(exercise) => `/exercises/${exercise.id}`}
+          history={history}
         />
       )}
     </div>

@@ -63,6 +63,20 @@ export function groupByExercise<T extends Logged>(sets: T[]): { exerciseId: stri
   return [...groups].map(([exerciseId, grouped]) => ({ exerciseId, sets: grouped }));
 }
 
+/** The exercises that have sets, most recently done first, with when each was last done. */
+export function exercisesByRecency<T extends Logged>(
+  sets: T[],
+): { exerciseId: string; last: string }[] {
+  const lastDone = new Map<string, string>();
+  for (const set of sets) {
+    const known = lastDone.get(set.exerciseId);
+    if (known === undefined || set.loggedAt > known) lastDone.set(set.exerciseId, set.loggedAt);
+  }
+  return [...lastDone]
+    .map(([exerciseId, last]) => ({ exerciseId, last }))
+    .sort((a, b) => (a.last < b.last ? 1 : a.last > b.last ? -1 : 0));
+}
+
 const hundredths = (kg: number) => Math.round(kg * 100);
 
 /** The heaviest set (the first one on a tie) and how many sets were done at that weight, compared in hundredths. */

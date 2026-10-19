@@ -1,14 +1,18 @@
 import { Link, useNavigate } from 'react-router';
 import { Button, ErrorMessage, LoadingMessage } from '../../components';
-import { ExercisePicker, useExerciseService, useExercises } from '../exercises';
+import { ExercisePicker, useExerciseHistory, useExerciseService, useExercises } from '../exercises';
+
+const NONE: never[] = [];
 
 /** Picks the exercise for the workout, and goes back to it. */
 export function ChooseExercisePage() {
   const navigate = useNavigate();
   const { state, reload } = useExercises(useExerciseService());
+  const history = useExerciseHistory(state.status === 'ready' ? state.exercises : NONE);
 
   // One loader until the exercise list (including your own, from the server) has settled.
-  if (state.status === 'loading') return <LoadingMessage>Loading exercises…</LoadingMessage>;
+  if (state.status === 'loading' || history === null)
+    return <LoadingMessage>Loading exercises…</LoadingMessage>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,6 +51,7 @@ export function ChooseExercisePage() {
           customProblem={state.customProblem}
           onRetryCustom={reload}
           onSelect={(exercise) => navigate(`/workout?exercise=${exercise.id}`)}
+          history={history}
         />
       )}
     </div>
