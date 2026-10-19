@@ -194,7 +194,7 @@ describe('record badges on the workout', () => {
       ],
       `/workout?exercise=${BENCH}`,
     );
-    const list = await screen.findByRole('region', { name: 'Barbell Bench Press' });
+    const list = await screen.findByRole('region', { name: 'Sets so far' });
     expect(await within(list).findByRole('img', { name: /heaviest weight/i })).toBeInTheDocument();
     expect(
       await screen.findByText(/New personal record: Barbell Bench Press, 62.5 Kg × 5/),
@@ -209,7 +209,7 @@ describe('record badges on the workout', () => {
       ],
       `/workout?exercise=${BENCH}`,
     );
-    await screen.findByRole('region', { name: 'Barbell Bench Press' });
+    await screen.findByRole('region', { name: 'Sets so far' });
     await waitFor(() =>
       expect(screen.queryByRole('img', { name: /personal record/i })).not.toBeInTheDocument(),
     );

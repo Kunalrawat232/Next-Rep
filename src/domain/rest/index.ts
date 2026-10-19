@@ -1,6 +1,8 @@
 /** Rest timer rules. Times are milliseconds since the epoch; lengths are whole seconds. */
 
 export const REST_PRESETS = [60, 90, 120, 180] as const;
+/** The rest that starts after a set until the person picks another one. */
+export const REST_DEFAULT = 90;
 export const REST_MIN_CUSTOM = 30;
 export const REST_MAX = 900;
 export const REST_EXTEND = 30;

@@ -256,6 +256,7 @@ export function VoiceLogger({
       });
       ensurePersistence();
       notify();
+      rest.startAfterSet();
       setPending(null);
       setNotice(null);
       await onLogged();

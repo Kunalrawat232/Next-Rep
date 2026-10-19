@@ -223,12 +223,32 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         <div className="flex items-center justify-between gap-2">
           <Link
             to={`/workout/exercise${query}`}
-            className="flex min-h-touch items-center gap-2 text-title font-semibold"
+            className="flex min-h-touch min-w-0 items-center gap-2 text-title font-semibold"
           >
-            {exerciseId ? nameOf(exerciseId) : 'Choose exercise'}
+            <span className="min-w-0 break-words">
+              {exerciseId ? nameOf(exerciseId) : 'Choose exercise'}
+            </span>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="shrink-0 text-ink-muted"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
           </Link>
           {confirmingEnd ? null : (
-            <Button variant="secondary" onClick={() => setConfirmingEnd(true)}>
+            <Button
+              variant="secondary"
+              className="shrink-0 whitespace-nowrap"
+              onClick={() => setConfirmingEnd(true)}
+            >
               End workout
             </Button>
           )}
@@ -275,9 +295,9 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       )}
       {exerciseId && (
         <SetList
-          title={nameOf(exerciseId)}
+          title="Sets so far"
           sets={selected}
-          empty="No sets yet. Tap instead to log one."
+          empty="No sets yet. Log your first set below."
           marks={marks}
         />
       )}
@@ -305,13 +325,13 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
           />
         )}
         {exerciseId ? (
-          <Link to={`/workout/log${query}`} className={buttonClasses('primary', 'w-full')}>
+          <Link to={`/workout/log${query}`} className={buttonClasses('secondary', 'w-full')}>
             Tap instead
           </Link>
         ) : (
-          <span aria-disabled="true" className={buttonClasses('primary', 'w-full opacity-60')}>
-            Tap instead
-          </span>
+          <Link to="/workout/exercise" className={buttonClasses('secondary', 'w-full')}>
+            Pick an exercise
+          </Link>
         )}
         <Button
           variant="secondary"

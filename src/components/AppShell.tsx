@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useLiquidGlass } from '../lib/useGlassEffect';
 import { Logo } from './Logo';
 
@@ -92,12 +92,40 @@ const ITEMS: Item[] = [
 const itemBase =
   'flex min-h-touch flex-1 flex-col items-center justify-center gap-1 text-caption lg:flex-none lg:flex-row lg:justify-start lg:gap-3 lg:rounded-md lg:px-3 lg:text-body';
 
+/** The phone's Workout entry: the sidebar item is desktop-only. Not shown on the workout screens themselves, where it would only cover their buttons. */
+function WorkoutButton() {
+  const workoutButton = useRef<HTMLAnchorElement>(null);
+  useLiquidGlass(workoutButton, 'round');
+  return (
+    <Link
+      to="/workout"
+      aria-label="Workout"
+      ref={workoutButton}
+      className="glass fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full border border-glass-line text-accent lg:hidden"
+    >
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
+      </svg>
+    </Link>
+  );
+}
+
 /** A floating glass tab bar on phones, a sidebar from 1024 px up. One nav element, laid out by CSS. */
 export function AppShell() {
   const dock = useRef<HTMLDivElement>(null);
-  const workoutButton = useRef<HTMLAnchorElement>(null);
+  const { pathname } = useLocation();
+  const onWorkout = pathname === '/workout' || pathname.startsWith('/workout/');
   useLiquidGlass(dock, 'dock');
-  useLiquidGlass(workoutButton, 'round');
   return (
     <div className="relative isolate min-h-dvh lg:flex">
       {/* The colour behind the app, for the glass to show. Decoration only. */}
@@ -131,27 +159,7 @@ export function AppShell() {
           </ul>
         </nav>
       </div>
-      {/* The phone's Workout entry: the sidebar item is desktop-only. */}
-      <Link
-        to="/workout"
-        aria-label="Workout"
-        ref={workoutButton}
-        className="glass fixed right-4 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-10 flex size-16 items-center justify-center rounded-full border border-glass-line text-accent lg:hidden"
-      >
-        <svg
-          width="28"
-          height="28"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" />
-        </svg>
-      </Link>
+      {!onWorkout && <WorkoutButton />}
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-8 pb-44 lg:px-8 lg:pb-8">
         <Outlet />
       </main>

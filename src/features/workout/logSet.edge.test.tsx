@@ -192,7 +192,7 @@ describe('saving', () => {
       inputMode: 'total',
     });
     const [item] = await within(
-      await screen.findByRole('region', { name: 'Barbell Bench Press' }),
+      await screen.findByRole('region', { name: 'Sets so far' }),
     ).findAllByRole('listitem');
     expect(item).toHaveTextContent('10 Kg × 8');
     expect(item!.textContent).not.toMatch(/-\d|plates|bar \+/);

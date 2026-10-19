@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { Button, Card, TextField } from '../../components';
+import { Button, Card, Switch, TextField } from '../../components';
 import { useLiquidGlass } from '../../lib/useGlassEffect';
 import {
   REST_EXTEND,
@@ -83,6 +83,15 @@ export function RestTimer({ timer }: { timer: Timer }) {
                 {seconds} s
               </Button>
             ))}
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col">
+              <span className="text-callout font-medium">Start after each set</span>
+              <span className="text-caption text-ink-muted">
+                {formatRest(timer.seconds)}, or the last length you picked
+              </span>
+            </div>
+            <Switch label="Start after each set" checked={timer.auto} onChange={timer.setAuto} />
           </div>
           <form onSubmit={submit} noValidate className="flex flex-col gap-2">
             <TextField

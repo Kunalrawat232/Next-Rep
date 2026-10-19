@@ -144,7 +144,7 @@ describe('resuming', () => {
     // a reload shows them
     const second = renderApp('/workout?exercise=' + BENCH, { userId });
     const list = await within(
-      await screen.findByRole('region', { name: 'Barbell Bench Press' }),
+      await screen.findByRole('region', { name: 'Sets so far' }),
     ).findAllByRole('listitem');
     expect(list).toHaveLength(2);
     expect(list[0]).toHaveTextContent('60 Kg × 8');
@@ -171,8 +171,12 @@ describe('the exercise', () => {
     await openAt();
     expect(await screen.findByRole('link', { name: 'Choose exercise' })).toBeInTheDocument();
     expect(screen.getByText(/choose an exercise to log your first set/i)).toBeInTheDocument();
-    const tap = screen.getByText('Tap instead');
-    expect(tap).toHaveAttribute('aria-disabled', 'true');
+    // There is no dead "Tap instead": the way forward is a real link to the picker.
+    expect(screen.queryByText('Tap instead')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pick an exercise' })).toHaveAttribute(
+      'href',
+      '/workout/exercise',
+    );
   });
 
   it('is chosen from the picker and then shown in the header', async () => {

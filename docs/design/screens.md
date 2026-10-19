@@ -33,3 +33,5 @@ Shared components: see [design system](design-system.md). Every screen needs emp
 ## Priority order for designs (11 to 15 Oct)
 
 Active workout (idle, listening, parsing, offline) → set confirmation with weight breakdown → "total or per side?" prompt → home with suggestion → history and progress chart → sign in and gym setup.
+
+**Workout screen changes (2026-10-19, from a walk through as a user):** with no exercise chosen the second button is "Pick an exercise" (a link to the picker) instead of a dimmed "Tap instead"; the exercise name in the header has a chevron so it reads as tappable; the voice button is the only blue one and "Tap instead" is secondary; the list of sets for the chosen exercise is headed "Sets so far" (the name was shown twice); "End workout" does not wrap; the round Workout button is hidden on the `/workout` screens; and a rest starts by itself after each set (90 s, or the length last picked), with a switch in the Rest panel to turn that off.

@@ -321,7 +321,7 @@ describe('undo and personal records', () => {
       ]),
       `/workout?exercise=${BENCH}`,
     );
-    await screen.findByRole('region', { name: 'Barbell Bench Press' });
+    await screen.findByRole('region', { name: 'Sets so far' });
     await waitFor(() =>
       expect(screen.getAllByRole('img', { name: /personal record/i })).toHaveLength(1),
     );

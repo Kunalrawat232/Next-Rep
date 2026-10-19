@@ -454,3 +454,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: the maximum moved into the database function (and its tests changed to match: there is no argument to raise it); a 401 and a missing session now say "sign in again"; the 48 px button; a content-length precheck in both endpoints; the check script builds its schema with the same Zod call as the function and a test keeps their numbers equal; a bigger token budget for the coach so a thinking model cannot cut the JSON.
 - How validated: _(developer to fill)_ Evidence: the whole suite (4262) and the database tests (117) pass. Not done: running `check:coach` against live Gemini, applying migration 0005 to the hosted project, and email confirmation and CAPTCHA at sign-up.
 - Lesson: a limit that the caller can set is not a limit.
+
+## 2026-10-19: The workout screen, as a user
+
+- Tool: Claude Code, with Chrome driving the app at phone size.
+- Found by walking the journey: a dead, dimmed "Tap instead" that looked like a button; the round Workout button sitting on top of "Log set"; two equal blue buttons; the exercise name twice; "End workout" wrapping; and a rest timer that never started by itself.
+- AI produced: "Pick an exercise" as a real link, a chevron on the exercise name, a secondary "Tap instead", "Sets so far" as the list heading, no wrapping on "End workout", the round button hidden on workout screens, and a rest that starts after each set (tap and voice) with a remembered length and an off switch. 8 new tests; the older tests that expected the old labels were updated.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4267). In Chrome I confirmed the round button is gone, the chevron and the "End workout" fix show; the last label ("Pick an exercise") could not be seen because the dev server was serving an older copy of the file, so it needs one more look after a restart.
+- Lesson: a button that cannot be used yet should say what to do first, not just look disabled.

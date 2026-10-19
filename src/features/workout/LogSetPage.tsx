@@ -36,6 +36,7 @@ import { BreakdownCard } from './BreakdownCard';
 import { Stepper } from './Stepper';
 import { useFreshGym } from './useFreshGym';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
+import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
 import { usePending } from '../../lib/usePending';
 
@@ -126,6 +127,7 @@ type FormProps = {
 };
 
 function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
+  const rest = useRestTimer(workout.id);
   const navigate = useNavigate();
   const store = useLogStore();
   const { notify, ensurePersistence } = useSyncControls();
@@ -253,6 +255,8 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
       });
       ensurePersistence();
       notify();
+      // A rest starts by itself, unless the person turned that off.
+      rest.startAfterSet();
       navigate(back);
     } catch {
       setProblem('Could not save the set. Please try again.');

@@ -108,6 +108,13 @@ describe('voice logging on the workout page', () => {
     );
   });
 
+  it('starts the usual rest by itself after a voice set is logged', async () => {
+    const { speak, user } = await openWorkout();
+    await speak('bench press 60 kilo 8 reps');
+    await user.click(await screen.findByRole('button', { name: 'Log set' }));
+    expect(await screen.findByRole('button', { name: /^Rest 1:(30|29)$/ })).toBeInTheDocument();
+  });
+
   it('lets the user flip a weight with no "per side" word to per side before logging', async () => {
     const { speak, user, store, workout } = await openWorkout();
     await speak('bench press 20 kilo 8 reps');
