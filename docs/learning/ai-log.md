@@ -487,3 +487,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: `exercisesByRecency` (domain), `useExerciseHistory`, a "History" section in the shared exercise list (so it is on both the Exercises screen and the workout's picker): six rows with "Last done ...", "Show all N", hidden while searching. 12 new tests; the older Exercises page tests now render inside a signed-in sync session because the page reads the sets.
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4297); in Chrome at phone size the section shows above Popular with the dates and "Show all" opens the rest.
 - Lesson: when a shared screen starts reading the local store, tests that render it alone need the session it reads from.
+
+## 2026-10-19: A QA pass on the new features
+
+- Tool: the `qa-tester` agent (new test files only), then Claude Code to check it.
+- Covered: the progress maths (week edges, new year, daylight saving in three time zones, lb rounding), the exercise history, the rest timer's saved settings (damaged JSON, blocked storage, two users), the workout screen without a valid exercise, the round Workout button on look-alike paths, and the unit words in every message.
+- AI produced: 8 new test files, 151 cases, no production code changed. It found no real bug. It listed three things to decide: one bad field in the saved rest settings resets the whole object (auto turns back on); `exercisesByRecency` compares times as text, which is right only for canonical UTC strings (the app's rule); and an exercise missing from the library but with sets is left out of History while Progress shows it as "Custom exercise".
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4451), typecheck and lint are clean, and `git status` showed only new files.
+- Lesson: QA written after the feature mostly confirms it; the useful output is the list of behaviours nobody had decided.
