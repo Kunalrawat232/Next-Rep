@@ -7,17 +7,12 @@ const HIDDEN =
 
 /* eslint-enable no-control-regex */
 
-/** Text as it is sent or kept: no hidden characters, spaces tidied, and no longer than `max`. */
-export function cleanText(text: string, max: number): string {
+/** Text as it is sent or kept: no hidden characters, spaces tidied, and no longer than `max` (a question's limit unless said). */
+export function cleanText(text: string, max: number = COACH_QUESTION_MAX): string {
   return text
     .replace(HIDDEN, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
     .slice(0, max);
-}
-
-/** A question as it is sent: cleaned and no longer than the limit. */
-export function cleanQuestion(text: string): string {
-  return cleanText(text, COACH_QUESTION_MAX);
 }

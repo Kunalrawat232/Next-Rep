@@ -10,7 +10,7 @@ import {
 } from './schemas';
 
 export * from './schemas';
-export { cleanQuestion, cleanText } from './clean';
+export { cleanText } from './clean';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** The last few turns of a chat, the most recent ones. */

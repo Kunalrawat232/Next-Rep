@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SessionBest } from '../records';
-import { chartPoints, trendOf, trendText, weeklyBests, workoutsPerWeek } from '.';
+import { chartPoints, trendOf, trendText, workoutsPerWeek } from '.';
 
 /** Local noon, so the day is the same in any time zone. */
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12).toISOString();
@@ -29,17 +29,14 @@ describe('workoutsPerWeek', () => {
     expect(weeks[0]!.start).toBe('2026-09-28');
   });
 
-  it('shows at most the number of weeks asked for, the current one last', () => {
-    // The July workout is outside the four weeks, so it is not shown; the one in September is.
-    const sets = [
-      set('old', at(2026, 7, 6)),
-      set('a', at(2026, 9, 29)),
-      set('b', at(2026, 10, 14)),
-    ];
-    const weeks = workoutsPerWeek(sets, NOW, 4);
-    expect(weeks).toHaveLength(4);
+  it('shows the last eight weeks, the current one last, and leaves out older workouts', () => {
+    // The July workout is outside the eight weeks, so it is not shown; the one in September is.
+    const sets = [set('old', at(2026, 7, 6)), set('a', at(2026, 9, 1)), set('b', at(2026, 10, 14))];
+    const weeks = workoutsPerWeek(sets, NOW);
+    expect(weeks).toHaveLength(8);
     expect(weeks.at(-1)!.start).toBe('2026-10-19');
-    expect(weeks[0]!.start).toBe('2026-09-28');
+    expect(weeks[0]!.start).toBe('2026-08-31');
+    expect(weeks[0]!.workouts).toBe(1);
   });
 
   it('is empty when nothing was logged in the period, and ignores a set with a bad date', () => {
@@ -100,7 +97,7 @@ describe('trendText', () => {
   });
 });
 
-describe('weeklyBests and chartPoints', () => {
+describe('chartPoints', () => {
   // Two sessions a week: a heavy day and a light day, the light one last.
   const twice = [
     point(at(2026, 10, 5), 10), // Monday
@@ -110,8 +107,7 @@ describe('weeklyBests and chartPoints', () => {
   ];
 
   it('keeps the heaviest set of each week, so a lighter day does not look like a fall', () => {
-    const weekly = weeklyBests(twice, 'kg');
-    expect(weekly.map((p) => p.totalKg)).toEqual([10, 10]);
+    expect(chartPoints(twice, 'kg').map((p) => p.totalKg)).toEqual([10, 10]);
     expect(trendOf(chartPoints(twice, 'kg'), 'kg')!.change).toBe(0);
     // Per session the same history ends 5 Kg lower than it began.
     expect(trendOf(twice, 'kg')!.change).toBe(-5);
@@ -121,15 +117,11 @@ describe('weeklyBests and chartPoints', () => {
     const a = { ...point(at(2026, 10, 6), 40), reps: 8 };
     const b = { ...point(at(2026, 10, 9), 40), reps: 10 };
     const earlier = point(at(2026, 9, 29), 35);
-    expect(weeklyBests([a, b, earlier], 'kg')).toEqual([earlier, b]);
+    expect(chartPoints([a, b, earlier], 'kg')).toEqual([earlier, b]);
   });
 
   it('uses each session when the exercise was only trained in one week', () => {
     const sameWeek = [point(at(2026, 10, 12), 40), point(at(2026, 10, 14), 42.5)];
     expect(chartPoints(sameWeek, 'kg')).toEqual(sameWeek);
-  });
-
-  it('ignores a point with a bad date', () => {
-    expect(weeklyBests([point('nope', 40)], 'kg')).toEqual([]);
   });
 });

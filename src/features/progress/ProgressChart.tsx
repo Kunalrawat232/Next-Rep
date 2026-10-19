@@ -6,12 +6,12 @@ import type { SessionBest } from '../../domain/records';
 
 const ink = 'var(--color-ink-muted)';
 
-/**
- * The top set of each session over time: its weight, or its reps. The drawing is for sighted users only: the same numbers
- * are in the table next to it, which is what a screen reader gets.
- */
 export type ChartMetric = 'weight' | 'reps';
 
+/**
+ * The top set over time: its weight, or its reps. The drawing is for sighted users only: the same numbers
+ * are in the table next to it, which is what a screen reader gets.
+ */
 export function ProgressChart({
   points,
   unit,

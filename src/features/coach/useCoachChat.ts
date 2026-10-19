@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ignoreClosed } from '../../data/local';
 import {
   buildCoachContext,
-  cleanQuestion,
+  cleanText,
   lastTurns,
   type ChatMessage,
   type CoachContext,
@@ -113,10 +113,19 @@ export function useCoachChat() {
     }
   }, [store]);
 
+  /** Takes a question back out of the chat, so the person can edit it and send it again, and shows the chat as it is on the device. */
+  const takeBack = useCallback(
+    async (id: string) => {
+      await store.removeCoachMessage(id);
+      if (mounted.current) setState({ status: 'ready', messages: await store.coachMessages() });
+    },
+    [store],
+  );
+
   /** Sends a question. Returns 'failed' when the coach did not answer, so the screen can give the text back. */
   const send = useCallback(
     async (text: string, shareTraining: boolean): Promise<'sent' | 'failed' | 'ignored'> => {
-      const question = cleanQuestion(text);
+      const question = cleanText(text);
       if (question === '' || state.status !== 'ready' || !begin()) return 'ignored';
       sendingRef.current = true;
       setProblem(null);
@@ -132,12 +141,8 @@ export function useCoachChat() {
           ...(context ? { context } : {}),
         });
         if (answer.status !== 'ok' && answer.status !== 'off_topic') {
-          // The question is taken back out of the chat, so the person can edit it and send it again.
-          await store.removeCoachMessage(asked.id);
-          if (mounted.current) {
-            setState({ status: 'ready', messages: await store.coachMessages() });
-            setProblem(COACH_PROBLEM[answer.status]);
-          }
+          await takeBack(asked.id);
+          if (mounted.current) setProblem(COACH_PROBLEM[answer.status]);
           return 'failed';
         }
         // An off-topic question is answered with our own words, and both stay in the chat.
@@ -146,16 +151,8 @@ export function useCoachChat() {
         if (mounted.current) setState({ status: 'ready', messages: [...before, asked, reply] });
         return 'sent';
       } catch {
-        // Whatever failed, the question must not stay in the chat: it goes back to the person to send again.
-        if (asked) {
-          try {
-            await store.removeCoachMessage(asked.id);
-            if (mounted.current)
-              setState({ status: 'ready', messages: await store.coachMessages() });
-          } catch {
-            // The device store is not usable; the notice below still tells the person.
-          }
-        }
+        // Whatever failed, the question must not stay in the chat. If the device store is not usable the notice below still tells the person.
+        if (asked) await takeBack(asked.id).catch(() => undefined);
         if (mounted.current) setProblem(COACH_PROBLEM.unavailable);
         return 'failed';
       } finally {
@@ -163,7 +160,7 @@ export function useCoachChat() {
         end();
       }
     },
-    [state, store, service, summary, begin, end],
+    [state, store, service, summary, takeBack, begin, end],
   );
 
   /** Forgets the chat. Not while a question is out: its answer would bring the old chat back. Returns whether it was cleared. */

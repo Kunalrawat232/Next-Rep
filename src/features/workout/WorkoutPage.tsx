@@ -5,6 +5,7 @@ import {
   buttonClasses,
   Card,
   cardClasses,
+  ChevronDown,
   ErrorMessage,
   LoadingMessage,
   PageHeader,
@@ -228,20 +229,7 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
             <span className="min-w-0 break-words">
               {exerciseId ? nameOf(exerciseId) : 'Choose exercise'}
             </span>
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="shrink-0 text-ink-muted"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <ChevronDown className="shrink-0 text-ink-muted" />
           </Link>
           {confirmingEnd ? null : (
             <Button

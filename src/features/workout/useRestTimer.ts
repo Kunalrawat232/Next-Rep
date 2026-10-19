@@ -25,47 +25,37 @@ type Prefs = z.infer<typeof StoredPrefs>;
 const DEFAULT_PREFS: Prefs = { seconds: REST_DEFAULT, auto: true };
 const prefsKey = (userId: string) => `next-rep-rest-prefs-${userId}`;
 
-function readPrefs(userId: string | null): Prefs {
-  if (!userId) return DEFAULT_PREFS;
+/** A value kept on this device, checked against its schema; null when there is none, it is damaged, or storage is blocked. */
+function readStored<T>(key: string | null, schema: z.ZodType<T>): T | null {
+  if (!key) return null;
   try {
-    const raw = window.localStorage.getItem(prefsKey(userId));
-    const parsed = raw ? StoredPrefs.safeParse(JSON.parse(raw)) : null;
-    return parsed?.success ? parsed.data : DEFAULT_PREFS;
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
-
-function writePrefs(userId: string | null, prefs: Prefs): void {
-  if (!userId) return;
-  try {
-    window.localStorage.setItem(prefsKey(userId), JSON.stringify(prefs));
-  } catch {
-    // Blocked storage only means the choice is not kept.
-  }
-}
-
-function readEndsAt(userId: string | null, workoutId: string, now: number): number | null {
-  if (!userId) return null;
-  try {
-    const raw = window.localStorage.getItem(storageKey(userId));
-    if (!raw) return null;
-    const parsed = StoredRest.safeParse(JSON.parse(raw));
-    if (!parsed.success || parsed.data.workoutId !== workoutId) return null;
-    return isRestStale(parsed.data.endsAt, now) ? null : parsed.data.endsAt;
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? schema.safeParse(JSON.parse(raw)) : null;
+    return parsed?.success ? parsed.data : null;
   } catch {
     return null;
   }
 }
 
-function writeEndsAt(userId: string | null, workoutId: string, endsAt: number | null): void {
-  if (!userId) return;
+/** Keeps a value on this device, or forgets it when it is null. Blocked storage only means it is not kept. */
+function writeStored(key: string | null, value: unknown): void {
+  if (!key) return;
   try {
-    if (endsAt === null) window.localStorage.removeItem(storageKey(userId));
-    else window.localStorage.setItem(storageKey(userId), JSON.stringify({ workoutId, endsAt }));
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Blocked storage only means the timer is not kept across a reload.
+    // Not kept across a reload, which is harmless.
   }
+}
+
+const readPrefs = (userId: string | null): Prefs =>
+  readStored(userId && prefsKey(userId), StoredPrefs) ?? DEFAULT_PREFS;
+
+function readEndsAt(userId: string | null, workoutId: string, now: number): number | null {
+  const stored = readStored(userId && storageKey(userId), StoredRest);
+  return stored && stored.workoutId === workoutId && !isRestStale(stored.endsAt, now)
+    ? stored.endsAt
+    : null;
 }
 
 export type RestTimer = {
@@ -132,7 +122,7 @@ export function useRestTimer(workoutId: string): RestTimer {
       setNow(Date.now());
       latest.current = next;
       setEndsAt(next);
-      writeEndsAt(userId, workoutId, next);
+      writeStored(userId && storageKey(userId), next === null ? null : { workoutId, endsAt: next });
     },
     [userId, workoutId],
   );
@@ -143,7 +133,7 @@ export function useRestTimer(workoutId: string): RestTimer {
     (next: Prefs) => {
       latestPrefs.current = next;
       setPrefs(next);
-      writePrefs(userId, next);
+      writeStored(userId && prefsKey(userId), next);
     },
     [userId],
   );
@@ -153,8 +143,7 @@ export function useRestTimer(workoutId: string): RestTimer {
       set(startRest(Date.now(), seconds));
       // The length the person picked is the one that starts by itself next time.
       if (
-        seconds >= REST_MIN_CUSTOM &&
-        seconds <= REST_MAX &&
+        StoredPrefs.shape.seconds.safeParse(seconds).success &&
         seconds !== latestPrefs.current.seconds
       )
         savePrefs({ ...latestPrefs.current, seconds });

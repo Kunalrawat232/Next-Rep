@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCoachContext,
-  cleanQuestion,
+  cleanText,
   COACH_HISTORY_MAX,
   COACH_QUESTION_MAX,
   CoachContextSchema,
@@ -162,12 +162,12 @@ describe('buildCoachContext', () => {
   });
 });
 
-describe('cleanQuestion and lastTurns', () => {
+describe('cleanText and lastTurns', () => {
   it('removes hidden characters, tidies spaces and cuts a question to the limit', () => {
-    expect(cleanQuestion('  how\u0000 do \u200B I   squat?  ')).toBe('how do I squat?');
-    expect(cleanQuestion('a\n\n\n\nb')).toBe('a\n\nb');
-    expect(cleanQuestion('x'.repeat(COACH_QUESTION_MAX + 50))).toHaveLength(COACH_QUESTION_MAX);
-    expect(cleanQuestion('   ')).toBe('');
+    expect(cleanText('  how\u0000 do \u200B I   squat?  ')).toBe('how do I squat?');
+    expect(cleanText('a\n\n\n\nb')).toBe('a\n\nb');
+    expect(cleanText('x'.repeat(COACH_QUESTION_MAX + 50))).toHaveLength(COACH_QUESTION_MAX);
+    expect(cleanText('   ')).toBe('');
   });
 
   it('keeps the most recent turns', () => {

@@ -471,3 +471,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Found while checking: an exercise trained on two days with different weights (cable lateral raise, 10 Kg then 5 Kg) drew a zigzag and a false fall, so charts and trends now use the best set of each week.
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4287); in Chrome the weekly bars climb from 4 to 6 workouts, the exercise lines rise, and the Reps toggle works.
 - Lesson: a trend between two single sessions says more about which day came last than about progress; compare like with like (the best of each week).
+
+## 2026-10-19: A review for over-engineering (Ponytail)
+
+- Tool: the Ponytail plugin's review rules (it was installed but not loaded in the session, so its `ponytail-review` instructions were followed by a read-only agent), then Claude Code applied the fixes.
+- Found: copy-pasted limit blocks, a one-line wrapper with one caller, the same "take the question back" code twice, four near-identical localStorage helpers, two parameters nobody passes, an export used in one place, a 14-line inline icon, and a misplaced doc comment.
+- AI produced: a `counted()` helper and a loop in the coach function, `cleanText` with a default length, one `takeBack` in the chat hook, two small `readStored`/`writeStored` helpers for the rest timer, a constant eight weeks, a private `weeklyBests` (tested through `chartPoints`), a shared `ChevronDown`, and the comment moved. Left alone on purpose: `extendRest`'s seconds parameter (its tests use it), the chat's sending flag (changing `usePending` for four lines is not worth it), and the old one-argument rate-limit function (a deploy-order shim).
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4286). The cut is smaller than the 69 lines estimated, because the helpers replace code rather than only removing it.
+- Lesson: a review that only lists what to delete is cheap; check that each cut still has its tests before applying it.

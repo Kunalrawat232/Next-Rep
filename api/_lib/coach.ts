@@ -45,6 +45,18 @@ function logFailure(step: string, error?: unknown) {
   console.error(`coach: ${step}`, kind, typeof status === 'number' ? `HTTP ${status}` : '');
 }
 
+/** A count from the limiter: its value, or null (after saying which step failed in the log) when it cannot be had. */
+async function counted<T>(step: string, count: () => Promise<T | null>): Promise<T | null> {
+  try {
+    const value = await count();
+    if (value === null) logFailure(step);
+    return value;
+  } catch (error) {
+    logFailure(step, error);
+    return null;
+  }
+}
+
 /**
  * The request with every piece of text cleaned on the server (the browser's own cleaning cannot be trusted), and
  * with the person's earlier turns held to the same length as a question, so history cannot carry a long prompt.
@@ -128,38 +140,21 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
   const cleaned = cleanRequest(parsed.data);
   if (cleaned.question === '') return reply(400, { status: 'invalid' });
 
-  try {
-    const perMinute = await deps.consume(token, 60);
-    if (perMinute === null) {
-      logFailure('could not count the limit');
-      return unavailable(503);
-    }
-    if (perMinute > COACH_LIMITS.perMinute) return reply(429, { status: 'limited' });
-    const perHour = await deps.consume(token, 3600);
-    if (perHour === null) {
-      logFailure('could not count the limit');
-      return unavailable(503);
-    }
-    if (perHour > COACH_LIMITS.perHour) return reply(429, { status: 'limited' });
-  } catch (error) {
-    logFailure('could not count the limit', error);
-    return unavailable(503);
+  for (const [seconds, most] of [
+    [60, COACH_LIMITS.perMinute],
+    [3600, COACH_LIMITS.perHour],
+  ] as const) {
+    const used = await counted('could not count the limit', () => deps.consume(token, seconds));
+    if (used === null) return unavailable(503);
+    if (used > most) return reply(429, { status: 'limited' });
   }
 
   // A question that is plainly not about the gym or diet is turned away without asking the model.
   if (isObviouslyOffTopic(cleaned.question)) return reply(200, { status: 'off_topic' });
 
-  try {
-    const room = await deps.ceiling(token);
-    if (room === null) {
-      logFailure('could not count the day');
-      return unavailable(503);
-    }
-    if (!room) return reply(429, { status: 'limited' });
-  } catch (error) {
-    logFailure('could not count the day', error);
-    return unavailable(503);
-  }
+  const room = await counted('could not count the day', () => deps.ceiling(token));
+  if (room === null) return unavailable(503);
+  if (!room) return reply(429, { status: 'limited' });
 
   try {
     const answer = await deps.ask({

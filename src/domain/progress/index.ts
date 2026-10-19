@@ -25,15 +25,17 @@ const keyOf = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 /**
- * How many workouts the person did in each of the last `weeks` weeks (Monday to Sunday, device time zone),
+ * How many workouts the person did in each of the last 8 weeks (Monday to Sunday, device time zone),
  * oldest first, the current week last. A workout is counted in the week of its first set, and only workouts
  * with a set count. Weeks before the first workout are left out, so a new user does not see a row of empty
  * bars; an empty list means nothing was logged in the period.
  */
+/** How many weeks the weekly chart looks back, this week included. */
+const WEEKS = 8;
+
 export function workoutsPerWeek(
   sets: { workoutId: string; loggedAt: string }[],
   now: Date,
-  weeks: number = 8,
 ): WeekCount[] {
   const firstSet = new Map<string, number>();
   for (const set of sets) {
@@ -49,7 +51,7 @@ export function workoutsPerWeek(
   }
   const thisWeek = mondayOf(now);
   const all: WeekCount[] = [];
-  for (let back = weeks - 1; back >= 0; back--) {
+  for (let back = WEEKS - 1; back >= 0; back--) {
     const start = new Date(thisWeek);
     start.setDate(start.getDate() - 7 * back);
     all.push({
@@ -67,7 +69,7 @@ export function workoutsPerWeek(
  * trains an exercise twice a week with a different weight each day would otherwise see a zigzag, and a fall
  * whenever the lighter day came last, so charts and trends use this when there are at least two weeks.
  */
-export function weeklyBests(points: SessionBest[], unit: Unit): SessionBest[] {
+function weeklyBests(points: SessionBest[], unit: Unit): SessionBest[] {
   const hundredths = (kg: number) => Math.round(toDisplay(kg, unit) * 100);
   const best = new Map<string, SessionBest>();
   for (const point of points) {
