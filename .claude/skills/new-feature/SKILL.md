@@ -14,7 +14,7 @@ Follow these steps in order. Do not skip the plan or the pause for the developer
 5. **Verify.** Run `npm run lint`, `npm run typecheck` and `npm test`. Fix failures. Do not run `npm run build` (it loads `.env.local`; the developer runs it). Do not commit yet.
 6. **Review.** Delegate to `code-reviewer` and `security-auditor`; add `qa-tester` for domain or sync code. Present findings to the developer; do not auto-fix. The qa-tester agent may only add new test files.
 7. **Docs.** Update affected docs, add or amend an ADR if a decision changed (delegate to `doc-writer` if large).
-8. **AI log.** Append an entry to `docs/learning/ai-log.md` (tool, asked, produced, problems found, how validated left for the developer, lesson). Promote reusable lessons to `docs/learning/lessons.md`.
+8. **AI log.** Append an entry to `docs/learning/ai-log.md` (tool, asked, produced, problems found, how it was validated (what was run and by whom, and what was not), lesson). Promote reusable lessons to `docs/learning/lessons.md`.
 9. **Commit.** After the review and the developer's go: one finished task = one commit: a single short Conventional Commit subject line, no body, plus the Co-Authored-By attribution trailer when the harness asks for one (the trailer is the only allowed body). Ask before any other commit. Never push without approval. If the user says they handle git themselves, do not commit.
 
 Definition of done: code + tests passing + types and lint clean + docs updated if behaviour changed + ai-log entry, committed after review.

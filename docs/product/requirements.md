@@ -16,7 +16,7 @@ Status as of 2026-10-10: **done** (built and merged to `main`), **done, on `feat
 - History list, per-exercise progress chart, personal records. Done.
 - Deployed on Vercel, installable as a PWA. In progress: the PWA manifest and icons are built; no Vercel deployment exists yet.
 - Unit tests for all domain logic; a few Playwright smoke tests for the core journey. Unit tests done; the Playwright smoke specs exist and are run by the developer, not in CI.
-- Documentation and AI log. In progress (the AI log is updated per task; "How validated" is for the developer to fill).
+- Documentation and AI log. In progress (the AI log is updated per task, and each entry says how it was validated and who ran the checks).
 
 ### Should have
 
