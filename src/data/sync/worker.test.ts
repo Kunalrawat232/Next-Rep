@@ -87,6 +87,8 @@ describe('pushing', () => {
     const { store, server, worker } = setup();
     const late = await store.startWorkout(aWorkout({ startedAt: '2026-10-10T12:00:00.000Z' }));
     const early = await store.startWorkout(aWorkout({ startedAt: '2026-10-10T08:00:00.000Z' }));
+    await store.logSet(aSet(late.id));
+    await store.logSet(aSet(early.id));
     await worker.run();
     expect(server.callsTo('upsertWorkouts')[0]?.ids).toEqual([early.id, late.id]);
   });
@@ -153,6 +155,7 @@ describe('refused rows', () => {
   it('counts an attempt and waits longer each time', async () => {
     const { store, server, worker, clock, db } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected', 3);
     await worker.run();
     const first = await db.workouts.get(w.id);
@@ -181,6 +184,7 @@ describe('refused rows', () => {
   it('gives up after too many refusals, and a failed row is not retried by itself', async () => {
     const { store, server, worker, clock, db } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected', 100);
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
       await worker.run({ ignoreWait: true });
@@ -190,7 +194,7 @@ describe('refused rows', () => {
       syncStatus: 'failed',
       attempts: MAX_ATTEMPTS,
     });
-    expect(await store.counts()).toEqual({ pending: 0, failed: 1 });
+    expect(await store.counts()).toEqual({ pending: 1, failed: 1 }); // the failed workout, and its set still waiting
     server.calls.length = 0;
     await worker.run({ ignoreWait: true });
     expect(server.calls).toEqual([]);
@@ -199,6 +203,7 @@ describe('refused rows', () => {
   it('lets a row go through after a manual retry once the server works again', async () => {
     const { store, server, worker, clock } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected', MAX_ATTEMPTS);
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
       await worker.run({ ignoreWait: true });
@@ -214,6 +219,7 @@ describe('refused rows', () => {
   it('treats a duplicate-name conflict like any other refusal', async () => {
     const { store, server, worker, db } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'conflict');
     await worker.run();
     expect(await db.workouts.get(w.id)).toMatchObject({ attempts: 1, syncStatus: 'pending' });
@@ -339,6 +345,7 @@ describe('changes while a push is in flight', () => {
   it('sends the workout again when it was ended while the first copy was on its way', async () => {
     const { store, server, worker, db } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     const release = server.hold('upsertWorkouts');
     const running = worker.run();
     await waitFor(() => server.callsTo('upsertWorkouts').length > 0);
@@ -355,6 +362,7 @@ describe('changes while a push is in flight', () => {
   it('ending an already synced workout sends it again', async () => {
     const { store, server, worker } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await worker.run();
     await store.endWorkout(w.id, '2026-10-10T11:00:00.000Z');
     await worker.run();

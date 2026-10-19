@@ -207,7 +207,8 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
 
   async function end() {
     try {
-      await store.endWorkout(workout.id, new Date().toISOString());
+      // A workout with no sets is not kept (see `finishWorkout`).
+      await store.finishWorkout(workout.id, new Date().toISOString());
       rest.stop();
       notify();
       navigate('/');
@@ -255,7 +256,11 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
 
       {confirmingEnd && (
         <Card tone="danger" role="group" aria-label="End workout" className="flex flex-col gap-4">
-          <p>End this workout? You can start a new one afterwards.</p>
+          <p>
+            {sets.length === 0
+              ? 'This workout has no sets, so it will not be saved. End it?'
+              : 'End this workout? You can start a new one afterwards.'}
+          </p>
           <div className="flex gap-2">
             <Button variant="danger" onClick={() => void end()}>
               Yes, end it

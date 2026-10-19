@@ -62,10 +62,14 @@ const main = () => within(screen.getByRole('main'));
 describe('the progress list', () => {
   it('says so when nothing is logged, and offers to start a workout', async () => {
     await openWith([], '/progress');
-    expect(
-      await screen.findByRole('heading', { name: 'Nothing to chart yet' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Start workout' })).toHaveAttribute('href', '/workout');
+    // The page can re-render once while the history is being checked, so look again until it is steady.
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Nothing to chart yet' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Start workout' })).toHaveAttribute(
+        'href',
+        '/workout',
+      );
+    });
   });
 
   it('lists each exercise once with its heaviest set, the one done last first', async () => {

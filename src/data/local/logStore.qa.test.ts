@@ -89,6 +89,7 @@ describe('the outbox and the clock', () => {
   it('a wait set far in the future (the clock was wrong) counts as over', async () => {
     const { store, db } = freshLocal();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await db.workouts.update(w.id, { nextAttemptAt: 1_000 + BACKOFF_MAX_MS + 1 });
     expect((await store.outbox.dueWorkouts(1_000)).map((r) => r.id)).toEqual([w.id]);
     await db.workouts.update(w.id, { nextAttemptAt: 1_000 + BACKOFF_MAX_MS });

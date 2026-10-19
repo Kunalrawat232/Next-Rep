@@ -88,6 +88,11 @@ export interface LogStore {
   /** Starts a workout. Starting one that already exists changes nothing, so a retry cannot reopen an ended one. */
   startWorkout(input: NewWorkout): Promise<StoredWorkout>;
   endWorkout(id: string, endedAt: string): Promise<StoredWorkout>;
+  /**
+   * Ends a workout the way the screen does. A workout with no sets that never reached the server is not kept at
+   * all: it is removed from this device and `'discarded'` is returned. Otherwise it is ended as `endWorkout` does.
+   */
+  finishWorkout(id: string, endedAt: string): Promise<'saved' | 'discarded'>;
   /** The most recently started workout that has not been ended. */
   activeWorkout(): Promise<StoredWorkout | undefined>;
   /** Stores a set, after checking it against the shared schema. Logging an id that exists changes nothing. */

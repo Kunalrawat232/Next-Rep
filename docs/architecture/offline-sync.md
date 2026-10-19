@@ -13,6 +13,7 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 - **Offline, only creating sets is allowed.** Editing or deleting existing sets requires a connection. This avoids conflict resolution entirely.
 - Deletes are soft deletes (`deleted_at`) performed online.
 - Workouts started offline also get client UUIDs and sync the same way (**workout row before its sets**).
+- **An empty workout is never kept (2026-10-19).** A workout with no sets that has never reached the server is not sent (it goes out with its first set, and is not counted as "waiting"); ending it with no sets (`finishWorkout`) deletes it from the device; and the history pull does not bring an empty workout from the server onto the device. A workout that is already on the server stays as it is when it is ended, even if all its sets were undone (the rare case was left alone on purpose). A workout that is started and never ended stays on the device only, and can be resumed.
 - Global seeded exercises have stable UUIDs, so offline-created sets can reference them before sync.
 - The UI shows a small sync badge: "3 sets waiting to sync" / "All synced" / "Sync failed, tap to retry".
 - Voice and Gemini features (planned, Phase 3) will show "Needs internet" when offline; tap logging remains fully usable.

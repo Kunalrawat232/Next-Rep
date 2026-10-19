@@ -124,6 +124,7 @@ describe('scheduler, adversarial', () => {
     const pull = vi.fn(async () => done());
     const s = setup(pull);
     const w = await s.store.startWorkout(aWorkout());
+    await s.store.logSet(aSet(w.id));
     s.server.setOffline(true);
     s.scheduler.start();
     await settle();

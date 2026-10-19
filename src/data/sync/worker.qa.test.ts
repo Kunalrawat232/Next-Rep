@@ -127,7 +127,7 @@ describe('how each failure is classified', () => {
 
   it('a conflict on a workout that has a gym counts against the row (only "rejected" drops the gym)', async () => {
     const s = setup();
-    const { w } = await withSets(s, 0, uuid(777));
+    const { w } = await withSets(s, 1, uuid(777));
     s.server.failNext('upsertWorkouts', 'conflict');
     const out = await s.worker.run();
     expect(out.refused).toBe(1);
@@ -202,7 +202,7 @@ describe('offline then online mid-run', () => {
 
   it('ending a workout while its first push is in flight leaves the end time to go out next', async () => {
     const s = setup();
-    const { w } = await withSets(s, 0);
+    const { w } = await withSets(s, 1);
     const release = s.server.hold('upsertWorkouts');
     const run = s.worker.run();
     await new Promise((r) => setTimeout(r, 20));

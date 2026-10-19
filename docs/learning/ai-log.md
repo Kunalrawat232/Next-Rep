@@ -510,3 +510,13 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Checked and found right: the new coach notice naming Groq (and the summary switch off), the chart axis on round numbers (35, 40, 45, 50), the workout screen ("Pick an exercise", the arrow beside the exercise name, one blue button), History in the exercise picker, and a rest of about 1:30 starting by itself after a set was logged ("Sets so far" heading).
 - Left as found: the account's two empty workouts from earlier testing. The workout made for the check was deleted from the device and the server.
 - Lesson: the screens read as intended once seen together; the one thing worth tuning is the fallback's speed.
+
+## 2026-10-19: An empty workout is never kept
+
+- Tool: Claude Code, with a general-purpose agent to update the older sync tests.
+- Asked: if a workout is empty, it must not be stored in the database or anywhere.
+- Found: "Start workout" was sent to the server at once, and "End workout" kept an empty workout, so empty rows piled up (two in the test account).
+- AI produced: the outbox does not send a workout with no sets until its first set; `counts()` does not count it as waiting; `finishWorkout` (used by End workout) deletes an empty never-synced workout; the pull skips empty server workouts; the End workout question says "will not be saved" when there are no sets; 21 new tests. The one-time cleanup removed the two empty workouts from the test account (no empty workout is left for any user). Left as it was, on request: a workout already on the server whose sets were all undone is still saved when ended.
+- Cost: about 60 older tests assumed an empty workout is sent; they were updated so each still proves what it was written for.
+- How validated: _(developer to fill)_ Evidence: see the test run in the commit; the database was checked for empty workouts after the cleanup.
+- Lesson: a rule about what is stored belongs in the layer that stores it, and it shows up as old tests that quietly encoded the opposite.

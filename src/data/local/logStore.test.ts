@@ -313,6 +313,7 @@ describe('gym snapshot and gym cache', () => {
   it('never lets the snapshot into what is validated or sent', async () => {
     const { store, db } = freshLocal();
     const w = await store.startWorkout({ ...aWorkout(), gymSnapshot: gym });
+    await store.logSet(aSet(w.id));
     const due = await store.outbox.dueWorkouts(Number.MAX_SAFE_INTEGER);
     expect(due.map((r) => r.id)).toEqual([w.id]);
     expect((await db.workouts.get(w.id))?.gymSnapshot).toEqual(gym);

@@ -145,7 +145,8 @@ describe('when it runs', () => {
     browser.tick();
     await settle();
     expect(run).not.toHaveBeenCalled(); // idle: no request, no battery
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     browser.tick();
     await settle();
     expect(run).toHaveBeenCalledTimes(1);
@@ -154,7 +155,8 @@ describe('when it runs', () => {
 
   it('does not start a second pass while one is running', async () => {
     const { store, server, run, scheduler } = await setup();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     const release = server.hold('upsertWorkouts');
     scheduler.start();
     scheduler.notify();
@@ -200,11 +202,12 @@ describe('status', () => {
     const { store, server, scheduler, browser } = await setup();
     scheduler.start();
     await settle();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     server.setOffline(true);
     scheduler.notify();
     await settle();
-    expect(scheduler.status()).toMatchObject({ offline: true, pending: 1 });
+    expect(scheduler.status()).toMatchObject({ offline: true, pending: 2 });
     server.setOffline(false);
     browser.fire('online');
     await settle();
@@ -217,9 +220,10 @@ describe('status', () => {
     scheduler.start();
     await settle();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await db.workouts.update(w.id, { syncStatus: 'failed', attempts: 8 });
     await scheduler.refresh();
-    expect(scheduler.status()).toMatchObject({ failed: 1, pending: 0 });
+    expect(scheduler.status()).toMatchObject({ failed: 1, pending: 1 }); // the set still waits
     await scheduler.retryFailed();
     await settle();
     expect(server.workouts.has(w.id)).toBe(true);

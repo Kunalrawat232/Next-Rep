@@ -56,7 +56,9 @@ describe('starting a workout', () => {
     expect(workout).toMatchObject({ gymId: HOME_GYM.id, endedAt: null });
     expect(workout?.gymSnapshot).toEqual({ barbellKg: 15, bars: HOME_GYM.bars });
     expect(gyms.service.save).not.toHaveBeenCalled();
-    await waitFor(() => expect(server.workouts.has(workout!.id)).toBe(true));
+    // An empty workout is not kept: it is not sent until its first set is logged.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(server.workouts.has(workout!.id)).toBe(false);
   });
 
   it('shows your bars and a way to change them', async () => {

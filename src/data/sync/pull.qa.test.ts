@@ -87,7 +87,7 @@ describe('rows that break the schema', () => {
       wRow({ endedAt: '2026-10-01T24:00:00.000Z' }),
     ];
     const rows = [good, ...bad].sort((a, b) => (a.id < b.id ? -1 : 1));
-    const { local, result } = run(scripted([rows]));
+    const { local, result } = run(scripted([rows], [[aSet(good.id)]]));
     expect(await result).toMatchObject({ status: 'done', refused: 5, addedWorkouts: 1 });
     expect(await local.store.getWorkout(good.id)).toBeDefined();
   });
@@ -155,7 +155,8 @@ describe('duplicates and ordering', () => {
     const a = wRow({ id: uuid(901) });
     const b = wRow({ id: uuid(902) });
     const c = wRow({ id: uuid(903) });
-    const { local, result } = run(scripted([[a, b], [b, c], []]));
+    const sets = [a, b, c].map((wk) => aSet(wk.id));
+    const { local, result } = run(scripted([[a, b], [b, c], []], [sets]));
     expect(await result).toMatchObject({ status: 'done', addedWorkouts: 3 });
     expect(await local.db.workouts.count()).toBe(3);
   });
@@ -209,7 +210,8 @@ describe('duplicates and ordering', () => {
   it('a null row in the page is refused without crashing the pull', async () => {
     const good = wRow({ id: uuid(940) });
     const last = wRow({ id: uuid(941) });
-    const { result } = run(scripted([[null, 'text', 42, good, last]]));
+    const sets = [good, last].map((wk) => aSet(wk.id));
+    const { result } = run(scripted([[null, 'text', 42, good, last]], [sets]));
     expect(await result).toMatchObject({ status: 'done', refused: 3, addedWorkouts: 2 });
   });
 });
