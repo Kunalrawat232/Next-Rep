@@ -55,7 +55,8 @@ export function createFallbackAsk(config: FallbackConfig) {
           })),
         ],
         temperature: 0.6,
-        max_tokens: 800,
+        // Room for a model that thinks first: its thinking counts toward this limit, and a cut-off answer is useless.
+        max_tokens: 1500,
         response_format: { type: 'json_object' },
       }),
       signal: input.signal,

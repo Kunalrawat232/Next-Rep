@@ -113,7 +113,7 @@ if (placeholder(fbKey) && placeholder(fbUrl) && placeholder(fbModel)) {
           { role: 'user', content: 'How many sets of squats per week?' },
         ],
         temperature: 0.6,
-        max_tokens: 300,
+        max_tokens: 1500,
         response_format: { type: 'json_object' },
       }),
       signal: AbortSignal.timeout(20000),

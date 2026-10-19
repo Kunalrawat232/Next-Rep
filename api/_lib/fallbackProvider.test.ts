@@ -76,7 +76,7 @@ describe('createFallbackAsk', () => {
         { role: 'user', content: 'how many sets?' },
       ],
       temperature: 0.6,
-      max_tokens: 800,
+      max_tokens: 1500,
       response_format: { type: 'json_object' },
     });
   });
