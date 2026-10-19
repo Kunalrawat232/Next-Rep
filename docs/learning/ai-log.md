@@ -501,5 +501,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - Tool: Claude Code, with web search for the provider facts.
 - Asked: a Grok fallback for when Gemini's limit is reached. Finding: no free xAI tier could be confirmed, and the project allows free tiers only, so Groq was chosen after comparing it with OpenRouter (see ADR-018).
 - AI produced: `api/_lib/fallbackProvider.ts` (settings reader that refuses a non-https address, and an OpenAI-style request over plain `fetch`), the handler asking the second provider once (Gemini fails, cannot be read, or its day is used up), timeouts that fit the app's 25 s wait, the three settings in `.env.example`, the dev server and `check:coach`, a new coach notice (shown again once) and About page line. 29 new tests.
-- How validated: _(developer to fill)_ Evidence: the whole suite passes (4477). On 2026-10-19 the developer ran `npm run check:coach` with a real key: all eight lines passed, including Gemini and `openai/gpt-oss-20b` on Groq answering in the agreed `{onTopic, reply}` form. Not done: trying the fallback inside the running app (it needs Gemini to fail or its day to be used up), and setting the three settings in Vercel.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4477). On 2026-10-19 the developer ran `npm run check:coach` with a real key: all eight lines passed, including Gemini and `openai/gpt-oss-20b` on Groq answering in the agreed `{onTopic, reply}` form. On 2026-10-19 the fallback was tried in the running app with a deliberately wrong Gemini key: the coach still answered (about 10 s, because Gemini fails first and the second model thinks before it answers). The three settings are in Vercel for Production and Preview. Not done: a deploy.
 - Lesson: a fallback that sends users' text to a second company is a privacy change first and a code change second: say it where the person reads it.
+
+## 2026-10-19: Looking at the finished screens in Chrome
+
+- Tool: Claude Code with Chrome, on the developer's running dev server.
+- Checked and found right: the new coach notice naming Groq (and the summary switch off), the chart axis on round numbers (35, 40, 45, 50), the workout screen ("Pick an exercise", the arrow beside the exercise name, one blue button), History in the exercise picker, and a rest of about 1:30 starting by itself after a set was logged ("Sets so far" heading).
+- Left as found: the account's two empty workouts from earlier testing. The workout made for the check was deleted from the device and the server.
+- Lesson: the screens read as intended once seen together; the one thing worth tuning is the fallback's speed.
