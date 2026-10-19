@@ -462,3 +462,12 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: "Pick an exercise" as a real link, a chevron on the exercise name, a secondary "Tap instead", "Sets so far" as the list heading, no wrapping on "End workout", the round button hidden on workout screens, and a rest that starts after each set (tap and voice) with a remembered length and an off switch. 8 new tests; the older tests that expected the old labels were updated.
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4267). In Chrome I confirmed the round button is gone, the chevron and the "End workout" fix show; the last label ("Pick an exercise") could not be seen because the dev server was serving an older copy of the file, so it needs one more look after a restart.
 - Lesson: a button that cannot be used yet should say what to do first, not just look disabled.
+
+## 2026-10-19: Progress graphs and a month of sample history
+
+- Tool: Claude Code, with Chrome to look at the result.
+- Asked: graphs in the Progress section, and a month of sample data that shows steady progress, based on the plan the developer gave.
+- AI produced: `src/domain/progress` (workouts per week, best set per week, trend and its text), a "Workouts per week" bar chart, a trend line and "+X Kg since" text on every exercise row, and a Weight / Reps toggle on the exercise chart; in the test account only, 26 sample workouts (387 sets) from 7 Sep to 10 Oct in the same weekly split, with weights that rise in plate-sized steps to the weights in the plan and a few missed sessions. The week the developer entered was left as it is.
+- Found while checking: an exercise trained on two days with different weights (cable lateral raise, 10 Kg then 5 Kg) drew a zigzag and a false fall, so charts and trends now use the best set of each week.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4287); in Chrome the weekly bars climb from 4 to 6 workouts, the exercise lines rise, and the Reps toggle works.
+- Lesson: a trend between two single sessions says more about which day came last than about progress; compare like with like (the best of each week).

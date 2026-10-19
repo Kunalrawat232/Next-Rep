@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
 import {
   buttonClasses,
+  Chip,
   EmptyState,
   LoadingMessage,
   NotFound,
@@ -10,10 +12,11 @@ import {
 } from '../../components';
 import { withUnit } from '../../domain/units';
 import { dayLabel } from '../../domain/history';
+import { chartPoints } from '../../domain/progress';
 import { currentRecords, recordMarks, sessionBests } from '../../domain/records';
 import { useExerciseService, useExercises } from '../exercises';
 import { PrBadge } from './PrBadge';
-import { ProgressChart } from './ProgressChart';
+import { ProgressChart, type ChartMetric } from './ProgressChart';
 import { useExerciseSets } from './useExerciseSets';
 import { useUnit } from '../settings/UnitProvider';
 
@@ -24,6 +27,7 @@ export function ExerciseProgressPage() {
   const { unit } = useUnit();
   const id = IdSchema.safeParse(useParams().exerciseId);
   const exerciseId = id.success ? id.data : undefined;
+  const [metric, setMetric] = useState<ChartMetric>('weight');
   const { state, retry } = useExerciseSets(exerciseId ?? null);
   const { state: exercises } = useExercises(useExerciseService());
 
@@ -85,7 +89,17 @@ export function ExerciseProgressPage() {
           {points.length === 1 ? (
             <p className="text-callout text-ink-muted">Log another session to see a trend.</p>
           ) : (
-            <ProgressChart points={points} unit={unit} />
+            <section aria-label="Chart" className="flex flex-col gap-3">
+              <div role="group" aria-label="Chart shows" className="flex gap-2">
+                <Chip selected={metric === 'weight'} onClick={() => setMetric('weight')}>
+                  Weight
+                </Chip>
+                <Chip selected={metric === 'reps'} onClick={() => setMetric('reps')}>
+                  Reps
+                </Chip>
+              </div>
+              <ProgressChart points={chartPoints(points, unit)} unit={unit} metric={metric} />
+            </section>
           )}
 
           <section aria-label="Sessions" className="flex flex-col gap-2">

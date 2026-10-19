@@ -7,18 +7,28 @@ import type { SessionBest } from '../../domain/records';
 const ink = 'var(--color-ink-muted)';
 
 /**
- * The top set of each session over time. The drawing is for sighted users only: the same numbers
+ * The top set of each session over time: its weight, or its reps. The drawing is for sighted users only: the same numbers
  * are in the table next to it, which is what a screen reader gets.
  */
-export function ProgressChart({ points, unit }: { points: SessionBest[]; unit: Unit }) {
+export type ChartMetric = 'weight' | 'reps';
+
+export function ProgressChart({
+  points,
+  unit,
+  metric = 'weight',
+}: {
+  points: SessionBest[];
+  unit: Unit;
+  metric?: ChartMetric;
+}) {
   const now = new Date();
   // About the same room above and below in either unit (5 kg is about 11 lb).
-  const pad = unit === 'kg' ? 5 : 10;
+  const pad = metric === 'reps' ? 1 : unit === 'kg' ? 5 : 10;
   // Sessions are plotted by position, so two on the same day are two points.
   const data = points.map((p, i) => ({
     i,
     label: dayLabel(p.at, now),
-    weight: toDisplay(p.totalKg, unit),
+    value: metric === 'reps' ? p.reps : toDisplay(p.totalKg, unit),
   }));
   return (
     <div aria-hidden="true" className="h-60 w-full">
@@ -44,7 +54,7 @@ export function ProgressChart({ points, unit }: { points: SessionBest[]; unit: U
           />
           <Line
             type="monotone"
-            dataKey="weight"
+            dataKey="value"
             stroke="var(--color-accent)"
             strokeWidth={2}
             dot={{ r: 4, fill: 'var(--color-accent)', stroke: 'var(--color-accent)' }}

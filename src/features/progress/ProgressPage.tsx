@@ -7,12 +7,15 @@ import {
   RetryMessage,
 } from '../../components';
 import { dayLabel, groupByExercise } from '../../domain/history';
-import { currentRecords } from '../../domain/records';
-import { withUnit } from '../../domain/units';
+import { chartPoints, trendOf, trendText, workoutsPerWeek } from '../../domain/progress';
+import { currentRecords, sessionBests } from '../../domain/records';
+import { toDisplay, withUnit } from '../../domain/units';
 import { useExerciseService, useExercises } from '../exercises';
 import { useSyncStatus } from '../sync';
 import { useExerciseSets } from './useExerciseSets';
 import { useUnit } from '../settings/UnitProvider';
+import { Sparkline } from './Sparkline';
+import { WeeklyWorkoutsChart } from './WeeklyWorkoutsChart';
 
 /** The exercises logged on this device, most recently done first, each with its heaviest set. */
 export function ProgressPage() {
@@ -30,13 +33,19 @@ export function ProgressPage() {
       ? (exercises.exercises.find((e) => e.id === id)?.name ?? 'Custom exercise')
       : 'Exercise';
   const rows = groupByExercise(state.sets)
-    .map(({ exerciseId, sets }) => ({
-      id: exerciseId,
-      heaviest: currentRecords(sets, unit).heaviest,
-      last: sets[sets.length - 1]!.loggedAt,
-    }))
+    .map(({ exerciseId, sets }) => {
+      const points = chartPoints(sessionBests(sets, unit), unit);
+      return {
+        id: exerciseId,
+        heaviest: currentRecords(sets, unit).heaviest,
+        last: sets[sets.length - 1]!.loggedAt,
+        trend: trendOf(points, unit),
+        line: points.map((p) => toDisplay(p.totalKg, unit)),
+      };
+    })
     .sort((a, b) => (a.last < b.last ? 1 : a.last > b.last ? -1 : 0));
   const now = new Date();
+  const weeks = workoutsPerWeek(state.sets, now);
   // One loader until your history has been downloaded too, so the page never fills in later.
   if (rows.length === 0 && pulling) return <LoadingMessage>Loading your history…</LoadingMessage>;
 
@@ -53,20 +62,36 @@ export function ProgressPage() {
           </Link>
         </EmptyState>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <Link to={`/progress/${row.id}`} className={cardClasses('flex flex-col gap-1')}>
-                <span className="text-headline font-semibold">{nameOf(row.id)}</span>
-                <span className="text-callout text-ink-muted">
-                  {row.heaviest &&
-                    `Heaviest ${withUnit(row.heaviest.totalKg, unit)} × ${row.heaviest.reps} · `}
-                  Last {dayLabel(row.last, now)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          {weeks.length >= 2 && <WeeklyWorkoutsChart weeks={weeks} />}
+          <ul className="flex flex-col gap-2">
+            {rows.map((row) => (
+              <li key={row.id}>
+                <Link
+                  to={`/progress/${row.id}`}
+                  className={cardClasses('flex items-center justify-between gap-3')}
+                >
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="text-headline font-semibold">{nameOf(row.id)}</span>
+                    <span className="text-callout text-ink-muted">
+                      {row.heaviest &&
+                        `Heaviest ${withUnit(row.heaviest.totalKg, unit)} × ${row.heaviest.reps} · `}
+                      Last {dayLabel(row.last, now)}
+                    </span>
+                    {row.trend && (
+                      <span
+                        className={`text-callout font-medium ${row.trend.change > 0 ? 'text-success' : 'text-ink-muted'}`}
+                      >
+                        {trendText(row.trend, unit)}
+                      </span>
+                    )}
+                  </span>
+                  {row.line.length >= 2 && <Sparkline values={row.line} />}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
