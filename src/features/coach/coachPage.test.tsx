@@ -375,6 +375,7 @@ describe('the Coach screen', () => {
     const note = await screen.findByRole('note');
     expect(note).toHaveTextContent(/not medical advice/i);
     expect(note).toHaveTextContent(/google/i);
+    expect(note).toHaveTextContent(/groq/i);
     expect(note).toHaveTextContent(/stays on this device/i);
     await first.user.click(within(note).getByRole('button', { name: 'Got it' }));
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
@@ -382,6 +383,12 @@ describe('the Coach screen', () => {
     renderApp('/coach', { coach: fakeCoach().service });
     await box();
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
+  it('shows the notice again to someone who dismissed the older one, because it now names a second company', async () => {
+    localStorage.setItem('next-rep-coach-notice', 'seen');
+    renderApp('/coach', { coach: fakeCoach().service });
+    expect(await screen.findByRole('note')).toHaveTextContent(/groq/i);
   });
 
   it('is reached from the tab bar', async () => {

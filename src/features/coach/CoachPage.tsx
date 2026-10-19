@@ -16,7 +16,8 @@ const STARTERS = [
   'What should I eat before a workout?',
 ];
 
-const NOTICE_KEY = 'next-rep-coach-notice';
+// The number changes when what the notice says changes, so everyone reads the new one once (2: the second provider).
+const NOTICE_KEY = 'next-rep-coach-notice-2';
 
 function noticeSeen(): boolean {
   try {
@@ -137,8 +138,8 @@ export function CoachPage() {
           <p className="text-callout">
             {COACH_NAME} is an AI coach that gives training tips, not medical advice. Your question,
             and a short summary of your recent workouts if you turn that on, go to Google&apos;s
-            free AI service, which may use it to improve its products. Your chat stays on this
-            device.
+            free AI service, or to Groq&apos;s if Google&apos;s is busy. Both free services may use
+            it to improve their products. Your chat stays on this device.
           </p>
           <Button variant="secondary" className="self-start" onClick={dismissNotice}>
             Got it

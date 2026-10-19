@@ -64,3 +64,5 @@ The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)
 - **Trust:** everything the person writes and the earlier chat is untrusted text; a request to ignore the rules, reveal them or act as something else is treated as off topic.
 
 The person's text is only ever sent as chat turns; the facts and rules are the system instruction. The model is `COACH_MODEL`, falling back to `GEMINI_MODEL`, at temperature 0.6, with a response schema.
+
+When a second provider is set up (ADR-018) it gets the very same system prompt and chat, and its answer is checked in the same way; the prompt does not change per provider.

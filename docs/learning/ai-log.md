@@ -495,3 +495,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 - AI produced: 8 new test files, 151 cases, no production code changed. It found no real bug. It listed three things to decide: one bad field in the saved rest settings resets the whole object (auto turns back on); `exercisesByRecency` compares times as text, which is right only for canonical UTC strings (the app's rule); and an exercise missing from the library but with sets is left out of History while Progress shows it as "Custom exercise".
 - How validated: _(developer to fill)_ Evidence: the whole suite passes (4451), typecheck and lint are clean, and `git status` showed only new files.
 - Lesson: QA written after the feature mostly confirms it; the useful output is the list of behaviours nobody had decided.
+
+## 2026-10-19: A second provider for the coach
+
+- Tool: Claude Code, with web search for the provider facts.
+- Asked: a Grok fallback for when Gemini's limit is reached. Finding: no free xAI tier could be confirmed, and the project allows free tiers only, so Groq was chosen after comparing it with OpenRouter (see ADR-018).
+- AI produced: `api/_lib/fallbackProvider.ts` (settings reader that refuses a non-https address, and an OpenAI-style request over plain `fetch`), the handler asking the second provider once (Gemini fails, cannot be read, or its day is used up), timeouts that fit the app's 25 s wait, the three settings in `.env.example`, the dev server and `check:coach`, a new coach notice (shown again once) and About page line. 29 new tests.
+- How validated: _(developer to fill)_ Evidence: the whole suite passes (4477). Not done: a real Groq call, which needs the developer's key; `npm run check:coach` does it once the key is in `.env.local`.
+- Lesson: a fallback that sends users' text to a second company is a privacy change first and a code change second: say it where the person reads it.

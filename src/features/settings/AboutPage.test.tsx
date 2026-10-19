@@ -49,4 +49,12 @@ describe('About and credits', () => {
       expect(link.getAttribute('rel')).toMatch(/noreferrer/);
     }
   });
+
+  it('says which AI services the coach uses', async () => {
+    renderApp('/about');
+    await screen.findByRole('heading', { name: 'About and credits' });
+    const main = within(screen.getByRole('main'));
+    expect(main.getByText(/Gemini/)).toBeInTheDocument();
+    expect(main.getByText(/Groq/)).toBeInTheDocument();
+  });
 });

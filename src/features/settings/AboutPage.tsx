@@ -39,8 +39,9 @@ export function AboutPage() {
 
       <Section headingId="credits-ai" title="The coach and voice">
         <p className="text-callout text-ink-muted">
-          The AI coach and the check of phrases the app is not sure about use Google&apos;s Gemini.
-          Their answers are advice, never a record of what you lifted.
+          The AI coach and the check of phrases the app is not sure about use Google&apos;s Gemini,
+          and the coach asks Groq when Gemini is busy. Their answers are advice, never a record of
+          what you lifted.
         </p>
       </Section>
     </div>

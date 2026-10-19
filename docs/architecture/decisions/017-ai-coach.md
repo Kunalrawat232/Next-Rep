@@ -27,6 +27,8 @@ The developer wanted an AI coach: a text chat where a user asks training questio
 
 ## Consequences
 
+- A second provider can answer when Gemini cannot: see [ADR-018](018-coach-second-provider.md).
+
 - A busy day can hit Gemini's per-project free limits; the coach then says it is busy.
 - The shared rate counter couples the coach and the voice fallback (see above).
 - The answers are advice from a language model: the screen says so, and the prompt keeps it away from medical topics, but it cannot be made perfect. The developer should read a few real answers before the demo.

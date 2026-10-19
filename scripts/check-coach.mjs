@@ -82,6 +82,60 @@ if (!placeholder(env.GEMINI_API_KEY) && !placeholder(model)) {
   report(false, 'the model answers', 'skipped: fix the settings above first');
 }
 
+// 2b. the second provider, when it is set up (all three settings, or none)
+const [fbKey, fbUrl, fbModel] = [env.FALLBACK_API_KEY, env.FALLBACK_BASE_URL, env.FALLBACK_MODEL];
+if (placeholder(fbKey) && placeholder(fbUrl) && placeholder(fbModel)) {
+  console.log('SKIP  the second provider is not set (optional)');
+} else if (
+  placeholder(fbKey) ||
+  placeholder(fbUrl) ||
+  placeholder(fbModel) ||
+  !/^https:\/\//.test(fbUrl)
+) {
+  report(
+    false,
+    'the second provider settings',
+    'FALLBACK_API_KEY, FALLBACK_BASE_URL (https) and FALLBACK_MODEL must all be set',
+  );
+} else {
+  try {
+    const response = await fetch(`${fbUrl.replace(/\/+$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${fbKey}` },
+      body: JSON.stringify({
+        model: fbModel,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a gym coach. Answer with JSON only: {"onTopic": true, "reply": "..."} for a gym or diet question, or {"onTopic": false, "reply": ""} otherwise.',
+          },
+          { role: 'user', content: 'How many sets of squats per week?' },
+        ],
+        temperature: 0.6,
+        max_tokens: 300,
+        response_format: { type: 'json_object' },
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    let parsed = null;
+    if (response.ok) {
+      try {
+        parsed = JSON.parse((await response.json()).choices?.[0]?.message?.content ?? '');
+      } catch {
+        // not JSON
+      }
+    }
+    report(
+      parsed !== null && typeof parsed.onTopic === 'boolean' && typeof parsed.reply === 'string',
+      `the second provider's model "${fbModel}" answers in the agreed form`,
+      response.ok ? 'it answered, but not as {onTopic, reply}' : `HTTP ${response.status}`,
+    );
+  } catch (error) {
+    report(false, `the second provider's model "${fbModel}" answers`, error?.name ?? 'error');
+  }
+}
+
 // 3. sign in as the test user and count one request, as the function does
 const email = env.E2E_USER_A_EMAIL ?? '';
 const password = env.E2E_USER_A_PASSWORD ?? '';
@@ -109,7 +163,7 @@ if (!url || !anonKey || !email || !password) {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ p_window_seconds: 60 }),
+      body: JSON.stringify({ p_scope: 'coach', p_window_seconds: 60 }),
       signal: AbortSignal.timeout(15000),
     });
     const value = count.ok ? await count.json() : null;

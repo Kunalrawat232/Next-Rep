@@ -472,3 +472,142 @@ describe("the project's model calls for the day", () => {
     expect(ceiling).not.toHaveBeenCalled();
   });
 });
+
+describe('the second provider', () => {
+  const offTopic = model(false, '');
+  const second = (answer = model(true, 'From the second provider.')) =>
+    vi.fn<NonNullable<CoachDeps['fallback']>>(async () => answer);
+  const failing = () =>
+    vi.fn<CoachDeps['ask']>(async () => {
+      throw Object.assign(new Error('first provider down'), { status: 503 });
+    });
+
+  it('is asked when the first provider fails, and its answer is passed on', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fallback = second();
+    const { deps: d } = deps({ ask: failing(), fallback });
+    const response = await handleCoach(request(valid), d);
+    expect(await response.json()).toEqual({ status: 'ok', text: 'From the second provider.' });
+    expect(fallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('is asked when the first provider answers in a form that cannot be read', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fallback = second();
+    const { deps: d } = deps({ ask: async () => 'not json at all', fallback });
+    const response = await handleCoach(request(valid), d);
+    expect(await response.json()).toMatchObject({ status: 'ok' });
+    expect(fallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('is not asked when the first provider answers', async () => {
+    const fallback = second();
+    const { deps: d } = deps({ fallback });
+    const response = await handleCoach(request(valid), d);
+    expect(await response.json()).toMatchObject({
+      status: 'ok',
+      text: expect.stringContaining('Add 2.5'),
+    });
+    expect(fallback).not.toHaveBeenCalled();
+  });
+
+  it('gets the same system prompt and chat as the first provider', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const first = failing();
+    const fallback = second();
+    const { deps: d } = deps({ ask: first, fallback });
+    await handleCoach(
+      request({
+        question: 'And for legs?',
+        history: [
+          { role: 'user', text: 'Bench plateau?' },
+          { role: 'coach', text: 'Add reps.' },
+        ],
+      }),
+      d,
+    );
+    const a = first.mock.calls[0]![0];
+    const b = fallback.mock.calls[0]![0];
+    expect(b.system).toBe(a.system);
+    expect(b.turns).toEqual(a.turns);
+    expect(b.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('says unavailable when both fail, and logs only the steps, never the question', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fallback = vi.fn<NonNullable<CoachDeps['fallback']>>(async () => {
+      throw Object.assign(new Error('second down: echo of the question'), { status: 429 });
+    });
+    const { deps: d } = deps({ ask: failing(), fallback });
+    const response = await handleCoach(
+      request({ question: 'My secret question about squats', history: [] }),
+      d,
+    );
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ status: 'unavailable' });
+    const logged = JSON.stringify(log.mock.calls);
+    expect(logged).toContain('asking the second provider');
+    expect(logged).not.toContain('secret');
+    expect(logged).not.toContain('echo');
+  });
+
+  it("is used straight away when the first provider's day is used up, and the first is not called", async () => {
+    const first = vi.fn<CoachDeps['ask']>(async () => model(true, 'first'));
+    const fallback = second();
+    const { deps: d } = deps({ ceiling: async () => false, ask: first, fallback });
+    const response = await handleCoach(request(valid), d);
+    expect(await response.json()).toEqual({ status: 'ok', text: 'From the second provider.' });
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('says "limited" when the day is used up and the second provider fails too', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const fallback = vi.fn<NonNullable<CoachDeps['fallback']>>(async () => {
+      throw new Error('down');
+    });
+    const { deps: d } = deps({ ceiling: async () => false, fallback });
+    const response = await handleCoach(request(valid), d);
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({ status: 'limited' });
+  });
+
+  it('keeps saying "limited" when the day is used up and there is no second provider', async () => {
+    const { deps: d } = deps({ ceiling: async () => false });
+    expect((await handleCoach(request(valid), d)).status).toBe(429);
+  });
+
+  it('still counts the per-person limits before any provider is asked', async () => {
+    const fallback = second();
+    const { deps: d } = deps({
+      consume: async (_t, w) => (w === 60 ? COACH_LIMITS.perMinute + 1 : 1),
+      ask: failing(),
+      fallback,
+    });
+    expect((await handleCoach(request(valid), d)).status).toBe(429);
+    expect(fallback).not.toHaveBeenCalled();
+  });
+
+  it('puts its answer through the same checks: off topic gets our refusal, a link is not passed on', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const off = deps({ ask: failing(), fallback: second(offTopic) });
+    expect(await (await handleCoach(request(valid), off.deps)).json()).toEqual({
+      status: 'off_topic',
+    });
+    const link = deps({ ask: failing(), fallback: second(model(true, 'See https://example.com')) });
+    const response = await handleCoach(request(valid), link.deps);
+    expect(response.status).toBe(503);
+  });
+
+  it('gives the two attempts less time than the app waits, when there is a second provider', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const first = failing();
+    const fallback = second();
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
+    const { deps: d } = deps({ ask: first, fallback });
+    await handleCoach(request(valid), d);
+    expect(timeout.mock.calls.map((c) => c[0])).toEqual([12_000, 8_000]);
+    timeout.mockClear();
+    await handleCoach(request(valid), deps().deps);
+    expect(timeout.mock.calls.map((c) => c[0])).toEqual([20_000]);
+  });
+});

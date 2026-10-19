@@ -15,10 +15,19 @@ import { isObviouslyOffTopic } from './coachScope.js';
 
 export const COACH_LIMITS = { perMinute: 5, perHour: 20 } as const;
 export const COACH_TIMEOUT_MS = 20_000;
+/** With a second provider the two attempts must fit inside the app's own 25 s wait: 12 s for the first, 8 s for the second. */
+const FIRST_OF_TWO_TIMEOUT_MS = 12_000;
+const SECOND_TIMEOUT_MS = 8_000;
 /** Eight earlier turns of up to 2000 characters, a question and the facts fit in this. */
 const BODY_MAX_CHARS = 24_000;
 
 export type CoachTurnForModel = { role: 'user' | 'model'; text: string };
+
+export type CoachAsk = (input: {
+  system: string;
+  turns: CoachTurnForModel[];
+  signal: AbortSignal;
+}) => Promise<string>;
 
 export type CoachDeps = {
   /** True when the token is a valid, signed-in user's access token. */
@@ -28,7 +37,12 @@ export type CoachDeps = {
   /** True while the whole project is under its model calls for the day; null when it cannot be counted. */
   ceiling(token: string): Promise<boolean | null>;
   /** Asks the model and returns its text. Throws on any failure. */
-  ask(input: { system: string; turns: CoachTurnForModel[]; signal: AbortSignal }): Promise<string>;
+  ask: CoachAsk;
+  /**
+   * A second provider, asked once when `ask` fails or cannot be read, or when the project's day of calls to the
+   * first is used up. Same contract as `ask`; its answer goes through the same checks. Not set: only `ask` is used.
+   */
+  fallback?: CoachAsk;
 };
 
 const reply = (status: number, body: CoachResponse | { status: string }) =>
@@ -154,34 +168,44 @@ export async function handleCoach(request: Request, deps: CoachDeps): Promise<Re
 
   const room = await counted('could not count the day', () => deps.ceiling(token));
   if (room === null) return unavailable(503);
-  if (!room) return reply(429, { status: 'limited' });
+  // The first provider's day is used up: with no second provider that is "busy", with one it goes straight there.
+  if (!room && !deps.fallback) return reply(429, { status: 'limited' });
 
-  try {
-    const answer = await deps.ask({
-      system: `${COACH_PROMPT}\n\n${factsFor(cleaned.context)}`,
-      turns: turnsFor(cleaned),
-      signal: AbortSignal.timeout(COACH_TIMEOUT_MS),
-    });
-    const output = readModelOutput(answer);
-    if (output === null) {
-      logFailure('the model answered in a form that could not be read');
-      return unavailable(503);
+  const system = `${COACH_PROMPT}\n\n${factsFor(cleaned.context)}`;
+  const turns = turnsFor(cleaned);
+  /** One provider's answer in the agreed form, or null (after saying why in the log, never what was said). */
+  const attempt = async (ask: CoachAsk, milliseconds: number): Promise<CoachModelOutput | null> => {
+    try {
+      const output = readModelOutput(
+        await ask({ system, turns, signal: AbortSignal.timeout(milliseconds) }),
+      );
+      if (output === null) logFailure('the model answered in a form that could not be read');
+      return output;
+    } catch (error) {
+      logFailure('the model call failed', error);
+      return null;
     }
-    // The refusal is ours: whatever the model wrote next to "off topic" is thrown away.
-    if (!output.onTopic) return reply(200, { status: 'off_topic' });
-    const textOut = output.reply.trim().slice(0, COACH_REPLY_MAX);
-    if (textOut === '') {
-      logFailure('the model answered with nothing');
-      return unavailable(503);
-    }
-    if (!isPlainReply(textOut)) {
-      logFailure('the model answered with a link, code or markup');
-      return unavailable(503);
-    }
-    return reply(200, { status: 'ok', text: textOut });
-  } catch (error) {
-    // The kind of failure only: never the question, and never next to a user id.
-    logFailure('the model call failed', error);
+  };
+
+  let output = room
+    ? await attempt(deps.ask, deps.fallback ? FIRST_OF_TWO_TIMEOUT_MS : COACH_TIMEOUT_MS)
+    : null;
+  if (output === null && deps.fallback) {
+    if (room) logFailure('asking the second provider');
+    output = await attempt(deps.fallback, SECOND_TIMEOUT_MS);
+  }
+  if (output === null) return room ? unavailable(503) : reply(429, { status: 'limited' });
+
+  // The refusal is ours: whatever the model wrote next to "off topic" is thrown away.
+  if (!output.onTopic) return reply(200, { status: 'off_topic' });
+  const textOut = output.reply.trim().slice(0, COACH_REPLY_MAX);
+  if (textOut === '') {
+    logFailure('the model answered with nothing');
     return unavailable(503);
   }
+  if (!isPlainReply(textOut)) {
+    logFailure('the model answered with a link, code or markup');
+    return unavailable(503);
+  }
+  return reply(200, { status: 'ok', text: textOut });
 }
