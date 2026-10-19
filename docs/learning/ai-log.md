@@ -446,7 +446,7 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 
 - Tool: Claude Code, with the read-only `security-auditor` and `code-reviewer` agents.
 - Found by the reviewers: Clear during a question brought the old chat back; a gym request ("write me a training program") was refused by our own prefilter; a failed save of the reply left the question stuck; the browser could forge earlier turns; nothing checked the reply's form; the training summary started on.
-- AI produced: Clear is disabled while a question is out and is guarded and reports a failure; the question is taken back out when anything fails; the server cleans every turn and refuses links, code and tags in a reply; the prefilter no longer catches "program"; the summary starts off. 17 new tests.
+- AI produced: Clear is disabled while a question is out and is guarded and reports a failure; the question is taken back out when anything fails; the server cleans every turn and refuses links, code and tags in a reply; the prefilter no longer catches "program"; the summary starts off. 16 new tests.
 - How validated: the whole suite passes (4250). Not done: rate-limit buckets and a daily ceiling (need a migration), the 48 px send button and `PageHeader`, the real-schema check script.
 - Lesson: an agent review of your own feature finds bugs that your own tests were written around.
 
@@ -470,7 +470,7 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 
 - Tool: Claude Code, with Chrome driving the app at phone size.
 - Found by walking the journey: a dead, dimmed "Tap instead" that looked like a button; the round Workout button sitting on top of "Log set"; two equal blue buttons; the exercise name twice; "End workout" wrapping; and a rest timer that never started by itself.
-- AI produced: "Pick an exercise" as a real link, a chevron on the exercise name, a secondary "Tap instead", "Sets so far" as the list heading, no wrapping on "End workout", the round button hidden on workout screens, and a rest that starts after each set (tap and voice) with a remembered length and an off switch. 8 new tests; the older tests that expected the old labels were updated.
+- AI produced: "Pick an exercise" as a real link, a chevron on the exercise name, a secondary "Tap instead", "Sets so far" as the list heading, no wrapping on "End workout", the round button hidden on workout screens, and a rest that starts after each set (tap and voice) with a remembered length and an off switch. 5 new tests; the older tests that expected the old labels were updated.
 - How validated: the whole suite passes (4267). In Chrome I confirmed the round button is gone, the chevron and the "End workout" fix show; the last label ("Pick an exercise") could not be seen because the dev server was serving an older copy of the file, so it needs one more look after a restart.
 - Lesson: a button that cannot be used yet should say what to do first, not just look disabled.
 
@@ -511,7 +511,7 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 
 - Tool: Claude Code, with web search for the provider facts.
 - Asked: a Grok fallback for when Gemini's limit is reached. Finding: no free xAI tier could be confirmed, and the project allows free tiers only, so Groq was chosen after comparing it with OpenRouter (see ADR-018).
-- AI produced: `api/_lib/fallbackProvider.ts` (settings reader that refuses a non-https address, and an OpenAI-style request over plain `fetch`), the handler asking the second provider once (Gemini fails, cannot be read, or its day is used up), timeouts that fit the app's 25 s wait, the three settings in `.env.example`, the dev server and `check:coach`, a new coach notice (shown again once) and About page line. 29 new tests.
+- AI produced: `api/_lib/fallbackProvider.ts` (settings reader that refuses a non-https address, and an OpenAI-style request over plain `fetch`), the handler asking the second provider once (Gemini fails, cannot be read, or its day is used up), timeouts that fit the app's 25 s wait, the three settings in `.env.example`, the dev server and `check:coach`, a new coach notice (shown again once) and About page line. 26 new tests.
 - How validated: the whole suite passes (4477). On 2026-10-19 the developer ran `npm run check:coach` with a real key: all eight lines passed, including Gemini and `openai/gpt-oss-20b` on Groq answering in the agreed `{onTopic, reply}` form. On 2026-10-19 the fallback was tried in the running app with a deliberately wrong Gemini key: the coach still answered (about 10 s, because Gemini fails first and the second model thinks before it answers). The three settings are in Vercel for Production and Preview. Not done: a deploy.
 - Lesson: a fallback that sends users' text to a second company is a privacy change first and a code change second: say it where the person reads it.
 
@@ -527,7 +527,16 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 - Tool: Claude Code, with a general-purpose agent to update the older sync tests.
 - Asked: if a workout is empty, it must not be stored in the database or anywhere.
 - Found: "Start workout" was sent to the server at once, and "End workout" kept an empty workout, so empty rows piled up (two in the test account).
-- AI produced: the outbox does not send a workout with no sets until its first set; `counts()` does not count it as waiting; `finishWorkout` (used by End workout) deletes an empty never-synced workout; the pull skips empty server workouts; the End workout question says "will not be saved" when there are no sets; 21 new tests. The one-time cleanup removed the two empty workouts from the test account (no empty workout is left for any user). Left as it was, on request: a workout already on the server whose sets were all undone is still saved when ended.
+- AI produced: the outbox does not send a workout with no sets until its first set; `counts()` does not count it as waiting; `finishWorkout` (used by End workout) deletes an empty never-synced workout; the pull skips empty server workouts; the End workout question says "will not be saved" when there are no sets; 18 new tests. The one-time cleanup removed the two empty workouts from the test account (no empty workout is left for any user). Left as it was, on request: a workout already on the server whose sets were all undone is still saved when ended.
 - Cost: about 60 older tests assumed an empty workout is sent; they were updated so each still proves what it was written for.
 - How validated: see the test run in the commit; the database was checked for empty workouts after the cleanup.
 - Lesson: a rule about what is stored belongs in the layer that stores it, and it shows up as old tests that quietly encoded the opposite.
+
+## 2026-10-19: Agent docs, level 2 (the agent's knowledge split by area)
+
+- Tool: Claude Code.
+- Asked: set up the project's AI context as a lean `CLAUDE.md` plus per-area docs with indexes (an audit and a plan were approved first), then split the big `AGENT_CONTEXT.md`.
+- AI produced: `agent_docs/` with an `index.md` and five areas (local-data, workout, api, database, testing; 10 docs and 5 area indexes), `AGENT_CONTEXT.md` reduced to what is shared (each moved section left as a pointer, so heading numbers and links still work), the two instructions in `CLAUDE.md` (read the docs first and the code only if necessary; update or create a doc after a change), and the placeholders in `docs/qa/ai-qa-report.md` replaced with what the record supports, plus rows for this stretch's reviews and QA.
+- Problems found while moving the text: several statements in `AGENT_CONTEXT.md` were stale (the rate counter was said to be shared, the Vercel function answers were wrong for 400, 401 and 413, `/api` was called "planned", test counts were from 10 Oct); each was checked against the code and corrected. Counts I had written in this log for new tests were also wrong in four places and were re-measured from git (for example the empty-workout rule added 18 tests, not 21).
+- How validated: every link and every file path in the new docs was checked by a script, every `npm run` name and every function or hook name was found in the code, constants (retries, timeouts, limits, page sizes) were read from the source, and the full suite (4499 tests), typecheck and lint pass. Not checked: whether a person finds the docs easier to use than the old file.
+- Lesson: when text is moved, check each claim against the code instead of copying it; the stale lines were all in the part nobody had re-read.
