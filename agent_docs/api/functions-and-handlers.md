@@ -16,7 +16,7 @@ There is no custom backend: the browser talks to Supabase directly with RLS as t
   - parse: 200 `{status:'ok', result}`, 429 or 503 `{status:'unavailable'}`.
   - coach: 200 `{status:'ok', text}` or `{status:'off_topic'}`, 429 `{status:'limited'}`, 503 `{status:'unavailable'}`.
 - **Never log** the question, the transcript or the reply. Logs carry only the step that failed, the kind of error and an HTTP status.
-- **Limits:** parse allows 10 a minute and 60 an hour per user (`LIMITS` in `api/_lib/parse.ts`) and gives Gemini 8 s (`GEMINI_TIMEOUT_MS`); the coach allows 5 a minute and 20 an hour (`COACH_LIMITS`). They are counted separately, and both then count against one daily ceiling of model calls for the whole project.
+- **Limits:** per-user limits are `LIMITS` in `api/_lib/parse.ts` and `COACH_LIMITS` in `api/_lib/coach.ts`; the numbers, and the daily ceiling both functions count against, are in [rate-limits-and-ceiling.md](../database/rate-limits-and-ceiling.md). Parse gives Gemini 8 s (`GEMINI_TIMEOUT_MS`).
 - **Parse request:** `transcript` up to 300 characters and a `context` of `{unit, currentExercise?, lastSet?}` (`src/domain/parser/gemini.ts`). Gemini answers in JSON mode (temperature 0, up to 300 output tokens); the answer is checked against `GeminiOutputSchema` and, on the client, mapped with `fromGemini` and then goes through the same `validateSet` as any phrase. The client (`src/data/remote/parse.ts`, 10 s) shows what it read on the confirm card, and never stores anything without the user's Log set.
 
 ## Rules that bite
@@ -25,4 +25,4 @@ There is no custom backend: the browser talks to Supabase directly with RLS as t
 - A new endpoint: add `api/<name>.ts` (compiled by `tsconfig.api.json`), verify the token, validate input and output with Zod, rate-limit through `consume_rate_limit`, return the same error shapes, document it in `docs/architecture/api-contracts.md`.
 - **Dev server:** `npm run dev` serves `/api/parse` and `/api/coach` itself through `vite.devApi.ts` (dev only; never in a build or the tests). It reads only these settings from `.env.local`: `GEMINI_API_KEY`, `GEMINI_MODEL`, `COACH_MODEL`, `FALLBACK_API_KEY`, `FALLBACK_BASE_URL`, `FALLBACK_MODEL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` (the browser's `VITE_` Supabase values stand in when the server-only ones are missing), warns about missing ones by name only, and needs a restart after a change. Without it the dev server answers `/api/*` with the app's own page. Test: `tests/design/devApi.test.ts`.
 - `npm run check:coach` (the developer runs it; it loads `.env.local`) prints PASS or FAIL for the Gemini model, the second provider if set, sign-in and the rate limit, never a key or a reply.
-- Agents must not run commands that load `.env.local` (`dev`, `build`, `test:e2e`, `test:integration`, `check:supabase`, `check:coach`).
+- Agents must not run commands that load `.env.local` (the list is in [CLAUDE.md](../../CLAUDE.md) section 5).

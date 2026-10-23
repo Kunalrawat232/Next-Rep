@@ -19,7 +19,7 @@
 
 ## Details worth knowing
 
-- **Weights are stored as the TOTAL in kg including the bar.** Tap helpers take the unit: `stepFor` (2.5 kg or 5 lb for a total, 1.25 kg or 2.5 lb per side), `perSideShown`, `weightForValidation`, `convertEntry`, `nextValue`, `parseWeight` (accepts "62,5", rejects "1,000"), `breakdownFor`, `setSummary`, `initialEntry` (all in `src/domain/workout/index.ts`). The bar of a set comes from `barFor(gym, equipment)` (`src/domain/gyms/index.ts`).
+- **Weights are stored as the TOTAL in kg including the bar.** Tap helpers take the unit: `stepFor` (2.5 kg or 5 lb for a total, 1.25 kg or 2.5 lb per side), `perSideShown`, `weightForValidation`, `convertEntry`, `nextValue`, `breakdownFor`, `setSummary`, `initialEntry` (all in `src/domain/workout/index.ts`). The bar of a set comes from `barFor(gym, equipment)` (`src/domain/gyms/index.ts`).
 - **Validation** (`src/domain/validation`): `validateSet` returns `ok`, `warn`, `ask` or `reject`. A tapped jump is only a warning; the "Did you mean 60?" confusion check is voice only. Thresholds are in `src/domain/validation/config.ts`.
 - **The round Workout button** (`AppShell`) is hidden on every `/workout` screen, where it would cover the buttons. The Workout link in the tab bar or sidebar stays.
 - **Hooks:** `useWorkout` (the open workout and its sets, re-read as syncing moves), `useMyGym`, `useFreshGym(workout, reload)` (refreshes the workout's gym snapshot when online and the gym was edited), `useExerciseParam` and `exerciseQuery` (validate `?exercise=` as a UUID and build the query).

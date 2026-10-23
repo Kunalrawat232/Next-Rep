@@ -26,7 +26,7 @@ Runs a pass on start, on the `online` event, when the page becomes visible, afte
 - It is a **full read** (no `updated_at` on workouts): finished workouts and their sets, `PULL_PAGE_SIZE = 500` per page, keyset paging by id, only rows with `deleted_at is null`. Rows are checked with `WorkoutSchema` and `SetSchema` before merging.
 - `LogStore.mergePulled` adds what is missing, keeps pending local rows, and removes synced local rows that the server no longer lists, **except** that an answer which would remove all or most synced sets is not applied for removals (`removalsSkipped`), because a bad answer is likelier than a real change. It skips a server workout that has no sets, and fills `gymSnapshot` from the cached gym (without it a pulled workout has no bars and bar exercises ask for the bar).
 - Open workouts on other devices are not pulled (only finished ones). Records and charts see only what is on the device until the pull has run.
-- Verified against the hosted project on 2026-10-19: workouts and sets inserted directly on the server appeared in the app after a reload.
+- Verified against the hosted project: workouts and sets inserted directly on the server appeared in the app after a reload.
 
 ## Sign-out
 

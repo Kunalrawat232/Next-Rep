@@ -1,6 +1,6 @@
 # Rate limits and the daily ceiling
 
-Added in migration `0005_rate_limit_scopes.sql` (applied 2026-10-18); tests in `tests/db/rateLimits.test.ts` and `tests/db/schema.test.ts`. The functions are called from the Vercel functions through `api/_lib/supabase.ts` (see [functions-and-handlers.md](../api/functions-and-handlers.md)).
+Added in migration `0005_rate_limit_scopes.sql` (applied to the hosted project); tests in `tests/db/rateLimits.test.ts` and `tests/db/schema.test.ts`. The functions are called from the Vercel functions through `api/_lib/supabase.ts` (see [functions-and-handlers.md](../api/functions-and-handlers.md)).
 
 | Piece                                                        | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -12,4 +12,4 @@ Added in migration `0005_rate_limit_scopes.sql` (applied 2026-10-18); tests in `
 
 How the app uses them: each function counts the per-user limits first (parse 10 a minute and 60 an hour, coach 5 and 20), then the ceiling just before a model is called. When the ceiling says no, `/api/coach` uses the second provider if there is one, otherwise answers `limited`; `/api/parse` answers 429.
 
-Open risk: signing up is open and "Confirm email" is off, so many accounts could still use up the daily ceiling for everyone; email confirmation and CAPTCHA (Supabase dashboard) are planned before the 25 Oct freeze.
+Open risk: signing up is open and "Confirm email" is off, so many accounts could still use up the daily ceiling for everyone. The dashboard settings that reduce this are listed in [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) section 12.

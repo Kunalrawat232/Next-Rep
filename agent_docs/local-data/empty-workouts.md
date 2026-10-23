@@ -1,6 +1,6 @@
 # Empty workouts are never kept
 
-**Rule:** a workout with no sets that has never reached the server is not stored anywhere that lasts: it is not sent to Supabase, it is not counted as waiting to sync, it is discarded when it is ended, and the history pull does not bring one back. Decided 2026-10-19.
+**Rule:** a workout with no sets that has never reached the server is not stored anywhere that lasts: it is not sent to Supabase, it is not counted as waiting to sync, it is discarded when it is ended, and the history pull does not bring one back.
 
 ## Where it is enforced
 
