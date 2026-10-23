@@ -32,4 +32,5 @@ Helpers: `src/test/localDb.ts` (`freshLocal()`, `reopenLocal()`, `aWorkout()`, `
 - **Do not assert right after an async render.** Under load the page can re-render once; use `waitFor` (re-checks until steady) for things that can change, and wait for the condition instead of a fixed time. A text query that needs a moment uses `findBy...`.
 - **Fakes of Dexie internals:** the harness opens its own copy of the database, so to fail a Dexie call in a whole-app test patch the shared table methods (see `src/features/coach/coachPage.test.tsx`), not the harness `db`.
 - **Stale hook state:** results are tagged with their inputs; a `current` flag alone is not enough when the address changes. Tests that change the route check this.
+- **`npm run test:integration` deletes every workout, set, exercise and gym of test users A and B** (in `beforeAll` and `afterAll`), and `test:e2e` adds a workout to user A. Never seed demo data into those accounts and then run them: re-seed afterwards, or give the demo its own account.
 - Tests for `api/` use fakes for every dependency and never touch the network; `api/_lib/imports.test.ts` guards the `.js` import rule.

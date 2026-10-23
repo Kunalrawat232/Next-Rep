@@ -25,3 +25,5 @@
 - **Hooks:** `useWorkout` (the open workout and its sets, re-read as syncing moves), `useMyGym`, `useFreshGym(workout, reload)` (refreshes the workout's gym snapshot when online and the gym was edited), `useExerciseParam` and `exerciseQuery` (validate `?exercise=` as a UUID and build the query).
 - **Components:** `Stepper`, `BreakdownCard`, `AmbiguityPrompt` (Escape cancels, focus returns), `OfflineBanner`, `SetList` (numbered sets with PR badges), `VoiceLogger`, `VoiceConfirmCard`, `RestTimer`.
 - **One-shot actions** (log, undo, end) use `usePending()`, never a bare `useState` flag.
+
+**Offline and loaders:** the active workout screen shows one loader until the exercise list is ready. `useExercises` skips the server wait when `navigator.onLine` is false (otherwise it waits up to `SERVER_WAIT_MS`, 8 s, for the custom exercises), so logging offline never stalls behind a loader.

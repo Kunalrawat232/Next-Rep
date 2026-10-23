@@ -76,7 +76,7 @@ Full map with every folder and file: AGENT_CONTEXT.md section 2.
 
 ## 5. Known quirks and gotchas
 
-- **Never run commands that load `.env.local`** (`dev`, `build`, `test:e2e`, `test:integration`, `check:supabase`, `check:coach`): ask the developer to run them. Use `npm run typecheck` to check that code compiles.
+- **Never run commands that load `.env.local`** (`dev`, `build`, `test:e2e`, `test:integration`, `check:supabase`, `check:coach`): ask the developer to run them. Use `npm run typecheck` to check that code compiles. `test:integration` wipes the data of test users A and B, so never run it after seeding demo data into them.
 - There is **no Stop hook**: run `npm test` yourself before finishing a task (an unhandled error fails the run). Whole-app tests that seed rows as "synced" must use an unreachable fake server (`offlineServer()` in `src/test/appHarness.tsx`) or the first pull deletes them.
 - **Prettier rewraps code**, so scripted find/replace edits must tolerate whitespace; check each edit applied.
 - **`npm run dev` serves `/api/parse` and `/api/coach` itself** (`vite.devApi.ts`, dev server only, never a build or the tests), using the server-only settings in `.env.local`; without it the dev server answers `/api/*` with the app's own page and the coach says it is unavailable.
