@@ -14,7 +14,7 @@ Call Gemini (free tier) **only** from `/api/parse`, and **only** when the local 
 
 - **Gemini as the primary parser:** simpler grammar work, but slow, needs internet, burns the free quota and is non-deterministic.
 - **No LLM:** fully deterministic, but unusual phrases dead-end in a manual form.
-- **In-browser model (e.g. Whisper, Laya):** offline, but heavy and out of scope (see [ADR-004](004-laya-deferred.md)).
+- **In-browser model (e.g. Whisper or an intent model):** offline, but heavy and out of scope (see [ADR-004](004-intent-model-deferred.md)).
 
 ## Consequences
 

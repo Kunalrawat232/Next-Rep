@@ -35,7 +35,7 @@ Status: **done** (built and merged to `main`), **in progress**, or **not built**
 
 ### Won't have (this hackathon)
 
-- **Laya intent model** (dropped: not done and decided out; see [ADR-004](../architecture/decisions/004-laya-deferred.md))
+- **In-browser intent model** (dropped: not done and decided out; see [ADR-004](../architecture/decisions/004-intent-model-deferred.md))
 - Offline voice recognition (for example in-browser Whisper)
 - Social features, sharing, coaching programmes
 - Native mobile apps

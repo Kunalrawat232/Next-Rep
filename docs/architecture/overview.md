@@ -24,7 +24,7 @@ Google Gemini API (free tier) ... called ONLY by /api/parse (as a fallback for v
 
 Groq API (free tier, optional) .. the coach's second provider, asked only when Gemini cannot answer (ADR-018)
 
-Laya ............................ dropped, never built (ADR-004)
+In-browser intent model ......... dropped, never built (ADR-004)
 ```
 
 ## Data flow: logging a set by voice
