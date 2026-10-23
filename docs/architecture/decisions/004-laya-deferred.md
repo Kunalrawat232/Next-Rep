@@ -1,6 +1,6 @@
 # ADR-004: Laya intent model deferred
 
-- **Status:** accepted (2026-10-08). Outcome (2026-10-23): the spike was not done and Laya is dropped.
+- **Status:** accepted. Outcome: the spike was not done and Laya is dropped.
 
 ## Context
 
@@ -8,7 +8,7 @@ Laya is an intent model that could classify and extract fields from speech. It i
 
 ## Decision
 
-Laya is **not** part of the MVP. It may be tried in a timeboxed spike on 21 to 22 Oct (after 19 Oct), only if all must-haves and the Gemini fallback work. Otherwise those days go to bug fixing. See the [roadmap](../../plans/roadmap.md).
+Laya is **not** part of the MVP. It may be tried in a timeboxed spike, only if all must-haves and the Gemini fallback work. Otherwise that time goes to bug fixing. See the [roadmap](../../plans/roadmap.md).
 
 ## Alternatives considered
 

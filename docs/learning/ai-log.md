@@ -5,7 +5,7 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 ## Entry format
 
 ```md
-## 2026-10-08: <task name>
+## <task name>
 
 - Tool: Claude Code / Claude chat / Claude Design / Gemini
 - Asked: <one line>
@@ -17,27 +17,27 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 
 ## Open checks
 
-What has not been verified, as of 2026-10-23. Earlier entries may say "not yet run" for things that have since been done; this is the current list.
+What has not been verified, today. Earlier entries may say "not yet run" for things that have since been done; this is the current list.
 
 - **Real devices:** the app on a real phone (touch, the glass lenses with the real library, the photo crossfade, rest-timer vibration, battery), and the microphone (permission prompt, accuracy in en-IN with Hinglish). Everything visual was checked in desktop Chrome and in phone-sized frames only.
-- **Hosted checks after the latest changes:** `npm run check:supabase`, `npm run test:integration` and `npm run test:e2e` (the developer runs these; they load `.env.local`). `npm run check:coach` passed on 2026-10-19 for Gemini and Groq.
-- **Deployment:** a Vercel preview with the coach was deployed on 2026-10-23 and checked in a browser. Production is not deployed yet.
+- **Hosted checks after the latest changes:** `npm run check:supabase`, `npm run test:integration` and `npm run test:e2e` (the developer runs these; they load `.env.local`). `npm run check:coach` passed for Gemini and Groq.
+- **Deployment:** a Vercel preview with the coach was deployed and checked in a browser. Production is not deployed yet.
 - **Sign-up protection:** email confirmation, CAPTCHA and leaked-password protection are not switched on yet (Supabase dashboard).
 - **The coach's real answers:** a read-through of real answers for quality and safety, and the data policy of the second provider (Groq).
 - **Licences:** the exercise demonstrations are (c) Gym visual, hotlinked for non-commercial use only; a licence would be needed for any commercial use.
 
 ## Entries
 
-## 2026-10-08: Phase 0 planning
+## Phase 0 planning
 
 - Tool: Claude Code (plan mode, then the advisor/stronger-model review)
 - Asked: read the project brief and plan Phase 0.
 - AI produced: a 15-step plan, a summary of the product, and four clarifying questions (branching, auth method, rate-limit storage, open-question defaults).
 - Problems found: the advisor review caught gaps in the first plan: a dangling "branching per the answer below" reference with no question; a final check ("no mention of the brief's filename") that contradicted files the plan itself required; the "new" docs were only referenced, not listed, so some could be dropped; a JWT secret listed in `.env.example` by default although the docs recommend JWKS; and a git hooks path that would not survive a fresh clone.
-- How validated: a second, stronger model reviewed the plan before anything was built (the review described above); the developer answered the four open questions and approved the plan on 2026-10-08 before work began.
+- How validated: a second, stronger model reviewed the plan before anything was built (the review described above); the developer answered the four open questions and approved the plan before work began.
 - Lesson: have a second model review the plan before executing; it found concrete gaps the author missed.
 
-## 2026-10-08: Tooling, dependencies and scaffold
+## Tooling, dependencies and scaffold
 
 - Tool: Claude Code
 - Asked: install tooling, propose and pin dependencies, scaffold the app with CI and hooks.
@@ -46,16 +46,16 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: Evidence in the repo: lint/typecheck/tests/build and a Playwright smoke test pass; a fake token was blocked by the pre-commit hook; a deliberate lint error was reported back by the edit hook.
 - Lesson: check peer ranges and audit sources yourself; see `docs/learning/lessons.md`.
 
-## 2026-10-08: Context files and documentation
+## Context files and documentation
 
 - Tool: Claude Code
 - Asked: turn the project brief into permanent context files, ADRs, agents and skills, with real content.
 - AI produced: `CLAUDE.md` (60 lines), README, about 40 docs, six ADRs, five subagents, two skills.
 - Problems found: an internal link check found two links to a document created later (resolved by step 11); the filename of the brief appears once in `.prettierignore` and has to be removed when the brief is retired.
-- How validated: an internal link and reference check after the files were generated (it found the two links above); on 2026-10-10 the documentation was audited again against the code by three read-only agents (`docs/qa/doc-audit-report.md`: 33 findings, all addressed the same day).
+- How validated: an internal link and reference check after the files were generated (it found the two links above); the documentation was audited again against the code by three read-only agents (`docs/qa/doc-audit-report.md`: 33 findings, all addressed the same day).
 - Lesson: run a link and reference check after generating many docs.
 
-## 2026-10-08: Database schema, seed and domain schemas
+## Database schema, seed and domain schemas
 
 - Tool: Claude Code with the Supabase skills; PGlite (Postgres in WASM, later committed as `tests/db/schema.test.ts`) for local verification; an automated commit security review.
 - Asked: write the migration with RLS, a 50-60 exercise seed, and Zod domain schemas.
@@ -64,7 +64,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: `npm run test:db` passes (38 tests: two-user isolation, constraints, rate limiter, squatting); sabotaging a policy or a check constraint makes the matching tests fail. A deliberate break of `totalFromPerSide` makes 6 tests fail. Not yet run against a hosted Supabase project.
 - Lesson: foreign keys bypass RLS; test cross-tenant references explicitly, and treat public ids as attacker-controlled.
 
-## 2026-10-08: Deployment guide and git history
+## Deployment guide and git history
 
 - Tool: Claude Code
 - Asked: write the manual deployment steps, then clean up the git history.
@@ -73,7 +73,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: The squashed tree is byte-identical to the original (same tree hash); the intermediate scaffold commit passes lint, typecheck and tests on its own.
 - Lesson: one commit per finished task, ask before anything else; see `docs/learning/lessons.md`.
 
-## 2026-10-08: Distributing and retiring the project brief
+## Distributing and retiring the project brief
 
 - Tool: Claude Code
 - Asked: prove every section and rule of the temporary project brief now lives in a permanent file, then retire the brief.
@@ -83,17 +83,17 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: A deliberate sabotage of one RLS policy and of one check constraint makes the matching database tests fail; a search for the brief's filename returns no hits in the working tree after retirement; the brief stays in Git history.
 - Lesson: after any scripted edit, assert it landed (re-grep); see `docs/learning/lessons.md`.
 
-## 2026-10-08: Evaluating graphify (installed, run in full, removed)
+## Evaluating graphify (installed, run in full, removed)
 
 - Tool: Claude Code, with the third-party `graphify` knowledge-graph tool and 3 general-purpose subagents
 - Asked: install graphify for Claude Code, then run the full pass (code plus docs) on the project.
 - AI produced: a vetting of the package before installing (PyPI page links to the same GitHub repo, licence, release history, dependencies), a read of the skill's own instructions for risky commands, a project-scoped install, and a full run: 46 code files parsed locally and 53 docs read by three subagents, giving a 428-node, 566-edge graph in 45 named communities, with an HTML view and a report.
 - Problems found: (1) `graphify install --project` re-wrote tracked files after they had been cleaned up: hooks with a hard-coded absolute path in `.claude/settings.json`, a new `.claude/CLAUDE.md` and a stray backup file, so each step needed a backup and a diff; (2) JSON config files were modelled as code, so the top "god nodes" were `compilerOptions` and `scripts`; (3) SQL was not parsed because the parser is an optional extra; (4) the tool's own check said the 25k-word corpus fits in one context window and may not need a graph; (5) its hooks inject "MANDATORY" instructions into every search and read, which steers the assistant from a third party; (6) the graph and skill would sit in the project folder and could end up in the submission ZIP.
-- Decision: removed completely (package, hooks, skill, `CLAUDE.md` section, output, cache), and `CLAUDE.md` restored byte-for-byte to its pre-install state. Revisit at the start of Phase 3 (16 Oct 2026), when `parser`, `sync` and `api` give the graph real cross-module relationships.
+- Decision: removed completely (package, hooks, skill, `CLAUDE.md` section, output, cache), and `CLAUDE.md` restored byte-for-byte to its pre-install state. Revisit at the start of Phase 3, when `parser`, `sync` and `api` give the graph real cross-module relationships.
 - How validated: the benchmark measured about 8.5x fewer tokens per query but on a corpus of only about 28k tokens; after removal a search finds no mention of the tool in the working tree and `.claude/settings.json` has no diff against the committed version.
 - Lesson: vet a tool and run it on a small trial before letting it edit shared instruction files and hooks; see `docs/learning/lessons.md`.
 
-## 2026-10-08: Phase 1 task 1, weight helpers and plausibility validators
+## Phase 1 task 1, weight helpers and plausibility validators
 
 - Tool: Claude Code with the `new-feature` flow, `code-reviewer` and `qa-tester` subagents
 - Asked: implement the pure weight helpers and the `validateSet` plausibility rules from the weight rules, tests first.
@@ -102,7 +102,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 255 tests pass; 9 deliberate breakages each make tests fail; the 6 deliberately failing QA tests all pass after the fixes.
 - Lesson: a passing first run is not evidence; a reviewer that cannot run code needs its claims reproduced; a schema refine must never call a function that throws.
 
-## 2026-10-08: Checking the hosted Supabase connection
+## Checking the hosted Supabase connection
 
 - Tool: Claude Code
 - Asked: confirm that the Supabase project, migration, seed and auth are set up and reachable.
@@ -111,7 +111,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: after switching to public DNS all 16 checks passed, including 56 seed rows, sign-in for both test users and the rate-limit function. The Supabase Advisors page reported no issues.
 - Lesson: when a call fails with no HTTP status, separate DNS, TCP and the application layer before blaming keys; design secret-loading scripts so their output is safe to paste and let the developer run them.
 
-## 2026-10-08: Over-engineering review with the ponytail skill
+## Over-engineering review with the ponytail skill
 
 - Tool: Claude Code with the third-party `ponytail-review` skill, followed once from its plugin cache (not enabled for the project)
 - Asked: review the weight and validator code only for things that can be deleted or shortened.
@@ -120,7 +120,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the 255 unit tests and 38 database tests are unchanged and pass; the four cuts removed 13 lines, fewer than the 20 estimated.
 - Lesson: a complexity-only review is a useful second opinion for finding fat, not a decision-maker; read a third-party skill's instructions before following them.
 
-## 2026-10-08: Email and password sign-in
+## Email and password sign-in
 
 - Tool: Claude Code with the `new-feature` flow, `code-reviewer`, `security-auditor` and `qa-tester` subagents, and throwaway probes against the installed Supabase library
 - Asked: build sign-in and sign-up with Supabase Auth, a protected home page and sign-out, tests first, working offline for a signed-in user.
@@ -130,7 +130,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 578 unit tests pass; 8 deliberate breakages each turn tests red; the env-free build and Playwright smoke test pass (the CI path); a build with a planted secret variable or padded secret key is refused without printing the value. `npm run test:integration` passed 6 of 6 against the hosted project (run by the developer, after fixing a slow-DNS problem on their router that had shown up as a misleading "no user" error). Not yet run: `npm run test:e2e`.
 - Lesson: see the two new rows in `docs/learning/lessons.md` (measure offline behaviour; allowlist what reaches the browser).
 
-## 2026-10-08: Applying the Claude Design handoff
+## Applying the Claude Design handoff
 
 - Tool: Claude Design (screens and tokens, made by the developer), then Claude Code to apply them
 - Asked: use the designs for the real app: tokens, font, logo, icons, responsive shell, sign-in and home.
@@ -139,7 +139,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the handed-off colours pass the 4.5:1 contrast rule in both themes; 6 deliberate breakages (low contrast, a submit-by-default button, a missing `aria-invalid`, a missing disabled state, a missing maskable icon) each turn tests red; screenshots at 390 and 1440 px are saved beside the handoff.
 - Lesson: check an AI-made design with tests (contrast, token parity) before building on it.
 
-## 2026-10-09: Second design handoff and floating mic
+## Second design handoff and floating mic
 
 - Tool: Claude Design (the developer's updated artboards), then Claude Code
 - Asked: read the updated design and make the phone's Workout entry a floating mic button.
@@ -148,7 +148,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 638 unit tests pass; screenshot at 390 px checked.
 - Lesson: when a design repeats an action in a second place, make the test queries exact.
 
-## 2026-10-09: Gym setup
+## Gym setup
 
 - Tool: Claude Code with the `new-feature` flow, the advisor tool (a stronger reviewer model) before coding, and mutation checks
 - Asked: build gym setup (list, create, edit, delete, default gym, bar weights) from the new designs.
@@ -156,10 +156,10 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - Problems found: (1) my plan claimed "no schema change", but the advisor pointed out that nothing linked an exercise's equipment to a gym bar, so migration 0002 was added after asking; (2) the plan's default-gym swap would have been one statement, and a probe in PGlite showed it fails for some row orders, so it became two steps; (3) I ran the integration test config myself to check that a new file compiled, which loads `.env.local`, against the agreed rule (it was disclosed straight away; output was not read for secrets); (4) the advisor was not used between the design work and this plan, until the developer asked.
 - Review results: `code-reviewer`, `security-auditor` and `qa-tester` (193 new tests, 17 failing on purpose) found 2 high issues (a retry of create made a second gym; the UI ignored the oldest-gym default rule), a half-typed bar silently dropped on save, Enter in the add-bar fields saving the whole gym, double-click races, a thousands separator saved as 1 kg, look-alike names and a timestamp sort bug, and weak isolation tests. All were fixed except the non-atomic update, which is documented in ADR-009.
 - Decisions by the developer: kg only for now; no limit on the number of gyms; block deleting a gym that has workouts once workouts exist.
-- How validated: 951 unit tests and 61 database tests pass; 5 of 7 deliberate breakages turned tests red (the other 2 are equivalent or shadowed); screenshots at 390 and 1440 px checked. Not yet run: the gym integration test on the hosted project (migration 0002 was found applied there on 2026-10-11).
+- How validated: 951 unit tests and 61 database tests pass; 5 of 7 deliberate breakages turned tests red (the other 2 are equivalent or shadowed); screenshots at 390 and 1440 px checked. Not yet run: the gym integration test on the hosted project (migration 0002 was found applied there).
 - Lesson: consult the advisor before fixing the data shape, not after; check what a command loads before running it, even to "just compile".
 
-## 2026-10-09: Exercise library and muscle search
+## Exercise library and muscle search
 
 - Tool: Claude Code with the advisor tool, a downloaded third-party dataset, `code-reviewer` and `qa-tester`
 - Asked: build the exercise picker and custom exercises, matching body part in search, and use an open exercise dataset.
@@ -167,10 +167,10 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - Problems found: (1) the advisor pointed out that the data only had upper, lower and core, so "match body part" could not mean chest or legs; I asked instead of guessing, and the developer chose a new column; (2) I read the dataset's licence file myself instead of trusting a summary: the data is MIT but its images and GIFs are a third party's, so only text is used; (3) the dataset's equipment does not map cleanly to our weight rules, so only 7 of 20+ types are imported and each import is filtered, mapped and deduplicated against the curated list; (4) my first search-speed claim was measured on the real data (0.03 ms per search), and the real cost is drawing rows, so results are shown 40 at a time; (5) the advisor noticed that `npm run build` loads `.env.local`, which I had not considered, so builds now use an env-free copy; (6) two clear buttons appeared in the search box in the screenshot, one from the browser, found only by looking at it.
 - Review results: `code-reviewer` and `qa-tester` (223 new tests, 20 failing on purpose) found that imported exercises outranked curated ones for voice words such as "bench", "squat" and "curl" (now ranked by source first), that assisted machines, planks, sprints and similar slipped through the importer (filters tightened, 23 more rows removed), that a retry wiped the user's search, that the custom form skipped duplicate checks when its own list had not loaded, and several Unicode and accent cases. All fixed; `seed:check` is now in CI.
 - Decisions by the developer: search matches body part and muscle (a new column); the Recent section stays hidden until workouts exist; no edit or delete of custom exercises yet; no push of the gym branch yet.
-- How validated: 1298 unit tests and 72 database tests pass; 7 of 8 deliberate breakages turned tests red (the eighth is a shadowed guard); the seed check confirms 892 exercises (56 curated, 836 imported); screenshots at 390 and 1440 px checked. Not yet run: the exercise integration test (migration 0003 and the 892-row seed were found applied on the hosted project on 2026-10-11).
+- How validated: 1298 unit tests and 72 database tests pass; 7 of 8 deliberate breakages turned tests red (the eighth is a shadowed guard); the seed check confirms 892 exercises (56 curated, 836 imported); screenshots at 390 and 1440 px checked. Not yet run: the exercise integration test (migration 0003 and the 892-row seed were found applied on the hosted project).
 - Lesson: read a dataset's licence file, not its summary, and separate its data from its media before importing.
 
-## 2026-10-09: Local-first logging and the sync worker
+## Local-first logging and the sync worker
 
 - Tool: Claude Code with the advisor tool, a randomised invariant test, mutation checks, `code-reviewer`, `security-auditor` and `qa-tester`
 - Asked: build the on-device log (IndexedDB) and a sync worker that pushes workouts and sets to Supabase, working offline, before any workout screen exists.
@@ -180,7 +180,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 1760 unit tests and 93 database tests pass; 8 of 8 deliberate breakages of the sync logic turn tests red; the randomised test converges on 150 seeds without any manual retry. Not yet run: the hosted integration test (`npm run test:integration`).
 - Lesson: a randomised test with a model of "what should be on the server" finds races that example tests do not; and a test that only checks the initial state cannot catch a broken session.
 
-## 2026-10-09: Workout screens (tap logging)
+## Workout screens (tap logging)
 
 - Tool: Claude Code with the advisor tool, whole-app tests on a fake server and fake IndexedDB, mutation checks, `code-reviewer`, `security-auditor` and `qa-tester`
 - Asked: build start workout, choose exercise, log a set by tapping with the bar and per-side breakdown, undo, end workout, an offline banner and a sync badge, on top of the local-first log.
@@ -191,7 +191,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2064 unit tests and 93 database tests pass; 7 of 7 deliberate breakages turn tests red. Not yet run: the Playwright offline-then-sync journey and the hosted integration tests (the developer runs these).
 - Lesson: when a rule exists because of speech, give the validator the source of the input instead of special-casing the screen.
 
-## 2026-10-09: History
+## History
 
 - Tool: Claude Code with the advisor tool, whole-app tests on a fake server and fake IndexedDB, mutation checks, `code-reviewer` and `qa-tester`
 - Asked: a History list of past workouts and a workout detail screen, working offline.
@@ -202,7 +202,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2192 unit tests and 93 database tests pass; 7 of 8 deliberate breakages turn tests red. Not yet run: the Playwright journeys and hosted integration tests (the developer runs these).
 - Lesson: when the plan and an ADR disagree, drop the feature from the task rather than choosing quietly.
 
-## 2026-10-09: Progress charts and personal records
+## Progress charts and personal records
 
 - Tool: Claude Code with the advisor tool, a randomised model test, mutation checks, and `code-reviewer` and `qa-tester`
 - Asked: a Progress tab with a chart per exercise, personal records, and PR badges on sets.
@@ -213,7 +213,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2285 unit tests and 93 database tests pass, with a randomised test comparing the PR rules against a plain check of every earlier set on 150 histories; 7 of 8 deliberate breakages turn tests red. Not yet run: a production build (it loads `.env.local`, so the developer runs it) to confirm the chart library is in its own download.
 - Lesson: write the rule's edge cases down before the code, and test them against a deliberately slow, obvious version.
 
-## 2026-10-09: Pulling history from the server
+## Pulling history from the server
 
 - Tool: Claude Code with the advisor tool, a two-device convergence test, mutation checks, `code-reviewer` and `security-auditor`
 - Asked: bring a user's workouts and sets back from Supabase to a fresh or signed-out device, so History, Progress and records are not empty.
@@ -224,7 +224,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: unit tests and 97 database tests pass; 90 random two-device scenarios converge (same sets and the same personal records); 17 of 19 deliberate breakages of the pull turn tests red (the two survivors are an `isActive` check and an `exclusive` call that overlap with each other). Not yet run: the hosted integration test (`npm run test:integration`), which checks that the real server's value types pass the shared schemas.
 - Lesson: when two devices share a server, test them against each other, and write the rule for what "deleted elsewhere" means before writing the code that deletes.
 
-## 2026-10-09: Double-tap guards
+## Double-tap guards
 
 - Tool: Claude Code with the advisor tool, a CI-like run (the tests pinned to two CPU cores) and a mutation check
 - Asked: fix the flaky "Sign out anyway tapped twice" test that failed on CI, and the double-tap bug behind it.
@@ -234,7 +234,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the full suite passes repeatedly on two cores; removing the guard turns 7 tests red.
 - Lesson: when a test flakes under load, ask what real timing it is hiding, and make the test strict enough to show the bug.
 
-## 2026-10-10: Settings screen
+## Settings screen
 
 - Tool: Claude Code with the advisor tool, a pre-paint script test, mutation checks, `code-reviewer` and `security-auditor`
 - Asked: the Settings screen: weight unit, default gym, light-mode switch, account and sign-out, built from the design handoff.
@@ -244,7 +244,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2517 unit tests pass three times in a row on two cores; 8 of 9 and then 5 of 5 deliberate breakages turn tests red. Not yet run: the page in a real browser, and the hosted check that the profile upsert is allowed by the live policies (`npm run test:integration` has no test for it yet).
 - Lesson: when a write can match zero rows, an update reports success; use an upsert or check the row count.
 
-## 2026-10-10: kg and lb everywhere
+## kg and lb everywhere
 
 - Tool: Claude Code with the advisor tool, property tests, a sweep test over every screen, mutation checks and `code-reviewer`
 - Asked: when the user picks lb, every weight on every screen is lb, including typing weights and bars; kg otherwise.
@@ -254,7 +254,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2703 unit tests pass three times in a row on two cores; every lb value to 0.1 and every kg value to 0.01 round-trips; 15 of 15 deliberate breakages turn tests red. Decision left for the voice task: the plate warning follows the display unit, but a spoken "60 kilo" for an lb user will need it to follow the spoken unit. Not yet run: the screens in a real browser in lb.
 - Lesson: a conversion that rounds is not reversible; keep the original wherever a value goes out and comes back.
 
-## 2026-10-10: Shared UI components
+## Shared UI components
 
 - Tool: Claude Code with the advisor tool, a temporary before-and-after snapshot of the rendered HTML, a guard test and `code-reviewer`
 - Asked: stop copying the same UI patterns into every screen.
@@ -265,16 +265,16 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 2730 unit tests pass three times in a row on two cores; the guard fails when a copy is added back; the rendered HTML of 32 screen states is identical before and after (apart from attribute order on three sections), checked before the later review fixes, which only touch the loading messages and three boxes' border colour.
 - Lesson: before a refactor that must change nothing, record what it must not change.
 
-## 2026-10-10: Progression suggestion and the new Home screen
+## Progression suggestion and the new Home screen
 
 - Tool: Claude Code with property tests, mutation checks and `code-reviewer`
 - Asked: suggest what to lift next (ADR-005) and rebuild Home from the design: ready to lift, sync pill, gym line, today's suggestion, last workout and a first-time state.
 - AI produced: a pure `suggest` function with 40 table tests and 4000 seeded random cases, a Home hook reading the on-device log, the new Home screen, and updated sign-out tests (the account card moved to Settings).
 - Decisions by the developer: the suggestion shows on Home only; the log screen still prefills from the last set.
-- How validated: Run by the developer on 2026-10-10: all 4 e2e specs pass against the hosted project (sign-in through Settings sign-out, and a workout logged online and offline). The first runs of the workout spec failed twice for timing mistakes in the spec itself (an instant `isVisible()` check, and leaving the gym form before the save finished); the app was right both times. Not yet run: Home and the rest timer on a real phone.
+- How validated: Run by the developer: all 4 e2e specs pass against the hosted project (sign-in through Settings sign-out, and a workout logged online and offline). The first runs of the workout spec failed twice for timing mistakes in the spec itself (an instant `isVisible()` check, and leaving the gym form before the save finished); the app was right both times. Not yet run: Home and the rest timer on a real phone.
 - Lesson: when no target reps are stored, derive them from the last sets and say so in the rules.
 
-## 2026-10-10: Rest timer
+## Rest timer
 
 - Tool: Claude Code with mutation checks and `code-reviewer`
 - Asked: a rest timer on the workout screen: tap presets (60, 90, 120, 180 s) and a custom length, a countdown that stays right after a reload, "Rest over" with vibration.
@@ -285,17 +285,17 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: Not yet run: the timer in a real browser on a phone (vibration support differs, and iOS Safari has none).
 - Lesson: store when something ends, not how long is left, and a reload, a locked screen and a background tab stop being special cases.
 
-## 2026-10-10: QA pass over the whole UI
+## QA pass over the whole UI
 
 - Tool: three `qa-tester` agents in parallel, split by area (newest screens and domain, history/progress/settings/units, data and sync), each told to add new files only and to mark a test that exposes a real bug as an expected failure with a `BUG:` note
 - Asked: find what the tests so far do not cover, now that the UI is complete.
 - AI produced: 26 new `*.qa.test.*` files (the agents first reported 614 tests in 27 files; not re-counted) and 22 reported bugs; none were in the highest severity class.
 - Problems found: Home crashed on a damaged set row and missed the last real workout behind ten empty ones; a corrupt custom exercise row made loading throw; half-cent rounding was wrong; the rest timer misbehaved after a clock change, with NaN, and for focus and double taps. All fixed and the tests turned into normal ones. The developer then asked for all open items to be fixed: records now compare weights as shown, in the unit shown (a first attempt with a fixed tolerance of two hundredths broke the tests that say one hundredth of a kg is a record, and was dropped); a row-level-security refusal is now a refusal of the row, while a plain permission denied or an expired session stays "tried again later"; a failing local read shows a message with Try again on the workout screens. Not changed, and why: making a gym edit atomic needs a database function, which ADR-009 deferred on purpose and is a change to the data layer to be decided first; the "Today" label on an open History screen is not refreshed after midnight.
 - Decisions by the developer: fix all the open items before the freeze (as recorded in "Problems found" above); the two left unchanged are the non-atomic gym edit (ADR-009) and the "Today" label after midnight.
-- How validated: all 22 bugs fixed and 0 expected-failure tests left; the last full run on 2026-10-10 was 139 test files and about 3530 tests, all passing (an earlier run in the same task showed 3514 passing with 7 expected failures, before the later fixes). Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
+- How validated: all 22 bugs fixed and 0 expected-failure tests left; the last full run was 139 test files and about 3530 tests, all passing (an earlier run in the same task showed 3514 passing with 7 expected failures, before the later fixes). Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
 - Lesson: ask the tester to keep a real bug as an expected failure; the suite stays green, the list of bugs stays visible, and fixing one turns into a loud "unexpectedly passed".
 
-## 2026-10-11: Voice parser (English)
+## Voice parser (English)
 
 - Tool: Claude Code, with the `parser-specialist` agent for the phrases and the `code-reviewer` agent for the review.
 - Asked: a pure parser that turns a transcript into a `ParseResult`, with 150+ phrases written by an agent that had not seen the parser.
@@ -305,7 +305,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 282 of 282 stage 1 phrases and 366 parser tests pass (26 stage 2 rows are listed as skipped); 18 of 18 deliberate breakages across two rounds turned tests red (one survived the first time and led to a stronger test); the slowest input (25 unknown long words against 1000 exercises) takes about 100 ms. Not yet done: Hindi number words, the mic and confirm screens, the Gemini fallback.
 - Lesson: let a separate agent write the expected answers from the spec; the failures then show where the spec is silent, and the developer decides instead of the parser's author quietly bending the test.
 
-## 2026-10-11: Hindi number words in the parser
+## Hindi number words in the parser
 
 - Tool: Claude Code.
 - Asked: stage 2 of the parser, the Hindi number words 1 to 20 from the specification.
@@ -313,7 +313,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - Problems found: none in the fixtures; the one design risk is "do", which is flagged as an extra number in an English sentence instead of being guessed.
 - How validated: all 307 fixture phrases and 419 parser tests pass; 4 of 4 deliberate breakages (table lookup, number-word check, two values) turned tests red. Not built: Hindi tens above 20 and combining Hindi numbers.
 
-## 2026-10-11: Voice screens (mic, confirm card, commands)
+## Voice screens (mic, confirm card, commands)
 
 - Tool: Claude Code.
 - Asked: the mic on the workout page: tap, speak, see what was heard with the weight breakdown, confirm, log; plus rest, repeat and undo by voice, and the offline and error states.
@@ -323,17 +323,17 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 3979 tests passing at the last full run. Not done: the microphone in a real browser on a phone (accuracy, permission prompt, en-IN with Hinglish), which only the developer can check.
 - Lesson: an effect that clears its own trigger re-runs its cleanup; keep a mounted flag for late answers instead of a per-run flag.
 
-## 2026-10-13: Gemini fallback (`/api/parse`)
+## Gemini fallback (`/api/parse`)
 
 - Tool: Claude Code.
 - Asked: when the local parser is unsure and the phone is online, ask Gemini (free tier only), check its answer like any other, and show it for confirmation.
 - AI produced: a handler with injected dependencies (`api/_lib/parse.ts`: token check with `getClaims`, Zod request, per-minute and per-hour limits through the existing `consume_rate_limit`, Gemini in JSON mode with a schema, 8 s timeout, every failure becomes `unavailable`), the prompt, shared schemas, `fromGemini` (maps the exercise name with the parser's own matcher and scores it with the parser's own rules; Gemini's confidence can only lower the score), a `ParseService`, and the mic integration (Checking state, "Read by AI" note, source `gemini`).
 - Decisions: the function never sees exercise ids; the app matches names. A name we do not have is never replaced by the current exercise. Model `gemini-3.5-flash-lite` (free tier, cheap model for one-sentence extraction), set by the `GEMINI_MODEL` variable. The limit is per hour, not per day, because the database function allows windows up to one hour. `getClaims` instead of `jose`.
 - Problems found: the first deploy failed on the output folder (an empty Vercel project defaults to `build`; now set in `vercel.json`), and the deployed function crashed on startup because Vercel runs it as native ES modules, which need `.js` on every relative import (Vite and the editor never complained; a test now follows the imports). The `bootstrap` test had to learn the new service; one chained command committed while a test was failing earlier in the session, so commits now wait for a green run.
-- How validated: 4039 tests passing with Gemini faked; a deliberate break (using Gemini's confidence alone) turned 3 tests red. Verified live on a preview deployment: 401 without a token and with a bad token (that one reached Supabase), 405 for GET. A real call with the signed-in token (2026-10-13, `gemini-3.5-flash-lite`) returned the expected reading for "bench press sixty five kilos for eight". Not done: the mic on a phone against the deployed app, and the rate limit under load.
+- How validated: 4039 tests passing with Gemini faked; a deliberate break (using Gemini's confidence alone) turned 3 tests red. Verified live on a preview deployment: 401 without a token and with a bad token (that one reached Supabase), 405 for GET. A real call with the signed-in token (`gemini-3.5-flash-lite`) returned the expected reading for "bench press sixty five kilos for eight". Not done: the mic on a phone against the deployed app, and the rate limit under load.
 - Lesson: pass the network clients into the handler so every failure path can be tested without a key.
 
-## 2026-10-16: Exercise demonstrations (hotlinked GIFs)
+## Exercise demonstrations (hotlinked GIFs)
 
 - Tool: Claude Code.
 - Asked: show an animated demonstration on an exercise page, from the open exercises dataset, without downloading or bundling the media, and everything free.
@@ -343,7 +343,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 4086 tests passing at the last full run; one Playwright spec for the page (not run: needs the hosted test user). Not done: a look at the page on a phone, and a licence from Gym visual.
 - Lesson: when a brief and the project's own decision records disagree, say so first and record the new decision in an ADR.
 
-## 2026-10-16: Photo crossfade (tried on a branch, kept)
+## Photo crossfade (tried on a branch, kept)
 
 - Tool: Claude Code.
 - Asked: the Gym visual GIFs were choppy and blurry; the developer wanted smooth up-and-down motion. Do the cheap fix on the main branch, and try a second source on a branch that can be thrown away.
@@ -353,7 +353,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: full test run green on both branches. Not done: a look at the crossfade on a phone, and a licence check of the images in free-exercise-db.
 - Lesson: when the quality limit is in the source file, say so before building anything.
 
-## 2026-10-16: One gym per user
+## One gym per user
 
 - Tool: Claude Code, with two general-purpose agents for the mechanical test rewrites (remote service tests; domain and device-store tests) while I did the screens and the feature tests.
 - Asked: remove the idea of several gyms, because people have one.
@@ -364,7 +364,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: 4000 unit tests and 107 database tests passing; typecheck and lint clean. Not run: the e2e spec (edited for the new first-workout flow) and the hosted integration test (rewritten for one gym), which need the hosted test user.
 - Lesson: when a concept is removed, enforce the new rule in the database and delete the old one outright; a hidden list would leave two models in the code.
 
-## 2026-10-16: Glass surfaces and one liquid glass lens (branch `feat/liquid-glass`)
+## Glass surfaces and one liquid glass lens (branch `feat/liquid-glass`)
 
 - Tool: Claude Code, with a headless Chromium (Playwright) on a throwaway page to see the library work before using it.
 - Asked: use liquidGL across the whole design system, CSS glass first, then liquidGL on two or three fitting surfaces, on a new branch that can be reverted; and replace the microphone icon on the workout button with something about exercise.
@@ -373,7 +373,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: full unit run green; a contrast test for text on glass in both themes (a first version failed for warning text in the light theme, so the light fill was made more opaque). Not done: the real app in a real phone browser (my test page used software rendering and the app needs your env file), battery and frame rate on a phone.
 - Lesson: look at the effect with the real palette before building on it; a library demo on a colourful background says little about a dark app.
 
-## 2026-10-17: Loaders (skeletons, spinner, start-up screen)
+## Loaders (skeletons, spinner, start-up screen)
 
 - Tool: Claude Code, with a throwaway page and headless Chromium to see the look before building.
 - Asked: replace the small "Loading…" text everywhere with a good, industry-level loader.
@@ -381,7 +381,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: full unit run green (4062 tests) with new tests for each loader. Not done: watching it on a slow connection on a real phone (throttle the network in DevTools to see it).
 - Lesson: a skeleton in the shape of the page reads as progress; a word reads as a pause.
 
-## 2026-10-17: One loader per screen, no staged loading
+## One loader per screen, no staged loading
 
 - Tool: Claude Code.
 - Asked: some pages drew half their data and filled in the rest later, which made the layout jump; show the loader until everything has arrived (the server answered), on every screen. The developer asked for no unit test run and will check by hand.
@@ -390,7 +390,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: Not run on purpose (the developer asked for no tests; typecheck and lint are clean). Existing tests that look for the old inline loaders (Settings, the exercise page, History and Progress while a download runs, the workout screen) will need updating once the behaviour is accepted.
 - Lesson: waiting for all the data costs one longer loader; showing it in pieces costs the layout.
 
-## 2026-10-17: Liquid glass on more places
+## Liquid glass on more places
 
 - Tool: Claude Code, with the throwaway test page and headless Chromium to see each shape first.
 - Asked: the lens on the Workout button looks good; put it in more places.
@@ -399,7 +399,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: typecheck and lint clean; the three shapes checked together on the test page. Not run: the unit tests (the developer asked for none; the two lens test files and the shell test were rewritten for the per-element lens and are untested), and not seen in the real app on a phone.
 - Lesson: change the shape to fit the effect (a rounded floating dock), not the effect to fit the shape.
 
-## 2026-10-17: The AI coach
+## The AI coach
 
 - Tool: Claude Code.
 - Asked: a text-only AI coach where users ask training questions, on free AI tiers; plan first, then build with the defaults (a Coach tab, the Gemini free tier, chat kept on the device, a visible switch for sharing recent workouts).
@@ -409,7 +409,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: new tests for the summary builder, the schemas, the handler (auth, limits, injection, every failure), the client service, the device chat store and the screen all pass (only the new tests were run; the full suite was not, at the developer's earlier request). Not done: a call to the live function, and reading real answers for quality and safety, which only the developer can judge.
 - Lesson: when an AI feature is added to a data app, make it read-only and hand it the numbers instead of letting it produce them.
 
-## 2026-10-17: Keeping the coach to the gym and diet
+## Keeping the coach to the gym and diet
 
 - Tool: Claude Code.
 - Asked: the coach must not answer things like the weather or a maths equation; for anything outside gym and diet it should say it cannot answer.
@@ -418,7 +418,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: new tests for the filter (14 turned away, 16 let through), the handler (off topic from the model, unreadable output, fenced JSON, limits still counted) and the screen all pass (only these tests were run). Not done: trying real off-topic and tricky questions against the live model, which is the real test of the prompt.
 - Lesson: let code own the refusal; a model can only be asked nicely.
 
-## 2026-10-17: The coach on the dev server
+## The coach on the dev server
 
 - Tool: Claude Code.
 - Problem found by the developer: on `localhost` the coach always said "can't answer right now". Cause: Vercel functions do not exist in `npm run dev`; the dev server answered `/api/coach` with the app's own page.
@@ -426,7 +426,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the 10 new tests pass (only these were run). Not done: trying it with the real keys, which needs the developer's `.env.local`.
 - Lesson: a feature that depends on a platform's functions needs a way to run them locally, or testing it by hand sends people to a deploy for every change.
 
-## 2026-10-17: The coach looks like a chat
+## The coach looks like a chat
 
 - Tool: Claude Code.
 - Asked: while the coach is working, show a typing animation like WhatsApp or Instagram instead of the skeleton, and make it look like a chatbot.
@@ -434,7 +434,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the 28 screen tests pass (run on the coach tests only). Not done: seeing it in the browser, so the speed and size of the bounce are a first guess.
 - Lesson: for a wait that is a conversation, show a person-like cue; for a page that is loading, show a skeleton.
 
-## 2026-10-17: The coach gets a name and a message box
+## The coach gets a name and a message box
 
 - Tool: Claude Code.
 - Asked: a send icon inside the text box that Enter triggers, the character count inside the box too, and a name and a person-like picture for the coach instead of "the coach".
@@ -442,7 +442,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the coach screen and handler tests pass (109, run on the coach tests only). Not done: seeing it on a phone.
 - Lesson: put a persona's name in one constant so renaming is one edit, and keep the prompt honest that it is an AI.
 
-## 2026-10-17: Review fixes for the coach
+## Review fixes for the coach
 
 - Tool: Claude Code, with the read-only `security-auditor` and `code-reviewer` agents.
 - Found by the reviewers: Clear during a question brought the old chat back; a gym request ("write me a training program") was refused by our own prefilter; a failed save of the reply left the question stuck; the browser could forge earlier turns; nothing checked the reply's form; the training summary started on.
@@ -450,7 +450,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite passes (4250). Not done: rate-limit buckets and a daily ceiling (need a migration), the 48 px send button and `PageHeader`, the real-schema check script.
 - Lesson: an agent review of your own feature finds bugs that your own tests were written around.
 
-## 2026-10-17: Rate-limit scopes and a daily ceiling
+## Rate-limit scopes and a daily ceiling
 
 - Tool: Claude Code, from the security audit and the code review.
 - Found: `/api/parse` and `/api/coach` shared one counter per window, and in the first minute of each hour the 60 s and 3600 s windows used the same row, so one request counted twice. Anyone could also open many accounts and use up the free Gemini quota.
@@ -458,7 +458,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: `npm run test:db` and the api and coach tests pass. Not done: applying the migration to the hosted project, which needs the developer's go; email confirmation and CAPTCHA at sign-up.
 - Lesson: a shared counter needs the endpoint in its key, and a global limit needs a per-account cap or one account can switch it off for everyone.
 
-## 2026-10-18: Ceiling fixed in the database, and the rest of the review
+## Ceiling fixed in the database, and the rest of the review
 
 - Tool: Claude Code, from a background commit review, the security audit and the code review.
 - Found: the daily ceiling took its maximum from the caller; the check script used a hand-written schema; a 401 looked like "can't answer right now"; the send button was 44 px; the body size was checked only after reading it.
@@ -466,7 +466,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite (4262) and the database tests (117) pass. Not done: running `check:coach` against live Gemini, applying migration 0005 to the hosted project, and email confirmation and CAPTCHA at sign-up.
 - Lesson: a limit that the caller can set is not a limit.
 
-## 2026-10-19: The workout screen, as a user
+## The workout screen, as a user
 
 - Tool: Claude Code, with Chrome driving the app at phone size.
 - Found by walking the journey: a dead, dimmed "Tap instead" that looked like a button; the round Workout button sitting on top of "Log set"; two equal blue buttons; the exercise name twice; "End workout" wrapping; and a rest timer that never started by itself.
@@ -474,16 +474,16 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite passes (4267). In Chrome I confirmed the round button is gone, the chevron and the "End workout" fix show; the last label ("Pick an exercise") could not be seen because the dev server was serving an older copy of the file, so it needs one more look after a restart.
 - Lesson: a button that cannot be used yet should say what to do first, not just look disabled.
 
-## 2026-10-19: Progress graphs and a month of sample history
+## Progress graphs and a month of sample history
 
 - Tool: Claude Code, with Chrome to look at the result.
 - Asked: graphs in the Progress section, and a month of sample data that shows steady progress, based on the plan the developer gave.
-- AI produced: `src/domain/progress` (workouts per week, best set per week, trend and its text), a "Workouts per week" bar chart, a trend line and "+X Kg since" text on every exercise row, and a Weight / Reps toggle on the exercise chart; in the test account only, 26 sample workouts (387 sets) from 7 Sep to 10 Oct in the same weekly split, with weights that rise in plate-sized steps to the weights in the plan and a few missed sessions. The week the developer entered was left as it is.
+- AI produced: `src/domain/progress` (workouts per week, best set per week, trend and its text), a "Workouts per week" bar chart, a trend line and "+X Kg since" text on every exercise row, and a Weight / Reps toggle on the exercise chart; in the test account only, 26 sample workouts (387 sets) over several weeks in the same weekly split, with weights that rise in plate-sized steps to the weights in the plan and a few missed sessions. The week the developer entered was left as it is.
 - Found while checking: an exercise trained on two days with different weights (cable lateral raise, 10 Kg then 5 Kg) drew a zigzag and a false fall, so charts and trends now use the best set of each week.
 - How validated: the whole suite passes (4287); in Chrome the weekly bars climb from 4 to 6 workouts, the exercise lines rise, and the Reps toggle works.
 - Lesson: a trend between two single sessions says more about which day came last than about progress; compare like with like (the best of each week).
 
-## 2026-10-19: A review for over-engineering (Ponytail)
+## A review for over-engineering (Ponytail)
 
 - Tool: the Ponytail plugin's review rules (it was installed but not loaded in the session, so its `ponytail-review` instructions were followed by a read-only agent), then Claude Code applied the fixes.
 - Found: copy-pasted limit blocks, a one-line wrapper with one caller, the same "take the question back" code twice, four near-identical localStorage helpers, two parameters nobody passes, an export used in one place, a 14-line inline icon, and a misplaced doc comment.
@@ -491,7 +491,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite passes (4286). The cut is smaller than the 69 lines estimated, because the helpers replace code rather than only removing it.
 - Lesson: a review that only lists what to delete is cheap; check that each cut still has its tests before applying it.
 
-## 2026-10-19: A history section in the exercise list
+## A history section in the exercise list
 
 - Tool: Claude Code.
 - Asked: show the exercises done before, above the popular ones.
@@ -499,7 +499,7 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite passes (4297); in Chrome at phone size the section shows above Popular with the dates and "Show all" opens the rest.
 - Lesson: when a shared screen starts reading the local store, tests that render it alone need the session it reads from.
 
-## 2026-10-19: A QA pass on the new features
+## A QA pass on the new features
 
 - Tool: the `qa-tester` agent (new test files only), then Claude Code to check it.
 - Covered: the progress maths (week edges, new year, daylight saving in three time zones, lb rounding), the exercise history, the rest timer's saved settings (damaged JSON, blocked storage, two users), the workout screen without a valid exercise, the round Workout button on look-alike paths, and the unit words in every message.
@@ -507,22 +507,22 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the whole suite passes (4451), typecheck and lint are clean, and `git status` showed only new files.
 - Lesson: QA written after the feature mostly confirms it; the useful output is the list of behaviours nobody had decided.
 
-## 2026-10-19: A second provider for the coach
+## A second provider for the coach
 
 - Tool: Claude Code, with web search for the provider facts.
 - Asked: a Grok fallback for when Gemini's limit is reached. Finding: no free xAI tier could be confirmed, and the project allows free tiers only, so Groq was chosen after comparing it with OpenRouter (see ADR-018).
 - AI produced: `api/_lib/fallbackProvider.ts` (settings reader that refuses a non-https address, and an OpenAI-style request over plain `fetch`), the handler asking the second provider once (Gemini fails, cannot be read, or its day is used up), timeouts that fit the app's 25 s wait, the three settings in `.env.example`, the dev server and `check:coach`, a new coach notice (shown again once) and About page line. 26 new tests.
-- How validated: the whole suite passes (4477). On 2026-10-19 the developer ran `npm run check:coach` with a real key: all eight lines passed, including Gemini and `openai/gpt-oss-20b` on Groq answering in the agreed `{onTopic, reply}` form. On 2026-10-19 the fallback was tried in the running app with a deliberately wrong Gemini key: the coach still answered (about 10 s, because Gemini fails first and the second model thinks before it answers). The three settings are in Vercel for Production and Preview. Not done: a deploy.
+- How validated: the whole suite passes (4477). The developer ran `npm run check:coach` with a real key: all eight lines passed, including Gemini and `openai/gpt-oss-20b` on Groq answering in the agreed `{onTopic, reply}` form. The fallback was tried in the running app with a deliberately wrong Gemini key: the coach still answered (about 10 s, because Gemini fails first and the second model thinks before it answers). The three settings are in Vercel for Production and Preview. Not done: a deploy.
 - Lesson: a fallback that sends users' text to a second company is a privacy change first and a code change second: say it where the person reads it.
 
-## 2026-10-19: Looking at the finished screens in Chrome
+## Looking at the finished screens in Chrome
 
 - Tool: Claude Code with Chrome, on the developer's running dev server.
 - Checked and found right: the new coach notice naming Groq (and the summary switch off), the chart axis on round numbers (35, 40, 45, 50), the workout screen ("Pick an exercise", the arrow beside the exercise name, one blue button), History in the exercise picker, and a rest of about 1:30 starting by itself after a set was logged ("Sets so far" heading).
 - Left as found: the account's two empty workouts from earlier testing. The workout made for the check was deleted from the device and the server.
 - Lesson: the screens read as intended once seen together; the one thing worth tuning is the fallback's speed.
 
-## 2026-10-19: An empty workout is never kept
+## An empty workout is never kept
 
 - Tool: Claude Code, with a general-purpose agent to update the older sync tests.
 - Asked: if a workout is empty, it must not be stored in the database or anywhere.
@@ -532,25 +532,25 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: see the test run in the commit; the database was checked for empty workouts after the cleanup.
 - Lesson: a rule about what is stored belongs in the layer that stores it, and it shows up as old tests that quietly encoded the opposite.
 
-## 2026-10-19: Agent docs, level 2 (the agent's knowledge split by area)
+## Agent docs, level 2 (the agent's knowledge split by area)
 
 - Tool: Claude Code.
 - Asked: set up the project's AI context as a lean `CLAUDE.md` plus per-area docs with indexes (an audit and a plan were approved first), then split the big `AGENT_CONTEXT.md`.
 - AI produced: `agent_docs/` with an `index.md` and five areas (local-data, workout, api, database, testing; 10 docs and 5 area indexes), `AGENT_CONTEXT.md` reduced to what is shared (each moved section left as a pointer, so heading numbers and links still work), the two instructions in `CLAUDE.md` (read the docs first and the code only if necessary; update or create a doc after a change), and the placeholders in `docs/qa/ai-qa-report.md` replaced with what the record supports, plus rows for this stretch's reviews and QA.
-- Problems found while moving the text: several statements in `AGENT_CONTEXT.md` were stale (the rate counter was said to be shared, the Vercel function answers were wrong for 400, 401 and 413, `/api` was called "planned", test counts were from 10 Oct); each was checked against the code and corrected. Counts I had written in this log for new tests were also wrong in four places and were re-measured from git (for example the empty-workout rule added 18 tests, not 21).
+- Problems found while moving the text: several statements in `AGENT_CONTEXT.md` were stale (the rate counter was said to be shared, the Vercel function answers were wrong for 400, 401 and 413, `/api` was called "planned", test counts were out of date); each was checked against the code and corrected. Counts I had written in this log for new tests were also wrong in four places and were re-measured from git (for example the empty-workout rule added 18 tests, not 21).
 - How validated: every link and every file path in the new docs was checked by a script, every `npm run` name and every function or hook name was found in the code, constants (retries, timeouts, limits, page sizes) were read from the source, and the full suite (4499 tests), typecheck and lint pass. Not checked: whether a person finds the docs easier to use than the old file.
 - Lesson: when text is moved, check each claim against the code instead of copying it; the stale lines were all in the part nobody had re-read.
 
-## 2026-10-23: The workout screen waited for the server while offline
+## The workout screen waited for the server while offline
 
 - Tool: Claude Code.
 - Asked: find out why the e2e test "logs a set online, another offline" failed (the "You are offline" banner never appeared within 5 seconds).
-- Found: the workout screen shows one loader until the exercise list is ready (the 17 Oct "one loader per screen" change), and the list waits up to 8 seconds for the user's custom exercises from the server. Offline, that meant a loader for up to 8 seconds after every set. It is a real fault in offline logging, not a flaky test.
+- Found: the workout screen shows one loader until the exercise list is ready (the "One loader per screen, no staged loading" change), and the list waits up to 8 seconds for the user's custom exercises from the server. Offline, that meant a loader for up to 8 seconds after every set. It is a real fault in offline logging, not a flaky test.
 - AI produced: `useExercises` does not wait for the server when `navigator.onLine` is false (the built-in exercises ship with the app); 2 new tests (offline is ready at once; online still waits). The first fails without the fix.
 - How validated: the full suite (4501 tests), typecheck and lint pass. Not yet checked: the e2e test itself, which needs the developer to run it against the hosted project.
 - Lesson: a loader that waits for the network is an offline bug; the unit tests used fakes that answer at once, so only a browser set offline showed it.
 
-## 2026-10-23: Whole-repo audit for over-engineering, and the first cleanup
+## Whole-repo audit for over-engineering, and the first cleanup
 
 - Tool: Claude Code, with four read-only reviewers (one per area) following the ponytail-audit method: rank what can be deleted, simplified or reused, and change nothing.
 - Asked: audit the whole codebase, then fix the small dead-code items and the duplicated docs.
@@ -560,13 +560,23 @@ What has not been verified, as of 2026-10-23. Earlier entries may say "not yet r
 - How validated: the full suite (4501 tests), typecheck, lint and formatting pass; the hook pattern was proven equivalent on 8 sample paths.
 - Lesson: the audit's value is in the checking: a quarter of the findings did not hold up, or were not worth the churn, when read against the code.
 
-## 2026-10-23: Documentation audit and fixes
+## Documentation audit and fixes
 
 - Tool: Claude Code, with four read-only reviewers (one per document group) and then five documentation editors working on separate files.
 - Asked: find every place where the docs repeat themselves, contradict each other, are wrong against the code, or describe an old state; then fix all of it.
-- Found: about 125 problems. The biggest groups: statuses frozen at 10 Oct that still called voice, `/api/parse`, the coach and deployment "planned" or "not built" (about 17 docs, including the README); an ADR file (009) that had been emptied by an earlier commit and was linked from about 17 docs; ADRs that had not been marked as amended by the later ones (003, 006, 012, 013, 016 to 018); facts that no longer matched the code (a token cap of 700 instead of 1200, "the only SECURITY DEFINER function", "seven tables", "no daily window" for `/api/parse`, "nothing is logged"); a prompt copy in `docs/ai/gemini-prompts.md` that did not match the real prompt; the Geist font licence missing from the notices; and numbers repeated in 4 or more places.
+- Found: about 125 problems. The biggest groups: statuses frozen early on that still called voice, `/api/parse`, the coach and deployment "planned" or "not built" (about 17 docs, including the README); an ADR file (009) that had been emptied by an earlier commit and was linked from about 17 docs; ADRs that had not been marked as amended by the later ones (003, 006, 012, 013, 016 to 018); facts that no longer matched the code (a token cap of 700 instead of 1200, "the only SECURITY DEFINER function", "seven tables", "no daily window" for `/api/parse`, "nothing is logged"); a prompt copy in `docs/ai/gemini-prompts.md` that did not match the real prompt; the Geist font licence missing from the notices; and numbers repeated in 4 or more places.
 - AI produced: every finding was fixed or answered. ADR-009 was restored from history and marked as superseded in part by ADR-015; statuses and dates were refreshed; the prompt copies were replaced by short descriptions that point to the code as the one source (and the two code comments that said "mirrors the doc" were corrected); the rate limits, the list of commands agents must not run, the dashboard settings and several detail lists now live in one place and are linked from the others; the Geist notice was added to `THIRD_PARTY_NOTICES.md` and to the About page (with a test); the agent definitions and the `new-feature` skill were brought in line with the rules in `CLAUDE.md`; 9 lessons were added to `docs/learning/lessons.md`.
 - Checked afterwards: Prettier is clean, no unexpected deletions (the only large cut was the pasted prompt), every relative link resolves, every file path written in backticks exists (two historical ai-log entries name files that have since been removed), a search for the old status phrases finds only one historical line in ADR-008, and the coach summary switch was confirmed to start off in the code.
 - Left on purpose: the old coach name "Kai" in an early ai-log entry (a historical record), and older ai-log entries that quote 4499 tests (correct on their dates).
 - Not verified: that no new wrong statement was introduced in the roughly 50 edited files; the editors verified their own edits against the code and a second read-only pass is the way to check.
 - Lesson: a status written as a date goes stale in days; the docs that stayed right were the ones that named a file or a command instead of a state.
+
+## Removing the dates from the documents
+
+- Tool: Claude Code, with six documentation editors working on separate sets of files.
+- Asked: remove the dates from the ADRs and every other document.
+- AI produced: about 310 dated statements were removed or reworded across roughly 50 documents: ADR status lines, the heading of every log entry, "as of" status stamps, the date column of the lessons table, dated ticks in checklists, and the phase windows in the roadmap (the phases keep their names and order). Clauses that only made sense with a date were reworded minimally ("the same day" became "after review").
+- Kept on purpose: the two hackathon deadlines (feature freeze 25 Oct, submission 30 Oct 2026), dates that are data and not documentation (the handoff folder names, migration file names, licence years, quoted example text such as a UI string), and the vendor deadline in the deployment guide.
+- Effect: the order of the log and of the ADRs is now the only record of sequence inside the documents; the git history keeps the commit dates. Status lines that used to say "as of" now say "now" or nothing, and counts such as the number of tests no longer say when they were true.
+- How validated: a search of every Markdown file for ISO dates and for "day month" dates finds only the items above; every relative link and every heading anchor still resolves; Prettier is clean; the full test suite passes.
+- Lesson: a date inside a status sentence is a claim that nobody revisits; where a date was only there to say when, removing it lost nothing, and where it was the whole point of the sentence the sentence needed a small rewrite.

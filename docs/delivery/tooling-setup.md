@@ -4,7 +4,7 @@ Keep this list lean: every plugin and MCP server adds to context.
 
 ## Local tools
 
-| Tool                                                       | Status / version (2026-10-08)                                                                                                   |
+| Tool                                                       | Status / version                                                                                                                |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Node.js LTS + npm                                          | v22.23.2 / npm 10.9.8 (project requires 22.12+)                                                                                 |
 | Git                                                        | 2.34.1                                                                                                                          |
@@ -21,7 +21,7 @@ Downloads are verified against the published SHA-256 checksums before installing
 
 ## Claude Code plugins (`claude-plugins-official`)
 
-This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the committed `.claude/settings.json` (12): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`. `playwright` and `supabase` were also installed during the 2026-10-08 setup but are not in the project settings, so they depend on the developer's own Claude Code install.
+This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the committed `.claude/settings.json` (12): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`. `playwright` and `supabase` were also installed during the setup but are not in the project settings, so they depend on the developer's own Claude Code install.
 
 Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin commands can only be run by the developer, not by Claude Code.
 

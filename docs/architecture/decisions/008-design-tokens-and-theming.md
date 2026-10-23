@@ -1,6 +1,6 @@
 # ADR-008: Design tokens in CSS, dark by default, self-hosted Geist
 
-- **Status:** accepted (2026-10-08)
+- **Status:** accepted
 
 ## Context
 
@@ -8,7 +8,7 @@ The Claude Design handoff defines colours for a dark and a light theme, a type s
 
 ## Decision
 
-- **Tokens live in `src/index.css`** as Tailwind `@theme` variables (dark values) with a `[data-theme='light']` override. Components use the utilities (`bg-surface-200`, `text-ink-muted`) and never raw hex values. Light is complete and has a switch in Settings (2026-10-10): the choice is kept on the device (`next-rep-theme`, one key for the device, not per user) and applied by a small script in `index.html` before the first paint, so there is no dark flash. The same script and the app set the browser's `theme-color`; a test keeps those values equal to the `surface-100` tokens. The script is inline: if a strict `script-src` is added to the Content-Security-Policy later (today it only sets `frame-ancestors`), it needs a hash or nonce, or the flash returns.
+- **Tokens live in `src/index.css`** as Tailwind `@theme` variables (dark values) with a `[data-theme='light']` override. Components use the utilities (`bg-surface-200`, `text-ink-muted`) and never raw hex values. Light is complete and has a switch in Settings: the choice is kept on the device (`next-rep-theme`, one key for the device, not per user) and applied by a small script in `index.html` before the first paint, so there is no dark flash. The same script and the app set the browser's `theme-color`; a test keeps those values equal to the `surface-100` tokens. The script is inline: if a strict `script-src` is added to the Content-Security-Policy later (today it only sets `frame-ancestors`), it needs a hash or nonce, or the flash returns.
 - **Dark is the default**, as the design specifies for use during a workout. Theme colour in the manifest and `index.html` is `#000000`.
 - **Geist is self-hosted** through `@fontsource-variable/geist` (OFL-1.1, no dependencies, no runtime requests). Only the Latin cut is precached for offline use; other subsets load on demand when online. Geist Mono is not installed because no screen uses it.
 - **Tests guard the tokens:** CSS must equal the saved `tokens.json`, and every text/background pair must reach 4.5:1 in both themes.

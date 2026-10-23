@@ -1,6 +1,6 @@
 # ADR-013: Hotlinked exercise demonstrations
 
-- **Status:** accepted (2026-10-16). Replaces the "No media" decision in [ADR-010](010-exercise-library-and-muscle-search.md).
+- **Status:** accepted. Replaces the "No media" decision in [ADR-010](010-exercise-library-and-muscle-search.md).
 
 ## Context
 
@@ -13,7 +13,7 @@ ADR-010 left out the exercise dataset's pictures: they are © Gym visual, and th
 - **A static file, not a database column.** No migration, seed or RLS change; the map is reviewed in a diff and built as its own chunk (about 150 KB) that is only fetched and parsed on the exercise page (the service worker still precaches it at install, like other app code; it is data, not media).
 - **One place for the provider** (`src/domain/exercises/demoMedia.ts`): the base URL, the credit text and an `enabled` switch. Swapping to licensed media later, or turning all demonstrations off, touches only that file.
 - **Never an error.** No entry, offline, a broken address or "reduce motion" each show a quiet placeholder or the still thumbnail in the same square, so the page does not shift.
-- **Credit and limit stated:** in the README and `THIRD_PARTY_NOTICES.md`: © Gym visual, non-commercial. The credit is also in the app, on the "About and credits" page (`/about`, linked from Settings). On 2026-10-17 it was taken out of the Settings screen at the developer's request, and on 2026-10-19 it came back as its own page.
+- **Credit and limit stated:** in the README and `THIRD_PARTY_NOTICES.md`: © Gym visual, non-commercial. The credit is also in the app, on the "About and credits" page (`/about`, linked from Settings). It was first taken out of the Settings screen at the developer's request, then came back as its own page.
 
 ## Alternatives considered
 

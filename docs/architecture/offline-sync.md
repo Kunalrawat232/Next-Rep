@@ -13,7 +13,7 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 - **Offline, only creating sets is allowed.** Editing or deleting **synced** sets requires a connection (a set that has not synced yet can be undone offline, see below). This avoids conflict resolution entirely.
 - Deletes are soft deletes (`deleted_at`) performed online.
 - Workouts started offline also get client UUIDs and sync the same way (**workout row before its sets**).
-- **An empty workout is never kept (2026-10-19).** A workout with no sets that has never reached the server is not sent (it goes out with its first set, and is not counted as "waiting"); ending it with no sets (`finishWorkout`) deletes it from the device; and the history pull does not bring an empty workout from the server onto the device. A workout that is already on the server stays as it is when it is ended, even if all its sets were undone (the rare case was left alone on purpose). A workout that is started and never ended stays on the device only, and can be resumed.
+- **An empty workout is never kept.** A workout with no sets that has never reached the server is not sent (it goes out with its first set, and is not counted as "waiting"); ending it with no sets (`finishWorkout`) deletes it from the device; and the history pull does not bring an empty workout from the server onto the device. A workout that is already on the server stays as it is when it is ended, even if all its sets were undone (the rare case was left alone on purpose). A workout that is started and never ended stays on the device only, and can be resumed.
 - Global seeded exercises have stable UUIDs, so offline-created sets can reference them before sync.
 - The UI shows a small sync badge: "3 sets waiting to sync" / "All synced" / "Sync failed, tap to retry".
 - Voice is online only: offline the mic button is disabled and the note under it says "Voice needs internet. Tap logging works." (`src/features/workout/VoiceLogger.tsx`). The coach also needs a connection. Tap logging remains fully usable.
@@ -23,7 +23,7 @@ Decided approach ([ADR-001](decisions/001-online-first-offline-set-logging.md)):
 
 `src/data/local/` (Dexie DB and repositories) · `src/data/remote/` (Supabase client and repositories) · `src/data/sync/` (queue + worker). Queue logic is unit-tested with `fake-indexeddb`; the offline-then-sync journey is covered by a Playwright test using offline mode (developer-run, not in CI).
 
-## As built (2026-10-09)
+## As built
 
 Details and reasons: [ADR-011](decisions/011-local-log-and-sync-worker.md).
 

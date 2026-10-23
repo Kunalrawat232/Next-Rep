@@ -1,6 +1,6 @@
 # ADR-011: A per-user local log and a push-only sync worker
 
-- **Status:** accepted (2026-10-09). Amended by ADR-012 (pull added)
+- **Status:** accepted. Amended by ADR-012 (pull added)
 
 ## Context
 

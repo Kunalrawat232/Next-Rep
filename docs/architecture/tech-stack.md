@@ -1,6 +1,6 @@
 # Tech stack
 
-Dependency versions live in `package.json`; the table below is a snapshot of 2026-10-23, checked against `package.json`. All are **pinned exactly** (`.npmrc` `save-exact=true`) and the lockfile is committed. The versions were first checked against the npm registry on 2026-10-08, not from memory. Node 22.12+ is required.
+Dependency versions live in `package.json`; the table below is a snapshot, checked against `package.json`. All are **pinned exactly** (`.npmrc` `save-exact=true`) and the lockfile is committed. The versions were first checked against the npm registry, not from memory. Node 22.12+ is required.
 
 | Area            | Choice                                       | Version (pinned)        | Notes                                                                                                  |
 | --------------- | -------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |

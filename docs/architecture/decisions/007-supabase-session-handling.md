@@ -1,6 +1,6 @@
 # ADR-007: Email and password auth with a local Supabase session
 
-- **Status:** accepted (2026-10-08), amended the same day after review and measurement
+- **Status:** accepted, amended after review and measurement
 
 ## Context
 

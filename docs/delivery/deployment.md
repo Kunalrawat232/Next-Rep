@@ -2,7 +2,7 @@
 
 The steps **you** do by hand: accounts, secrets and dashboards that Claude Code must not touch. Everything is free tier ([ADR-006](../architecture/decisions/006-free-tier-only-stack.md)). Never paste secrets into chat, commits or docs; they live only in the Vercel/Supabase dashboards, a password manager and your local `.env.local` (git-ignored, and Claude Code is denied from reading it).
 
-Verified against the Supabase, Vercel and Google AI docs on 2026-10-08. Dashboard labels change, so if one differs, follow the intent.
+Verified against the Supabase, Vercel and Google AI docs. Dashboard labels change, so if one differs, follow the intent.
 
 ## 1. Supabase (Auth + Postgres)
 
@@ -45,9 +45,9 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 ### 1.4 Auth settings
 
 - **Email provider** is enabled by default. The app uses email + password.
-- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **Switch it on on 23 to 24 Oct, before the 25 Oct freeze** (see the [roadmap](../plans/roadmap.md)), then check that mail arrives: the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
-- **CAPTCHA:** to switch on in the Auth settings (Attack Protection) on 23 to 24 Oct, with the other two settings here. Not done yet.
-- **Leaked-password protection:** to switch on in the Auth settings on 23 to 24 Oct. Not done yet.
+- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **Switch it on in Phase 5, before the 25 Oct freeze** (see the [roadmap](../plans/roadmap.md)), then check that mail arrives: the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
+- **CAPTCHA:** to switch on in the Auth settings (Attack Protection) in Phase 5, with the other two settings here. Not done yet.
+- **Leaked-password protection:** to switch on in the Auth settings in Phase 5. Not done yet.
 - Set a sensible minimum password length in the Auth settings.
 - **Site URL / redirect URLs:** set the Site URL to your Vercel production URL once you have it (production is not deployed yet); add `http://localhost:5173` for local dev.
 
@@ -63,14 +63,14 @@ After section 4 (the local env file) is filled in, run:
 npm run check:supabase
 ```
 
-It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has all its global exercises (56 on 2026-10-08, before migration 0003), that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
+It loads `.env.local` itself and prints only PASS/FAIL lines, never a key, password or token, so its output is safe to paste. It checks: the URL and key type, that the Auth service answers, that signed-out users are locked out of `exercises`, that both test users can sign in, that the seed has all its global exercises (56 at first, before migration 0003), that tables can be queried, and that the rate-limit function works for signed-in users and is closed to anon. It makes one write: the rate-limit call adds a row to test user A's own counter. Run it yourself rather than through Claude Code, which never touches `.env.local`.
 
 The same credentials let you run `npm run test:integration` (profile access rules on the hosted project, as the two test users) and `npm run test:e2e` (sign-in in a real browser). Both skip themselves when the values are missing, and both are run by you, not by CI.
 
-**Hosted checks: what ran and what has not** (single statement; as recorded in the AI log, 2026-10-10):
+**Hosted checks: what ran and what has not** (single statement; as recorded in the AI log):
 
-- Ran, 2026-10-08, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
-- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). The suite now has 5 tests in 4 files (auth x2, workout, exerciseDemo, smoke) and all passed on 2026-10-23. Checked on 2026-10-11 through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
+- Ran, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
+- Run: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). The suite now has 5 tests in 4 files (auth x2, workout, exerciseDemo, smoke) and all passed. Checked through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
 
 ## 2. Gemini API key (free tier, no billing)
 
@@ -89,7 +89,7 @@ The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)
 ## 3. Vercel (hosting + `/api/parse` and `/api/coach`)
 
 1. Sign in at vercel.com with the **Hobby** plan.
-2. **The repo is on GitHub** (`main` and 12 other branches pushed, as of 2026-10-23; CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
+2. **The repo is on GitHub** (`main` and 12 other branches pushed; CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
 3. Settings: Framework preset **Vite** (auto-detected), build command `npm run build`, output directory `dist`, Node.js version **22.x**.
 4. **Environment variables** (add before the first deploy). The names are single-sourced in `.env.example`; this table says where each one is set:
 
@@ -130,7 +130,7 @@ cp .env.example .env.local
 
 ## 5. GitHub
 
-- Push approval: tell Claude Code explicitly when you want a branch pushed. As of 2026-10-23 `main` and 12 other branches are pushed, and `feat/coach`, `feat/home`, `feat/liquid-glass`, `feat/settings`, `feat/units`, `fix/double-tap-guards` and `refactor/shared-ui` (still local only) are all merged into `main`.
+- Push approval: tell Claude Code explicitly when you want a branch pushed. `main` and 12 other branches are pushed, and `feat/coach`, `feat/home`, `feat/liquid-glass`, `feat/settings`, `feat/units`, `fix/double-tap-guards` and `refactor/shared-ui` (still local only) are all merged into `main`.
 - **CI** (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, `test:db`, `seed:check`, build, a grep of the built bundle for secrets, and a gitleaks full-history scan; it needs no secrets.
 - The hosted integration suite and the E2E smoke are run by you, not by CI (CI has no step for them). Only if you later add such a step, add the Supabase URL, publishable key and the four `E2E_*` values as **repository secrets**.
 - **GitHub plugin:** it failed to connect with "Authorization header is badly formatted". Run `/mcp` in Claude Code and re-authenticate it. This is optional; `git` and the web UI are enough.
@@ -140,32 +140,32 @@ cp .env.example .env.local
 
 Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date says when.
 
-- [x] Supabase project created (free); URL and publishable key saved (in use since 2026-10-08)
-- [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase` (2026-10-08)
-- [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises; checked 2026-10-11)
-- [x] `0005_rate_limit_scopes.sql` written (2026-10-17), tested in PGlite and applied through the Supabase plugin on 2026-10-18 (it cleared 11 old counter rows; `api_rate_limits` has `scope` and `window_seconds`, `api_daily_totals` exists with RLS on, the three functions are executable by `authenticated` only; the one-argument `consume_rate_limit` stays so an older `/api/parse` keeps working). The security advisor shows only the by-design notices for these tables and functions.
-- [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin on 2026-10-16 (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
-- [x] Advisors reviewed (healthy, no issues on 2026-10-08)
-- [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in, 2026-10-08)
-- [ ] Confirm email, CAPTCHA and leaked-password protection switched on (23 to 24 Oct, before the 25 Oct freeze)
+- [x] Supabase project created (free); URL and publishable key saved (in use)
+- [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase`
+- [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises)
+- [x] `0005_rate_limit_scopes.sql` written, tested in PGlite and applied through the Supabase plugin (it cleared 11 old counter rows; `api_rate_limits` has `scope` and `window_seconds`, `api_daily_totals` exists with RLS on, the three functions are executable by `authenticated` only; the one-argument `consume_rate_limit` stays so an older `/api/parse` keeps working). The security advisor shows only the by-design notices for these tables and functions.
+- [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
+- [x] Advisors reviewed (healthy, no issues)
+- [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in)
+- [ ] Confirm email, CAPTCHA and leaked-password protection switched on (Phase 5, before the 25 Oct freeze)
 - [ ] Site URL set (needs the Vercel production URL)
 - [x] Gemini key created with **no billing**; `GEMINI_MODEL` chosen (Gemini verified live on a preview deploy)
-- [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`, 2026-10-23)
-- [x] Vercel project `next-rep` imported; env vars set; preview deployed (2026-10-13 and 2026-10-23)
+- [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`)
+- [x] Vercel project `next-rep` imported; env vars set; preview deployed
 - [ ] Production deployed (not yet)
 - [ ] Production page loads; `POST /api/parse` with no token returns 401 JSON
-- [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, 2026-10-08, before migrations 0002 and 0003)
+- [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, before migrations 0002 and 0003)
 - [ ] A phone opens the preview URL over HTTPS (not recorded; check it yourself)
 
 ## Troubleshooting
 
-| Symptom                                                                 | Likely cause / fix                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sign-up emails never arrive                                             | Default mail limit (about 2 per hour); turn off Confirm email or create users in the dashboard                                                                                                                                                                                                                                                                                                 |
-| App shows empty data / 401 from Supabase                                | Wrong URL or key in env; `VITE_*` change not redeployed                                                                                                                                                                                                                                                                                                                                        |
-| `permission denied` on a table                                          | Migration not fully applied (the grants are at the end of `0001_init.sql`)                                                                                                                                                                                                                                                                                                                     |
-| Everything times out                                                    | Free Supabase project is paused; wake it in the dashboard                                                                                                                                                                                                                                                                                                                                      |
-| `/api/parse` returns HTML                                               | SPA rewrite capturing the route; check `vercel.json` and the function path `api/parse.ts`                                                                                                                                                                                                                                                                                                      |
-| Mic button does nothing on a phone                                      | Not HTTPS or `localhost`, microphone permission denied, or the browser lacks the Web Speech API                                                                                                                                                                                                                                                                                                |
-| Gemini returns 429                                                      | Free-tier rate limit; expected, the app falls back to manual confirmation                                                                                                                                                                                                                                                                                                                      |
-| `check:supabase` fails with `fetch failed` or `UND_ERR_CONNECT_TIMEOUT` | No HTTP response at all: DNS, firewall, VPN or proxy, not the key. On 2026-10-08 the home router answered IPv6 lookups for `supabase.co` far too slowly (15 to 20 s). Test with `time getent ahosts <ref>.supabase.co`; if it is slow, point the connection at a public DNS such as 1.1.1.1 and 8.8.8.8 (`nmcli connection modify <name> ipv4.dns "1.1.1.1 8.8.8.8" ipv4.ignore-auto-dns yes`) |
+| Symptom                                                                 | Likely cause / fix                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-up emails never arrive                                             | Default mail limit (about 2 per hour); turn off Confirm email or create users in the dashboard                                                                                                                                                                                                                                                                                        |
+| App shows empty data / 401 from Supabase                                | Wrong URL or key in env; `VITE_*` change not redeployed                                                                                                                                                                                                                                                                                                                               |
+| `permission denied` on a table                                          | Migration not fully applied (the grants are at the end of `0001_init.sql`)                                                                                                                                                                                                                                                                                                            |
+| Everything times out                                                    | Free Supabase project is paused; wake it in the dashboard                                                                                                                                                                                                                                                                                                                             |
+| `/api/parse` returns HTML                                               | SPA rewrite capturing the route; check `vercel.json` and the function path `api/parse.ts`                                                                                                                                                                                                                                                                                             |
+| Mic button does nothing on a phone                                      | Not HTTPS or `localhost`, microphone permission denied, or the browser lacks the Web Speech API                                                                                                                                                                                                                                                                                       |
+| Gemini returns 429                                                      | Free-tier rate limit; expected, the app falls back to manual confirmation                                                                                                                                                                                                                                                                                                             |
+| `check:supabase` fails with `fetch failed` or `UND_ERR_CONNECT_TIMEOUT` | No HTTP response at all: DNS, firewall, VPN or proxy, not the key. Once the home router answered IPv6 lookups for `supabase.co` far too slowly (15 to 20 s). Test with `time getent ahosts <ref>.supabase.co`; if it is slow, point the connection at a public DNS such as 1.1.1.1 and 8.8.8.8 (`nmcli connection modify <name> ipv4.dns "1.1.1.1 8.8.8.8" ipv4.ignore-auto-dns yes`) |

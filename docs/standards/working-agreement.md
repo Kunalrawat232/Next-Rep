@@ -27,7 +27,7 @@ How the developer and the AI collaborate on Next Rep. `CLAUDE.md` carries the sh
 
 Reviewers (code-reviewer, security-auditor) change nothing; the qa-tester agent may only add new test files. The developer decides which findings are valid.
 
-QA is batched at the end of a UI phase (decision 2026-10-09); code-reviewer runs per feature.
+QA is batched at the end of a UI phase (a decision); code-reviewer runs per feature.
 
 ## Git and workflow
 

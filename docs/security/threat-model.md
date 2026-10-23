@@ -1,6 +1,6 @@
 # Threat model: voice → Gemini → database
 
-Status as of 2026-10-23: voice, the parser, the Gemini fallback (`/api/parse`) and the AI coach (`/api/coach`, with Groq as a second provider) are built, with fake-provider tests (`api/_lib/parse.test.ts`, `coach.test.ts`, `coachScope.test.ts`, `fallbackProvider.test.ts`; `/api/parse` was checked once against the live API and `npm run check:coach` passed for both providers on 2026-10-19). All of T1 to T19 apply (T7 and T16 are controls in process and key handling rather than tested code).
+Status: voice, the parser, the Gemini fallback (`/api/parse`) and the AI coach (`/api/coach`, with Groq as a second provider) are built, with fake-provider tests (`api/_lib/parse.test.ts`, `coach.test.ts`, `coachScope.test.ts`, `fallbackProvider.test.ts`; `/api/parse` was checked once against the live API and `npm run check:coach` passed for both providers). All of T1 to T19 apply (T7 and T16 are controls in process and key handling rather than tested code).
 
 Scope: the data path from the microphone to Postgres, plus auth and dependencies. Drafted with AI assistance and reviewed by the developer; update as the system is built.
 

@@ -1,6 +1,6 @@
 # Design system
 
-The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off on 2026-10-08. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/); the second handoff of 2026-10-09 (60 artboards) is in [`handoff/2026-10-09/`](handoff/2026-10-09/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
+The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/); the second handoff (60 artboards) is in [`handoff/2026-10-09/`](handoff/2026-10-09/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
 
 ## Direction
 
@@ -49,7 +49,7 @@ Keep these names identical in code and in Claude Design.
 
 ## Status
 
-As of 2026-10-23, all merged into `main`: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch), the voice mic and confirm card, the ambiguity prompt, the offline banner, the AI Coach and About pages, the liquid-glass surfaces and the empty, loading and error states are applied. Run `/design-sync` to compare the handoff with the built components.
+All merged into `main`: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch), the voice mic and confirm card, the ambiguity prompt, the offline banner, the AI Coach and About pages, the liquid-glass surfaces and the empty, loading and error states are applied. Run `/design-sync` to compare the handoff with the built components.
 
 ## Shared UI components (`src/components`)
 

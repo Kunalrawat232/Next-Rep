@@ -1,6 +1,6 @@
 # Judging evidence checklist
 
-Judges can only score what they can see. Weights are single-sourced in [rules and judging](rules-and-judging.md); status below is as of 2026-10-23. Every item needs **evidence in the repo**. Daily habit: five minutes on [`docs/learning/ai-log.md`](../learning/ai-log.md).
+Judges can only score what they can see. Weights are single-sourced in [rules and judging](rules-and-judging.md); status is shown below. Every item needs **evidence in the repo**. Daily habit: five minutes on [`docs/learning/ai-log.md`](../learning/ai-log.md).
 
 ## AI development practices (35%)
 
@@ -15,16 +15,16 @@ Judges can only score what they can see. Weights are single-sourced in [rules an
 
 ## Engineering and code quality (30%)
 
-| Criterion            | How we use AI                                                                                     | Evidence                                                                                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Architecture         | AI proposes alternatives and critiques the chosen design                                          | ADRs with "alternatives considered"                                                                                                                                          |
-| Maintainability      | Pure domain layer; review/simplification agents after each feature                                | Small modules, clean commits                                                                                                                                                 |
-| Testing              | Developer specifies, AI implements; AI finds untested branches                                    | Coverage report, table-driven tests                                                                                                                                          |
-| Security             | security-guidance, security-auditor, AI threat model, RLS isolation tests, prompt-injection tests | [`docs/security/threat-model.md`](../security/threat-model.md) + passing tests                                                                                               |
-| Reliability          | AI lists failure scenarios; each becomes a test                                                   | Playwright end-to-end tests (built, `tests/e2e/workout.spec.ts` covers the offline path; 5 tests passed on 2026-10-23), failure table in the [test plan](../qa/test-plan.md) |
-| Deployment           | AI writes CI and deployment guide                                                                 | Green CI (built); preview deploys exist, the production live link is planned before 30 Oct                                                                                   |
-| Documentation        | AI drafts from code and ADRs; developer edits; `new-feature` skill has a docs step                | Up-to-date docs                                                                                                                                                              |
-| Technical trade-offs | AI plays devil's advocate per decision                                                            | ADRs + README limitations section                                                                                                                                            |
+| Criterion            | How we use AI                                                                                     | Evidence                                                                                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Architecture         | AI proposes alternatives and critiques the chosen design                                          | ADRs with "alternatives considered"                                                                                                                            |
+| Maintainability      | Pure domain layer; review/simplification agents after each feature                                | Small modules, clean commits                                                                                                                                   |
+| Testing              | Developer specifies, AI implements; AI finds untested branches                                    | Coverage report, table-driven tests                                                                                                                            |
+| Security             | security-guidance, security-auditor, AI threat model, RLS isolation tests, prompt-injection tests | [`docs/security/threat-model.md`](../security/threat-model.md) + passing tests                                                                                 |
+| Reliability          | AI lists failure scenarios; each becomes a test                                                   | Playwright end-to-end tests (built, `tests/e2e/workout.spec.ts` covers the offline path; 5 tests passed), failure table in the [test plan](../qa/test-plan.md) |
+| Deployment           | AI writes CI and deployment guide                                                                 | Green CI (built); preview deploys exist, the production live link is planned before 30 Oct                                                                     |
+| Documentation        | AI drafts from code and ADRs; developer edits; `new-feature` skill has a docs step                | Up-to-date docs                                                                                                                                                |
+| Technical trade-offs | AI plays devil's advocate per decision                                                            | ADRs + README limitations section                                                                                                                              |
 
 ## Product quality (25%)
 

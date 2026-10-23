@@ -1,6 +1,6 @@
 # ADR-009: Gym bars have a kind, and the default gym is moved in two steps
 
-- **Status:** accepted (2026-10-09). Superseded in part by [ADR-015](015-one-gym-per-user.md) (2026-10-16): the default-gym rules, the two-step default change and "no limit on the number of gyms" no longer apply (a user has exactly one gym). The bar kinds, the bar lookup, the weight parsing and the server-error rules below still hold.
+- **Status:** accepted. Superseded in part by [ADR-015](015-one-gym-per-user.md): the default-gym rules, the two-step default change and "no limit on the number of gyms" no longer apply (a user has exactly one gym). The bar kinds, the bar lookup, the weight parsing and the server-error rules below still hold.
 
 ## Context
 

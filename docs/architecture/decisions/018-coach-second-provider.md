@@ -1,6 +1,6 @@
 # ADR-018: A second provider for the coach, used only when Gemini cannot answer
 
-- **Status:** accepted (2026-10-19); merged to main. Builds on [ADR-017](017-ai-coach.md). Timeouts and token caps: [API contracts](../api-contracts.md).
+- **Status:** accepted; merged to main. Builds on [ADR-017](017-ai-coach.md). Timeouts and token caps: [API contracts](../api-contracts.md).
 
 ## Context
 
@@ -26,7 +26,7 @@ chosen instead.
 - **Same rules for both.** The second provider gets the same system prompt and chat, and its answer goes through the
   same checks: the agreed `{onTopic, reply}` form, our own refusal for off-topic, the length cap and the "no links,
   code or tags" check. The per-person limits still apply first.
-- **The reply may think first.** The second provider gets a larger token cap than Gemini (see the API contracts), because a model that reasons before it answers counts that thinking against the limit and would otherwise be cut off mid-answer. `npm run check:coach` passed for `openai/gpt-oss-20b` on Groq on 2026-10-19.
+- **The reply may think first.** The second provider gets a larger token cap than Gemini (see the API contracts), because a model that reasons before it answers counts that thinking against the limit and would otherwise be cut off mid-answer. `npm run check:coach` passed for `openai/gpt-oss-20b` on Groq.
 - **Nothing secret in the log.** A refused request carries only its HTTP status in the error; the log never gets the
   provider's message (which can echo the chat), the question or the reply.
 

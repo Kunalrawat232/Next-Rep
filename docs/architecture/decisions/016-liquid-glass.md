@@ -1,6 +1,6 @@
 # ADR-016: Glass surfaces in CSS, and one liquid glass lens
 
-- **Status:** accepted (2026-10-19; proposed 2026-10-16); merged to main. To revert, see Consequences.
+- **Status:** accepted; merged to main. To revert, see Consequences.
 
 ## Context
 

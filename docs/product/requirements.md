@@ -2,7 +2,7 @@
 
 ## Scope (MoSCoW)
 
-Status as of 2026-10-23: **done** (built and merged to `main`), **in progress**, or **not built**. The plan and dates are in the [roadmap](../plans/roadmap.md).
+Status: **done** (built and merged to `main`), **in progress**, or **not built**. The plan and dates are in the [roadmap](../plans/roadmap.md).
 
 ### Must have
 
@@ -15,7 +15,7 @@ Status as of 2026-10-23: **done** (built and merged to `main`), **in progress**,
 - Weight convention handling: total vs per side, bar weights, plausibility checks, confirmation with breakdown. Done, for tap and voice logging.
 - History list, per-exercise progress charts, personal records. Done.
 - Deployed on Vercel, installable as a PWA. In progress: the PWA manifest and icons are built and a preview deployment exists (behind Vercel Authentication); production is not deployed yet and is planned before the 30 Oct submission.
-- Unit tests for all domain logic; a few Playwright smoke tests for the core journey. Unit tests done; the Playwright specs exist and are run by the developer, not in CI (all 5 passed on 2026-10-23).
+- Unit tests for all domain logic; a few Playwright smoke tests for the core journey. Unit tests done; the Playwright specs exist and are run by the developer, not in CI (all 5 passed).
 - Documentation and AI log. In progress (the AI log is updated per task, and each entry says how it was validated and who ran the checks).
 
 ### Should have

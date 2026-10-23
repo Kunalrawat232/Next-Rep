@@ -1,6 +1,6 @@
 # User journeys
 
-Status (2026-10-23): every journey below is built and merged: the tap path, offline sync, history, progress and the suggestion, and the voice path (the mic steps, "Misheard number", "Voice unavailable" and "Gemini unavailable").
+Status: every journey below is built and merged: the tap path, offline sync, history, progress and the suggestion, and the voice path (the mic steps, "Misheard number", "Voice unavailable" and "Gemini unavailable").
 
 ## Primary journey (the demo story)
 

@@ -1,6 +1,6 @@
 # ADR-014: Photo crossfade demonstrations for the popular exercises
 
-- **Status:** accepted (2026-10-16): tried on a branch, the developer liked it and kept it. Supplements [ADR-013](013-hotlinked-exercise-demonstrations.md).
+- **Status:** accepted: tried on a branch, the developer liked it and kept it. Supplements [ADR-013](013-hotlinked-exercise-demonstrations.md).
 
 ## Context
 

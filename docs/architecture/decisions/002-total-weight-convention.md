@@ -1,6 +1,6 @@
 # ADR-002: Logged weight is the total, including the bar
 
-- **Status:** accepted (2026-10-08); addendum 2026-10-10 (display unit)
+- **Status:** accepted; addendum (display unit)
 
 ## Context
 
@@ -27,7 +27,7 @@
 - The parser and UI must resolve "total or per side?" before saving, using the bar settings of the gym (the user can choose a different bar of that gym).
 - Dumbbell semantics are an explicit exception that every consumer of `total_kg` must respect.
 
-## Addendum (2026-10-10): the weight unit is a display and entry choice
+## Addendum: the weight unit is a display and entry choice
 
 Storage stays kg. The user's unit (kg or lb, Settings) decides how every weight is **shown and typed**; the only place that converts is `src/domain/units`. Consequences that came with it:
 

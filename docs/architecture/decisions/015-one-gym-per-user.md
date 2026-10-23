@@ -1,6 +1,6 @@
 # ADR-015: One gym per user
 
-- **Status:** accepted (2026-10-16). Replaces "no limit on the number of gyms" and the default-gym rules in [ADR-009](009-gym-bars-and-default-gym.md).
+- **Status:** accepted. Replaces "no limit on the number of gyms" and the default-gym rules in [ADR-009](009-gym-bars-and-default-gym.md).
 
 ## Context
 

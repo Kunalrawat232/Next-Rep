@@ -6,7 +6,7 @@ Voice-first gym workout logger, delivered as an installable web app (PWA).
 
 Built solo for the **Build With AI Hackathon 2026** (internal company hackathon). Demo link and demo video are added at submission.
 
-**Status (2026-10-23):** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. A preview deployment exists; production is not deployed yet and is planned before the 30 Oct submission. See the [roadmap](docs/plans/roadmap.md).
+**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. A preview deployment exists; production is not deployed yet and is planned before the 30 Oct submission. See the [roadmap](docs/plans/roadmap.md).
 
 ## Problem
 

@@ -1,6 +1,6 @@
 # ADR-010: A bundled exercise library with muscle search
 
-- **Status:** accepted (2026-10-09). The "No media" decision below is replaced by [ADR-013](013-hotlinked-exercise-demonstrations.md).
+- **Status:** accepted. The "No media" decision below is replaced by [ADR-013](013-hotlinked-exercise-demonstrations.md).
 
 ## Context
 

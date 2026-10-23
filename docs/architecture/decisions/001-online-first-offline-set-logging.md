@@ -1,6 +1,6 @@
 # ADR-001: Online-first with offline set logging
 
-- **Status:** accepted (2026-10-08)
+- **Status:** accepted
 
 ## Context
 

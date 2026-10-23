@@ -1,6 +1,6 @@
 # ADR-005: Simple, explainable progression rules
 
-- **Status:** accepted (2026-10-08); clarified 2026-10-10 when built
+- **Status:** accepted; clarified when built
 
 ## Context
 
@@ -31,4 +31,4 @@ Rule-based suggestion in `src/domain/progression/` (built, shown on Home for the
 
 ## History
 
-The first version of this record said +2.5 kg (upper) or +5 kg (lower), about 10% less after two consecutive missed sessions, and body parts `upper`/`lower` only. The clarification of 2026-10-10 (core, lb increments, same top weight, working sets) was merged into the Decision above when the code was built.
+The first version of this record said +2.5 kg (upper) or +5 kg (lower), about 10% less after two consecutive missed sessions, and body parts `upper`/`lower` only. The clarification (core, lb increments, same top weight, working sets) was merged into the Decision above when the code was built.

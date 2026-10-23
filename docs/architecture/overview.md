@@ -1,6 +1,6 @@
 # Architecture overview
 
-Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API), and the AI coach (`/api/coach`, Gemini with an optional Groq second provider; [ADR-017](decisions/017-ai-coach.md), [ADR-018](decisions/018-coach-second-provider.md)). Also built: auth, one gym per user, exercises, tap logging, offline log and sync, history, progress, Home, Settings and About. Deployed as a Vercel preview (2026-10-23); production is not deployed yet. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
+Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API), and the AI coach (`/api/coach`, Gemini with an optional Groq second provider; [ADR-017](decisions/017-ai-coach.md), [ADR-018](decisions/018-coach-second-provider.md)). Also built: auth, one gym per user, exercises, tap logging, offline log and sync, history, progress, Home, Settings and About. Deployed as a Vercel preview; production is not deployed yet. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
 
 ## Components
 
