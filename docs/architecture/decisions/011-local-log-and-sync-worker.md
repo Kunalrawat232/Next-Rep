@@ -1,6 +1,6 @@
 # ADR-011: A per-user local log and a push-only sync worker
 
-- **Status:** accepted (2026-10-09)
+- **Status:** accepted (2026-10-09). Amended by ADR-012 (pull added)
 
 ## Context
 
@@ -17,6 +17,7 @@
   - _Trouble on the server's side_ (5xx, an expired session, a rate limit, a thrown error): the pass stops, the rows wait 30 seconds, and nothing is counted. A server outage of any length never marks a row failed.
   - _The row itself was refused_ (a constraint or foreign-key error): only this counts. A batch is then sent row by row to find the bad one, the row backs off (2 s, doubling, capped at 5 minutes), and after 8 refusals it is marked `failed` and waits for a manual retry.
   - A real answer from the server decides the reason, even when `navigator.onLine` says offline.
+  - A row-level-security refusal (code 42501 with a row-level security message) is _rejected_ (the row itself was refused); a plain permission denied stays _unknown_.
 - **A workout whose gym is gone** (deleted on another device, so the foreign key refuses it) is sent again without the gym, so its sets are not stranded.
 - **Rows read back from IndexedDB are validated against the shared schemas before they are sent.** Invalid rows are marked failed and never sent; one corrupt row cannot stop the others.
 - **Bookkeeping answers are revision-checked.** A late "refused" or "wait" about an older copy of a row cannot change a newer copy, and cannot turn a synced row back to pending.
@@ -27,7 +28,7 @@
 - **Sign-out and StrictMode:** the worker is paused at sign-out and checks before every step. The local database is closed in a deferred step, so React StrictMode's simulated unmount in development does not leave it closed for the session.
 - **Persistent storage** is requested once, after the first set is logged, not on every start. Syncing soon is the real protection.
 - **After sign-out,** `purgeSynced()` deletes what the server already has and keeps unsynced rows. The screens call it when the user signs out and tell them if sets are still waiting.
-- **No pull.** Nothing is downloaded into the local log yet. History will read the server when online; the local log only holds what this device recorded. Multi-device and multi-tab handling are out of scope for now (two tabs on one database lose nothing, because upserts are idempotent).
+- **No pull in this record.** The worker here only pushes; reading history back from the server was added by [ADR-012](012-pull-history-from-server.md) (`src/data/sync/pull.ts`). Multi-device and multi-tab handling are out of scope for now (two tabs on one database lose nothing, because upserts are idempotent).
 
 ## Alternatives considered
 
@@ -39,5 +40,5 @@
 
 - Unsynced sets exist only on the device until they reach the server. A cleared browser or an evicted store loses them, and the sync badge says how many are waiting.
 - Recording is instant and never waits for the network; the screens show the waiting count.
-- Rows the server keeps refusing end up `failed` and need the user to retry; the cause is kept in `lastError`. The screens show the waiting and failed counts and a retry action (built with the workout screens, the next task).
+- Rows the server keeps refusing end up `failed` and need the user to retry; the cause is kept in `lastError`. The screens show the waiting and failed counts and a retry action (built with the workout screens).
 - Residual risks: unsynced data is on the device in plain text until it syncs ([threat model](../../security/threat-model.md), T10); a soft delete that matches no row looks like success; per-user row quotas are not enforced.

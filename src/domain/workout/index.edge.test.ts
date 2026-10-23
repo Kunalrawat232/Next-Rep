@@ -2,14 +2,30 @@
 import { describe, expect, it } from 'vitest';
 import type { EquipmentType } from '../schemas';
 import {
-  breakdownFor,
-  initialEntry,
-  nextValue,
+  breakdownFor as breakdownForUnit,
+  initialEntry as initialEntryUnit,
+  nextValue as nextValueUnit,
   parseWeight,
-  setSummary,
-  stepFor,
+  setSummary as setSummaryUnit,
+  stepFor as stepForUnit,
   weightHint,
 } from '.';
+import { kgFromField } from '../units';
+
+// These tests were written for kg, which is still the default unit: the helpers below pass it.
+const breakdownFor = (w: Parameters<typeof breakdownForUnit>[0]) => breakdownForUnit(w, 'kg');
+const setSummary = (s: Parameters<typeof setSummaryUnit>[0]) => setSummaryUnit(s, 'kg');
+const stepFor = (e: Parameters<typeof stepForUnit>[0], m: Parameters<typeof stepForUnit>[1]) =>
+  stepForUnit(e, m, 'kg');
+const nextValue = (c: number, s: number, d: 1 | -1, m: 'total' | 'per_side') =>
+  nextValueUnit(c, s, d, m, 'kg');
+const initialEntry = (
+  e: Parameters<typeof initialEntryUnit>[0],
+  l: Parameters<typeof initialEntryUnit>[1],
+) => {
+  const r = initialEntryUnit(e, l, 'kg');
+  return { mode: r.mode, weight: kgFromField(r.weight, 'kg') ?? 0, reps: r.reps };
+};
 
 describe('parseWeight, typed by people on a phone', () => {
   it.each([
@@ -132,31 +148,31 @@ describe('breakdownFor and setSummary with awkward numbers', () => {
   it('shows a zero bar plainly', () => {
     expect(breakdownFor({ totalKg: 50, barKg: 0, perSideKg: 25 })).toEqual({
       lines: [
-        { label: '25 kg each side × 2', value: '50 kg' },
-        { label: '+ bar', value: '0 kg' },
+        { label: '25 Kg each side × 2', value: '50 Kg' },
+        { label: '+ bar', value: '0 Kg' },
       ],
-      total: '50 kg',
+      total: '50 Kg',
     });
   });
 
   it('does not show floating point dust in plates', () => {
     const { lines } = breakdownFor({ totalKg: 60.3, barKg: 20.1, perSideKg: null });
-    expect(lines[0]).toEqual({ label: 'Plates', value: '40.2 kg' });
+    expect(lines[0]).toEqual({ label: 'Plates', value: '40.2 Kg' });
   });
 
   it('describes an empty bar', () => {
     expect(setSummary({ totalKg: 15, barKg: 15, perSideKg: 0, reps: 12 })).toEqual({
-      headline: '15 kg × 12',
-      detail: '15 kg bar + 0 kg each side',
+      headline: '15 Kg × 12',
+      detail: '15 Kg bar + 0 Kg each side',
     });
   });
 
   it('keeps the headline readable at the limits', () => {
     expect(setSummary({ totalKg: 500, barKg: null, perSideKg: null, reps: 100 }).headline).toBe(
-      '500 kg × 100',
+      '500 Kg × 100',
     );
     expect(setSummary({ totalKg: 0, barKg: null, perSideKg: null, reps: 1 }).headline).toBe(
-      '0 kg × 1',
+      '0 Kg × 1',
     );
   });
 });

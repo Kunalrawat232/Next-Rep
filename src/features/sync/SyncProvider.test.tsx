@@ -67,6 +67,7 @@ describe('SyncProvider', () => {
     const { server } = renderWith({ id: `u-${uuid()}`, email: 'a@b.co' }, (a) => void (api = a));
     await screen.findByText(/pending 0/);
     const w = await api!.store.startWorkout(aWorkout());
+    await api!.store.logSet(aSet(w.id));
     api!.notify();
     await waitFor(() => expect(server.workouts.has(w.id)).toBe(true));
     await waitFor(() => expect(screen.getByText(/pending 0 failed 0 idle/)).toBeInTheDocument());
@@ -82,9 +83,10 @@ describe('SyncProvider', () => {
     const second = renderWith({ id, email: 'a@b.co' }, (a) => void (api = a));
     await screen.findByText(/pending/);
     const w = await api!.store.startWorkout(aWorkout());
+    await api!.store.logSet(aSet(w.id));
     second.server.setOffline(true);
     api!.notify();
-    await screen.findByText(/pending 1/);
+    await screen.findByText(/pending 2/);
     second.unmount();
     const third = renderWith({ id, email: 'a@b.co' });
     await waitFor(() => expect(third.server.workouts.has(w.id)).toBe(true));
@@ -97,8 +99,9 @@ describe('SyncProvider', () => {
     await screen.findByText(/pending/);
     a.server.setOffline(true);
     const w = await apiA!.store.startWorkout(aWorkout());
+    await apiA!.store.logSet(aSet(w.id));
     apiA!.notify();
-    await screen.findByText(/pending 1/);
+    await screen.findByText(/pending 2/);
     a.unmount();
     const b = renderWith({ id: `b-${uuid()}`, email: 'c@d.co' });
     await screen.findByText(/pending 0 failed 0/);
@@ -114,6 +117,7 @@ describe('SyncProvider', () => {
     );
     await screen.findByText(/pending 0/);
     const w = await api!.store.startWorkout(aWorkout());
+    await api!.store.logSet(aSet(w.id));
     const release = server.hold('upsertWorkouts');
     api!.notify();
     await waitFor(() => expect(server.callsTo('upsertWorkouts')).toHaveLength(1));
@@ -144,6 +148,7 @@ describe('SyncProvider', () => {
     await screen.findByText(/pending 0 failed 0/);
     // The database must be usable after StrictMode's simulated unmount, not closed for good.
     const w = await api!.store.startWorkout(aWorkout());
+    await api!.store.logSet(aSet(w.id));
     api!.notify();
     await waitFor(() => expect(server.workouts.has(w.id)).toBe(true));
     await waitFor(() => expect(screen.getByText(/pending 0 failed 0 idle/)).toBeInTheDocument());

@@ -1,6 +1,7 @@
 import { SetSchema, WorkoutSchema, type LoggedSet } from '../../domain/schemas';
 import type { LocalDb } from './db';
-import { readGymList, readGymSnapshot } from './gymShape';
+import { CoachTurnSchema, type ChatMessage } from '../../domain/coach';
+import { readCachedGym, readGymSnapshot } from './gymShape';
 import type {
   LogStore,
   MergeOutcome,
@@ -59,6 +60,9 @@ const compareText = (a: string | undefined, b: string | undefined): number => {
 const isDue = (row: SyncMeta, now: number): boolean =>
   row.nextAttemptAt <= now || row.nextAttemptAt - now > BACKOFF_MAX_MS;
 
+/** How many messages of the chat with the coach stay on the device. */
+const COACH_MESSAGES_KEPT = 50;
+
 export function createLogStore(db: LocalDb, clock: () => number = Date.now): LogStore {
   const table = (kind: RowKind) => (kind === 'workout' ? db.workouts : db.sets);
 
@@ -73,11 +77,35 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     return row && row.rev === rev && row.syncStatus !== 'synced' ? row : undefined;
   }
 
+  /** Marks a workout ended (inside the caller's transaction). Ending also works offline; it goes out as another upsert. */
+  async function endRow(id: string, endedAt: string): Promise<StoredWorkout> {
+    const row = await db.workouts.get(id);
+    if (!row) throw new Error('Workout not found');
+    const checked = WorkoutSchema.parse({ ...(plain(row) as object), endedAt });
+    const parsed = { ...checked, endedAt: canonical(endedAt) };
+    const next: StoredWorkout = {
+      ...parsed,
+      ...fresh(),
+      rev: row.rev + 1,
+      everSynced: row.everSynced,
+      gymSnapshot: row.gymSnapshot ?? null,
+    };
+    await db.workouts.put(next);
+    return next;
+  }
+
+  /** A workout that has no sets and never reached the server is not worth sending, and is not counted as waiting. */
+  async function isEmptyAndUnsent(row: StoredWorkout): Promise<boolean> {
+    return !row.everSynced && (await db.sets.where('workoutId').equals(row.id).count()) === 0;
+  }
+
   const outbox: Outbox = {
     async dueWorkouts(now) {
       const rows = await db.workouts.where('syncStatus').equals('pending').toArray();
       const due: StoredWorkout[] = [];
       for (const row of rows.filter((r) => isDue(r, now))) {
+        // An empty workout is not sent: it may be abandoned, and an empty one is not kept (it goes out with its first set).
+        if (await isEmptyAndUnsent(row)) continue;
         // Rows come back from IndexedDB, which the user or an extension can edit: check before sending.
         if (WorkoutSchema.safeParse(plain(row)).success) due.push(row);
         else await failInvalid('workout', row.id, 'invalid row');
@@ -220,21 +248,20 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async endWorkout(id, endedAt) {
-      return db.transaction('rw', db.workouts, async () => {
+      return db.transaction('rw', db.workouts, () => endRow(id, endedAt));
+    },
+
+    async finishWorkout(id, endedAt) {
+      return db.transaction('rw', db.workouts, db.sets, async () => {
         const row = await db.workouts.get(id);
         if (!row) throw new Error('Workout not found');
-        const checked = WorkoutSchema.parse({ ...(plain(row) as object), endedAt });
-        const parsed = { ...checked, endedAt: canonical(endedAt) };
-        // Ending is part of creating the workout, so it also works offline; it goes out as another upsert.
-        const next: StoredWorkout = {
-          ...parsed,
-          ...fresh(),
-          rev: row.rev + 1,
-          everSynced: row.everSynced,
-          gymSnapshot: row.gymSnapshot ?? null,
-        };
-        await db.workouts.put(next);
-        return next;
+        // Nothing was logged and the server never heard of it: there is nothing to keep.
+        if (!row.everSynced && (await db.sets.where('workoutId').equals(id).count()) === 0) {
+          await db.workouts.delete(id);
+          return 'discarded' as const;
+        }
+        await endRow(id, endedAt);
+        return 'saved' as const;
       });
     },
 
@@ -334,7 +361,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async mergePulled(pulled) {
-      const gyms = new Map((pulled.gyms ?? []).map((g) => [g.id, g]));
+      const gyms = new Map(pulled.gym ? [[pulled.gym.id, pulled.gym]] : []);
       return db.transaction('rw', db.workouts, db.sets, db.deletions, async () => {
         const outcome: MergeOutcome = {
           addedWorkouts: 0,
@@ -347,7 +374,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
         };
         const snapshotOf = (gymId: string | null) => {
           const gym = gymId === null ? undefined : gyms.get(gymId);
-          return gym ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars } : null;
+          return gym ? { barbellKg: gym.barbellKg, bars: gym.bars } : null;
         };
         const confirmed = (): SyncMeta & { everSynced: boolean } => ({
           ...fresh(),
@@ -355,6 +382,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
           everSynced: true,
         });
 
+        const withSets = new Set(pulled.sets.map((set) => set.workoutId));
         for (const incoming of pulled.workouts) {
           // Stored in the same canonical form as local rows, so times sort as plain strings.
           const checked = WorkoutSchema.parse(incoming);
@@ -365,13 +393,13 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
           };
           const local = await db.workouts.get(parsed.id);
           if (!local) {
+            // A workout with no sets on the server is not brought onto the device: an empty one is not kept.
+            if (!withSets.has(parsed.id)) continue;
             const gym = parsed.gymId === null ? undefined : gyms.get(parsed.gymId);
             await db.workouts.put({
               ...parsed,
               ...confirmed(),
-              gymSnapshot: gym
-                ? { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars }
-                : null,
+              gymSnapshot: gym ? { barbellKg: gym.barbellKg, bars: gym.bars } : null,
             });
             outcome.addedWorkouts += 1;
           } else if (
@@ -381,7 +409,7 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
               local.endedAt !== parsed.endedAt ||
               local.notes !== parsed.notes)
           ) {
-            // The gym name on screen must follow the gym the workout now belongs to.
+            // The bars shown must follow the gym the workout now belongs to.
             const gymSnapshot =
               local.gymId === parsed.gymId ? local.gymSnapshot : snapshotOf(parsed.gymId);
             await db.workouts.put({ ...local, ...parsed, gymSnapshot });
@@ -441,23 +469,67 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
       await db.workouts.update(workoutId, { gymSnapshot: snapshot });
     },
 
-    async saveGyms(gyms) {
-      await db.gymCache.put({ id: 'list', gyms, savedAt: clock() });
+    async saveGym(gym) {
+      await db.gymCache.put({ id: 'gym', gym, savedAt: clock() });
     },
 
-    async cachedGyms() {
-      return readGymList((await db.gymCache.get('list'))?.gyms);
+    async coachMessages() {
+      const rows = await db.coachMessages.orderBy('at').toArray();
+      // Rows on the device are not trusted: a damaged one is left out, never shown.
+      return rows.flatMap((row) => {
+        const turn = CoachTurnSchema.safeParse({ role: row.role, text: row.text });
+        return turn.success && typeof row.id === 'string' && Number.isFinite(row.at)
+          ? [{ ...turn.data, id: row.id, at: row.at }]
+          : [];
+      });
+    },
+
+    async addCoachMessage(message) {
+      const stored: ChatMessage = {
+        role: message.role,
+        text: message.text,
+        id: crypto.randomUUID(),
+        // Two messages in the same millisecond keep their order: the second is placed after the newest.
+        at: Math.max(clock(), ((await db.coachMessages.orderBy('at').last())?.at ?? 0) + 1),
+      };
+      await db.transaction('rw', db.coachMessages, async () => {
+        await db.coachMessages.put(stored);
+        const surplus = (await db.coachMessages.count()) - COACH_MESSAGES_KEPT;
+        if (surplus > 0) {
+          const oldest = await db.coachMessages.orderBy('at').limit(surplus).primaryKeys();
+          await db.coachMessages.bulkDelete(oldest);
+        }
+      });
+      return stored;
+    },
+
+    async removeCoachMessage(id) {
+      await db.coachMessages.delete(id);
+    },
+
+    async clearCoachMessages() {
+      await db.coachMessages.clear();
+    },
+
+    async cachedGym() {
+      const row = await db.gymCache.get('gym');
+      if (!row) return null;
+      const gym = readCachedGym(row.gym);
+      return gym === undefined ? null : { gym };
     },
 
     async counts() {
-      const [pendingSets, failedSets, pendingWorkouts, failedWorkouts, deletions] =
-        await Promise.all([
-          db.sets.where('syncStatus').equals('pending').count(),
-          db.sets.where('syncStatus').equals('failed').count(),
-          db.workouts.where('syncStatus').equals('pending').count(),
-          db.workouts.where('syncStatus').equals('failed').count(),
-          db.deletions.toArray(),
-        ]);
+      const [pendingSets, failedSets, pendingRows, failedWorkouts, deletions] = await Promise.all([
+        db.sets.where('syncStatus').equals('pending').count(),
+        db.sets.where('syncStatus').equals('failed').count(),
+        db.workouts.where('syncStatus').equals('pending').toArray(),
+        db.workouts.where('syncStatus').equals('failed').count(),
+        db.deletions.toArray(),
+      ]);
+      // An empty workout that was never sent is not waiting for anything.
+      const pendingWorkouts = (
+        await Promise.all(pendingRows.map(async (row) => !(await isEmptyAndUnsent(row))))
+      ).filter(Boolean).length;
       const failedDeletions = deletions.filter((d) => d.failed).length;
       return {
         pending: pendingSets + pendingWorkouts + (deletions.length - failedDeletions),
@@ -483,18 +555,27 @@ export function createLogStore(db: LocalDb, clock: () => number = Date.now): Log
     },
 
     async purgeSynced() {
-      return db.transaction('rw', db.workouts, db.sets, db.deletions, db.gymCache, async () => {
-        await db.gymCache.clear(); // gym names are the user's data too; they are fetched again at the next sign-in
-        await db.sets.where('syncStatus').equals('synced').delete();
-        const remainingSets = await db.sets.toArray();
-        const keep = new Set(remainingSets.map((s) => s.workoutId));
-        await db.workouts.filter((w) => w.syncStatus === 'synced' && !keep.has(w.id)).delete();
-        const [workouts, deletions] = await Promise.all([
-          db.workouts.count(),
-          db.deletions.count(),
-        ]);
-        return { remaining: workouts + remainingSets.length + deletions };
-      });
+      return db.transaction(
+        'rw',
+        db.workouts,
+        db.sets,
+        db.deletions,
+        db.gymCache,
+        db.coachMessages,
+        async () => {
+          await db.gymCache.clear(); // the gym is the user's data too; it is fetched again at the next sign-in
+          await db.coachMessages.clear(); // so is the chat with the coach
+          await db.sets.where('syncStatus').equals('synced').delete();
+          const remainingSets = await db.sets.toArray();
+          const keep = new Set(remainingSets.map((s) => s.workoutId));
+          await db.workouts.filter((w) => w.syncStatus === 'synced' && !keep.has(w.id)).delete();
+          const [workouts, deletions] = await Promise.all([
+            db.workouts.count(),
+            db.deletions.count(),
+          ]);
+          return { remaining: workouts + remainingSets.length + deletions };
+        },
+      );
     },
   };
 }

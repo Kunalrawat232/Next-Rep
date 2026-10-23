@@ -5,7 +5,8 @@ import { useLogStore, useSyncStatus } from '../sync';
 export type WorkoutState =
   | { status: 'loading' }
   | { status: 'none' }
-  | { status: 'open'; workout: StoredWorkout; sets: StoredSet[] };
+  | { status: 'open'; workout: StoredWorkout; sets: StoredSet[] }
+  | { status: 'error' };
 
 /** The open workout on this device, with its sets. `reload` reads it again after a change. */
 export function useWorkout(): { state: WorkoutState; reload: () => Promise<void> } {
@@ -25,12 +26,28 @@ export function useWorkout(): { state: WorkoutState; reload: () => Promise<void>
       .then((next) => {
         if (current) setState(next);
       })
-      .catch(ignoreClosed);
+      .catch((error: unknown) => {
+        try {
+          ignoreClosed(error);
+        } catch {
+          if (current) setState({ status: 'error' });
+        }
+      });
     return () => {
       current = false;
     };
   }, [load, pending, failed, syncing, pulledVersion]); // read again as sets reach the server, so statuses on screen stay true
 
-  const reload = useCallback(async () => setState(await load()), [load]);
+  const reload = useCallback(async () => {
+    try {
+      setState(await load());
+    } catch (error) {
+      try {
+        ignoreClosed(error);
+      } catch {
+        setState({ status: 'error' });
+      }
+    }
+  }, [load]);
   return { state, reload };
 }

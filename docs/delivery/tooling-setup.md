@@ -21,7 +21,7 @@ Downloads are verified against the published SHA-256 checksums before installing
 
 ## Claude Code plugins (`claude-plugins-official`)
 
-Installed: `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `playwright`, `supabase`, `vercel`, `github`, `context7`.
+This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the committed `.claude/settings.json` (12): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`. `playwright` and `supabase` were also installed during the 2026-10-08 setup but are not in the project settings, so they depend on the developer's own Claude Code install.
 
 Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin commands can only be run by the developer, not by Claude Code.
 
@@ -36,8 +36,7 @@ Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin comman
 ## Hooks (`.claude/settings.json`)
 
 - After `Edit`/`Write` on TypeScript under `src/`, `api/` or `tests/`: run eslint on the file and the project typecheck (`.claude/hooks/check-changed.sh`). Failures are fed back to Claude.
-- When a turn ends: run the unit tests and show failures (`.claude/hooks/run-tests.sh`), without blocking.
-- Deny reading local `.env*` files.
+- Deny reading the common local `.env` files (`.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`).
 - Git pre-commit: gitleaks (`.githooks/pre-commit`, activated by `npm install` through the `prepare` script).
 
 ## Accounts (all free)

@@ -80,6 +80,7 @@ describe("trouble on the server is not the rows' fault", () => {
   it('counts only a refusal of the row itself', async () => {
     const { store, server, worker, db } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected');
     await worker.run();
     expect(await db.workouts.get(w.id)).toMatchObject({ attempts: 1 });
@@ -102,6 +103,7 @@ describe('a workout whose gym is gone', () => {
   it('is not changed when the refusal has nothing to do with a gym (no gym on it)', async () => {
     const { store, server, worker, db } = setup();
     const w = await store.startWorkout(aWorkout({ gymId: null }));
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected');
     await worker.run();
     expect(await db.workouts.get(w.id)).toMatchObject({ gymId: null, attempts: 1 });
@@ -160,7 +162,7 @@ describe('removing a set that may already be on the server', () => {
     const { store } = setup();
     const { sets } = await withSets(store, 1);
     expect(await store.removeUnsyncedSet(sets[0]!.id)).toBe('removed');
-    expect(await store.counts()).toEqual({ pending: 1, failed: 0 }); // only the workout
+    expect(await store.counts()).toEqual({ pending: 0, failed: 0 }); // no delete owed, and the empty workout is not waiting either
   });
 
   it('queues the delete in the same step that marks a row synced, so no moment loses it', async () => {
@@ -214,6 +216,7 @@ describe('a forced run that arrives during an ordinary one', () => {
   it('is followed by a forced pass, so rows that were waiting are sent', async () => {
     const { store, server, worker } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected');
     await worker.run(); // now backing off
     server.calls.length = 0;

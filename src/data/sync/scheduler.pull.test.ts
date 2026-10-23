@@ -120,7 +120,8 @@ describe('pulling history after a push pass', () => {
       order.push('push');
       return { status: 'ok', value: undefined };
     });
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     scheduler.start();
     await settle();
     expect(order).toEqual(['push', 'pull']);

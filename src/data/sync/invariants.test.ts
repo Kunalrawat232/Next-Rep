@@ -17,7 +17,7 @@ function mulberry32(seed: number) {
 
 type Model = {
   workouts: Map<string, { endedAt: string | null }>;
-  sets: Set<string>; // logged and not removed
+  sets: Map<string, string>; // logged and not removed: set id -> its workout
 };
 
 async function scenario(seed: number, steps: number) {
@@ -33,7 +33,7 @@ async function scenario(seed: number, steps: number) {
     now: () => clock.now,
     batchSize: 1 + Math.floor(random() * 4),
   });
-  const model: Model = { workouts: new Map(), sets: new Set() };
+  const model: Model = { workouts: new Map(), sets: new Map() };
   const running: Promise<unknown>[] = [];
   let minute = 0;
   const stamp = () => new Date(Date.UTC(2026, 9, 10, 8, minute++)).toISOString();
@@ -46,9 +46,9 @@ async function scenario(seed: number, steps: number) {
       model.workouts.set(w.id, { endedAt: null });
     } else if (roll < 0.5) {
       const s = await store.logSet(aSet(pick(workoutIds), { id: uuid(), loggedAt: stamp() }));
-      model.sets.add(s.id);
+      model.sets.set(s.id, s.workoutId);
     } else if (roll < 0.58 && model.sets.size > 0) {
-      const id = pick([...model.sets]);
+      const id = pick([...model.sets.keys()]);
       if ((await store.removeUnsyncedSet(id)) === 'removed') model.sets.delete(id);
     } else if (roll < 0.64) {
       const id = pick(workoutIds);
@@ -89,12 +89,13 @@ describe('no set is ever lost, duplicated or orphaned', () => {
 
     // Every set the user kept is on the server, once, and not deleted.
     const live = [...server.sets.values()].filter((s) => !s.deletedAt).map((s) => s.id);
-    expect(live.sort()).toEqual([...model.sets].sort());
+    expect(live.sort()).toEqual([...model.sets.keys()].sort());
 
-    // Every workout is on the server with the end time it last had.
-    expect([...server.workouts.keys()].sort()).toEqual([...model.workouts.keys()].sort());
-    for (const [id, { endedAt }] of model.workouts)
-      expect(server.workouts.get(id)?.endedAt).toBe(endedAt);
+    // Every workout that has a set is on the server with the end time it last had. A workout with no sets is
+    // only sent with its first set, so it may or may not be there; the server never has one the user did not make.
+    for (const id of new Set(model.sets.values()))
+      expect(server.workouts.get(id)?.endedAt).toBe(model.workouts.get(id)?.endedAt);
+    for (const id of server.workouts.keys()) expect(model.workouts.has(id)).toBe(true);
 
     // No set sits on the server without its workout.
     for (const set of server.sets.values()) expect(server.workouts.has(set.workoutId)).toBe(true);

@@ -151,7 +151,8 @@ describe('stopping while a run is in flight', () => {
 
   it('does not leave the status saying it is still syncing', async () => {
     const { store, server, scheduler } = setup();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     const release = server.hold('upsertWorkouts');
     scheduler.start();
     await settle();
@@ -178,7 +179,8 @@ describe('stopping while a run is in flight', () => {
 
   it('a stop and quick restart while a run is held does not run two passes at once', async () => {
     const { store, server, scheduler } = setup();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     const release = server.hold('upsertWorkouts');
     scheduler.start();
     await settle();
@@ -199,6 +201,7 @@ describe('things that fail', () => {
     await settle();
     run.mockRejectedValueOnce(new Error('worker exploded'));
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     scheduler.notify();
     await settle();
     expect(scheduler.status().syncing).toBe(false);
@@ -212,7 +215,8 @@ describe('things that fail', () => {
     const { store, run, server, scheduler } = setup();
     scheduler.start();
     await settle();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     server.setOffline(true);
     scheduler.notify();
     await settle();
@@ -252,6 +256,7 @@ describe('things that fail', () => {
     await settle();
     counts.mockRestore();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     scheduler.notify();
     await settle();
     expect(server.workouts.has(w.id)).toBe(true);
@@ -260,12 +265,13 @@ describe('things that fail', () => {
 
   it('refresh keeps the last known counts when the database is closed', async () => {
     const { store, scheduler } = setup();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     await scheduler.refresh();
-    expect(scheduler.status().pending).toBe(1);
+    expect(scheduler.status().pending).toBe(2);
     vi.spyOn(store, 'counts').mockRejectedValue(new Error('closed'));
     await expect(scheduler.refresh()).resolves.toBeUndefined();
-    expect(scheduler.status().pending).toBe(1);
+    expect(scheduler.status().pending).toBe(2);
   });
 
   it('a manual retry whose store call rejects resolves quietly and starts no sync', async () => {
@@ -288,6 +294,7 @@ describe('things that fail', () => {
       if (s.syncing) throw new Error('UI bug');
     });
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     scheduler.notify();
     await settle();
     expect(server.workouts.has(w.id)).toBe(true);
@@ -328,7 +335,9 @@ describe('retry and refresh during a run', () => {
     scheduler.start();
     await settle();
     const other = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(other.id));
     const failed = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(failed.id));
     await db.workouts.update(failed.id, { syncStatus: 'failed', attempts: 8 });
     const release = server.hold('upsertWorkouts');
     scheduler.notify();
@@ -349,7 +358,9 @@ describe('retry and refresh during a run', () => {
     scheduler.start();
     await settle();
     const other = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(other.id));
     const failed = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(failed.id));
     await db.workouts.update(failed.id, { syncStatus: 'failed', attempts: 8 });
     const release = server.hold('upsertWorkouts');
     scheduler.notify();
@@ -367,7 +378,8 @@ describe('retry and refresh during a run', () => {
     const { store, server, scheduler } = setup();
     scheduler.start();
     await settle();
-    await store.startWorkout(aWorkout());
+    const started = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(started.id));
     const release = server.hold('upsertWorkouts');
     scheduler.notify();
     await settle();

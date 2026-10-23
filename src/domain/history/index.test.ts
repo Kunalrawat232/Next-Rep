@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '.';
+import {
+  dayLabel,
+  durationMinutes,
+  exercisesByRecency,
+  formatDuration,
+  groupByExercise,
+  topSet,
+} from '.';
 
 // Dates are built in local time, so the tests do not depend on the machine's time zone.
 const local = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m - 1, d, h, min);
@@ -90,5 +97,46 @@ describe('groupByExercise', () => {
     const copy = [...input];
     groupByExercise(input);
     expect(input).toEqual(copy);
+  });
+});
+
+describe('topSet', () => {
+  it('finds the heaviest set and counts the sets at that weight', () => {
+    const sets = [{ totalKg: 50 }, { totalKg: 60 }, { totalKg: 60 }, { totalKg: 55 }];
+    expect(topSet(sets)).toEqual({ top: sets[1], count: 2 });
+  });
+
+  it('compares in hundredths, so 60 and 60.001 are the same weight', () => {
+    expect(topSet([{ totalKg: 60 }, { totalKg: 60.001 }])?.count).toBe(2);
+  });
+
+  it('has no top set for no sets', () => {
+    expect(topSet([])).toBeNull();
+  });
+});
+
+describe('exercisesByRecency', () => {
+  const done = (exerciseId: string, loggedAt: Date) => ({
+    exerciseId,
+    loggedAt: loggedAt.toISOString(),
+  });
+
+  it('lists each exercise once, the one done last first, with when it was last done', () => {
+    const sets = [
+      done('bench', local(2026, 10, 1)),
+      done('squat', local(2026, 10, 3)),
+      done('bench', local(2026, 10, 5)),
+      done('bench', local(2026, 10, 2)),
+      done('curl', local(2026, 10, 4)),
+    ];
+    expect(exercisesByRecency(sets)).toEqual([
+      { exerciseId: 'bench', last: local(2026, 10, 5).toISOString() },
+      { exerciseId: 'curl', last: local(2026, 10, 4).toISOString() },
+      { exerciseId: 'squat', last: local(2026, 10, 3).toISOString() },
+    ]);
+  });
+
+  it('is empty when nothing was logged', () => {
+    expect(exercisesByRecency([])).toEqual([]);
   });
 });

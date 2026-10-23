@@ -5,7 +5,7 @@
 - **Challenge:** build ONE working product/MVP in one month, using AI as a development partner. The product does not have to be an AI product; what is judged is how well AI is used across the development lifecycle.
 - **Individual entry.** Substantial implementation must be the entrant's (with AI assistance), not other people's.
 - **Deadline:** 30 October 2026, end of day. **No changes after submission.**
-- **Internal feature freeze:** 25 October 2026.
+- **Internal feature freeze:** 25 October 2026. The plan and dates are single-sourced in the [roadmap](../plans/roadmap.md).
 
 ## Judging weights
 

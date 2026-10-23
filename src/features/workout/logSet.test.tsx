@@ -12,8 +12,8 @@ import {
 } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
-const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
+const NO_EZ: GymSnapshot = { barbellKg: 15, bars: [] };
 
 /** An open workout already on the device, then the log screen for an exercise. */
 async function openLog(exerciseId: string, snapshot: GymSnapshot = HOME, withSets: number[] = []) {
@@ -50,9 +50,9 @@ describe('logging a barbell set by tapping', () => {
     await user.click(await screen.findByRole('button', { name: 'Per side' }));
     await user.type(await weight(), '22.5');
     const card = screen.getByRole('region', { name: 'Weight breakdown' });
-    expect(card).toHaveTextContent('15 kg');
-    expect(card).toHaveTextContent('22.5 kg');
-    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('60 kg');
+    expect(card).toHaveTextContent('15 Kg');
+    expect(card).toHaveTextContent('22.5 Kg');
+    expect(within(card).getByText('Total').nextSibling).toHaveTextContent('60 Kg');
   });
 
   it('saves the total including the bar, the bar used, the mode and source tap', async () => {
@@ -84,7 +84,7 @@ describe('logging a barbell set by tapping', () => {
     expect(screen.getByRole('textbox', { name: /total/i })).toHaveValue('60');
   });
 
-  it('steps a total by 2.5 kg, a weight per side by 1.25 kg, and reps by one', async () => {
+  it('steps a total by 2.5 Kg, a weight per side by 1.25 Kg, and reps by one', async () => {
     const { user } = await openLog(BENCH);
     await user.type(await weight(), '60');
     await user.click(screen.getByRole('button', { name: /increase weight/i }));
@@ -194,13 +194,8 @@ describe('other equipment', () => {
 
   it('blocks an EZ bar exercise when the gym has no EZ bar, and links to set it', async () => {
     const { workout } = await openLog(EZ_CURL, NO_EZ);
-    expect(
-      await screen.findByRole('heading', { name: /no ez bar set for home gym/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Set the bar for this gym' })).toHaveAttribute(
-      'href',
-      `/gyms/${HOME_GYM.id}`,
-    );
+    expect(await screen.findByRole('heading', { name: /no ez bar set up/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Set up your bars' })).toHaveAttribute('href', '/gym');
     expect(screen.queryByRole('button', { name: 'Log set' })).not.toBeInTheDocument();
     expect(workout.id).toBeTruthy();
   });

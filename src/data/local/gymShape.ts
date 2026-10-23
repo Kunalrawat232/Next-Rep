@@ -10,12 +10,9 @@ const BarShape = z.object({
   weightKg: finite,
   kind: z.enum(['ez_bar', 'smith', 'other']),
 });
-const SnapshotShape = z.object({ name: z.string(), barbellKg: finite, bars: z.array(BarShape) });
-const GymShape = SnapshotShape.extend({
-  id: z.string(),
-  isDefault: z.boolean(),
-  createdAt: z.string(),
-});
+// Copies saved before the name and the default flag were removed still parse: extra fields are dropped.
+const SnapshotShape = z.object({ barbellKg: finite, bars: z.array(BarShape) });
+const GymShape = SnapshotShape.extend({ id: z.string() });
 
 /** What was saved on the device is read back with a check: a damaged copy is treated as missing, never trusted. */
 export function readGymSnapshot(value: unknown): GymSnapshot | null {
@@ -23,7 +20,9 @@ export function readGymSnapshot(value: unknown): GymSnapshot | null {
   return parsed.success ? parsed.data : null;
 }
 
-export function readGymList(value: unknown): Gym[] | null {
-  const parsed = z.array(GymShape).safeParse(value);
-  return parsed.success ? parsed.data : null;
+/** `undefined` for a damaged copy; `null` is a valid copy that says there is no gym. */
+export function readCachedGym(value: unknown): Gym | null | undefined {
+  if (value === null) return null;
+  const parsed = GymShape.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ignoreClosed } from '../../data/local';
 import { recordMarks, type RecordKind } from '../../domain/records';
+import { useUnit } from '../settings/UnitProvider';
 import { useLogStore, useSyncStatus } from '../sync';
 
 const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
@@ -12,10 +13,20 @@ const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
  * every set that was already there, and the badges do not blink off.
  */
 export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, RecordKind> {
+  return useRecordMarksState(exerciseIds).marks;
+}
+
+/** The same, and whether the first read has finished, so a screen can wait for its badges instead of showing them late. */
+export function useRecordMarksState(exerciseIds: string[]): {
+  marks: ReadonlyMap<string, RecordKind>;
+  loaded: boolean;
+} {
   const store = useLogStore();
+  const { unit } = useUnit();
   const { pending, failed, syncing, pulledVersion } = useSyncStatus();
   const idsKey = [...new Set(exerciseIds)].sort().join(',');
   const [marks, setMarks] = useState<ReadonlyMap<string, RecordKind>>(EMPTY);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     if (idsKey === '') return;
@@ -23,20 +34,24 @@ export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, Recor
     store
       .setsForExercises(idsKey.split(','))
       .then((sets) => {
-        if (current) setMarks(recordMarks(sets));
+        if (!current) return;
+        setMarks(recordMarks(sets, unit));
+        setDone(true);
       })
       .catch((error: unknown) => {
         try {
           ignoreClosed(error);
         } catch {
           // Badges are an extra: if the read fails, the sets are shown without them.
-          if (current) setMarks(EMPTY);
+          if (!current) return;
+          setMarks(EMPTY);
+          setDone(true);
         }
       });
     return () => {
       current = false;
     };
-  }, [store, idsKey, pending, failed, syncing, pulledVersion]);
+  }, [store, unit, idsKey, pending, failed, syncing, pulledVersion]);
 
-  return idsKey === '' ? EMPTY : marks;
+  return { marks: idsKey === '' ? EMPTY : marks, loaded: idsKey === '' || done };
 }

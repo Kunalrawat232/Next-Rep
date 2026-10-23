@@ -29,6 +29,7 @@ describe('corrupt rows already in IndexedDB', () => {
   it('a workout without startedAt does not stop the outbox from listing the healthy workouts', async () => {
     const { store, db } = freshLocal();
     const good = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(good.id));
     await db.workouts.put(rawWorkout({ startedAt: undefined }));
     const due = await store.outbox.dueWorkouts(Number.MAX_SAFE_INTEGER).catch(() => null);
     expect(due?.map((w) => w.id)).toContain(good.id);
@@ -70,6 +71,7 @@ describe('outbox timing', () => {
   ])('%s', async (_l, nextAttemptAt, now, due) => {
     const { store, db } = freshLocal();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await db.workouts.update(w.id, { nextAttemptAt });
     expect((await store.outbox.dueWorkouts(now)).length).toBe(due ? 1 : 0);
   });
@@ -77,6 +79,7 @@ describe('outbox timing', () => {
   it('a row deferred by a clock that was wrong is due again once the clock is right', async () => {
     const { store } = freshLocal();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     const farFuture = Date.UTC(2030, 0, 1);
     await store.outbox.recordFailure('workout', { id: w.id, rev: w.rev }, 'rejected', farFuture);
     // the device clock is now corrected back to 2026
@@ -287,7 +290,11 @@ describe('workouts', () => {
     const { store } = freshLocal();
     const same = '2026-10-10T10:00:00.000Z';
     const made = [];
-    for (let i = 0; i < 20; i++) made.push(await store.startWorkout(aWorkout({ startedAt: same })));
+    for (let i = 0; i < 20; i++) {
+      const w = await store.startWorkout(aWorkout({ startedAt: same }));
+      await store.logSet(aSet(w.id));
+      made.push(w);
+    }
     const first = (await store.activeWorkout())?.id;
     expect(made.map((w) => w.id)).toContain(first);
     expect((await store.activeWorkout())?.id).toBe(first);

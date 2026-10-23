@@ -20,10 +20,15 @@ test.describe('sign in', () => {
     await page.getByLabel('Email').fill(email!);
     await page.getByLabel('Password').fill(password!);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await expect(page.getByText(`Signed in as ${email!.toLowerCase()}`)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: /Ready to lift\?|Welcome to Next Rep/ }),
+    ).toBeVisible();
+
+    await page.goto('/settings');
+    await expect(page.getByText(email!.toLowerCase())).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText(`Signed in as ${email!.toLowerCase()}`)).toBeVisible();
+    await expect(page.getByText(email!.toLowerCase())).toBeVisible();
 
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();

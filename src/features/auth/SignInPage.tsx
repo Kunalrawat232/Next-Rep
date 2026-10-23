@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { Button, Logo, TextField } from '../../components';
+import { Button, cardClasses, ErrorMessage, Logo, TextField } from '../../components';
 import { useAuth } from './AuthProvider';
 import { messageFor } from './authErrors';
 import {
@@ -10,6 +10,7 @@ import {
   type CredentialErrors,
 } from './authSchema';
 import type { AuthFailure, AuthResult } from './types';
+import { usePending } from '../../lib/usePending';
 
 // A path inside this app: one slash, then plain path characters. No second slash or backslash, which
 // browsers read as another host, and no control characters or spaces.
@@ -34,7 +35,7 @@ export function SignInPage() {
   const [fieldErrors, setFieldErrors] = useState<CredentialErrors>({});
   const [failure, setFailure] = useState<AuthFailure | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
-  const [pending, setPending] = useState(false);
+  const { pending, begin, end } = usePending();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
@@ -62,7 +63,7 @@ export function SignInPage() {
       return;
     }
     setFieldErrors({});
-    setPending(true);
+    if (!begin()) return;
     let outcome: AuthResult;
     try {
       outcome = signingUp
@@ -71,7 +72,7 @@ export function SignInPage() {
     } catch {
       outcome = { status: 'error', reason: 'unknown' }; // a service that rejects must not leave the form stuck
     }
-    setPending(false);
+    end();
 
     if (outcome.status === 'error') setFailure(outcome.reason);
     if (outcome.status === 'confirm_email') setCheckEmail(true);
@@ -118,16 +119,9 @@ export function SignInPage() {
             error={fieldErrors.password}
           />
 
-          {failure && (
-            <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-              {messageFor(failure)}
-            </p>
-          )}
+          {failure && <ErrorMessage>{messageFor(failure)}</ErrorMessage>}
           {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
-          <p
-            role="status"
-            className={checkEmail ? 'rounded-md border border-line bg-surface-200 p-4' : undefined}
-          >
+          <p role="status" className={checkEmail ? cardClasses('') : undefined}>
             {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
           </p>
 

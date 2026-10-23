@@ -1,7 +1,7 @@
 // Shared domain types and Zod schemas for sets and workouts.
 // They mirror the database constraints in supabase/migrations/0001_init.sql.
 import { z } from 'zod';
-import { roundKg } from './weight';
+import { roundKg } from './weight/index.js';
 
 export const EQUIPMENT_TYPES = [
   'barbell',

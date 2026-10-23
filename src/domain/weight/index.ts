@@ -4,7 +4,8 @@
 const MAX_PRECISION_FACTOR = 100; // weights are stored with up to 2 decimals
 
 export function roundKg(kg: number): number {
-  return Math.round(kg * MAX_PRECISION_FACTOR) / MAX_PRECISION_FACTOR;
+  // toPrecision drops binary noise first, so 1.005 (stored as 1.00499999…) rounds up to 1.01.
+  return Math.round(Number((kg * MAX_PRECISION_FACTOR).toPrecision(12))) / MAX_PRECISION_FACTOR;
 }
 
 function assertValidKg(value: number, name: string): void {

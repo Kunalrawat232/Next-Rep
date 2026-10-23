@@ -1,6 +1,6 @@
 # Design system
 
-The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off on 2026-10-08. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
+The Next Rep design system (colours, typography, spacing, core components) and logo were created in **Claude Design** and handed off on 2026-10-08. The saved handoff (tokens plus 14 artboards) is in [`handoff/2026-10-08/`](handoff/2026-10-08/); the second handoff of 2026-10-09 (60 artboards) is in [`handoff/2026-10-09/`](handoff/2026-10-09/). Decisions on how it is applied are in [ADR-008](../architecture/decisions/008-design-tokens-and-theming.md).
 
 ## Direction
 
@@ -26,12 +26,37 @@ The source of truth in code is `src/index.css` (`@theme` for dark, `[data-theme=
 
 Type: Geist (self-hosted, variable). Styles `display` 40/44, `title` 28/34, `headline` 20/26, `body` 17/24, `callout` 15/20, `caption` 13/18, `metric` 56/60. Spacing 8/16/24/32. Radii `sm` 8, `md` 14, `full` 999. Use them as Tailwind utilities (`bg-surface-200`, `text-ink-muted`, `border-line`, `text-title`, `rounded-md`).
 
+## Glass
+
+Surfaces are translucent glass over a soft colour layer (`#ambient`, fixed behind the app), set in the tokens block of `src/index.css` for both themes: `--glass-fill`, `--glass-fill-strong`, `--glass-line` (the `border-glass-line` colour), `--glass-highlight`, `--glass-shadow`, `--glass-blur`, `--ambient-a/b/c`. Use `glass-flat` for cards, buttons, chips and pills (no blur, so cheap in long lists) and `glass` for the few overlays that sit over scrolling content (bars, dialogs). `Card`, `Button` and `Chip` already do. Text colours must keep 4.5:1 on the glass over the brightest ambient glow; `tests/design/tokens.test.ts` checks it. On phones the tab bar is a floating rounded glass dock, and three small floating elements are liquid glass lenses (liquid-gl: the dock, the Workout button and the sticky rest pill; one config in `src/lib/liquidGlass.ts`, a Settings switch). Use `useLiquidGlass(ref, 'round' | 'dock')` on a new element only if it is small, rounded and fixed or sticky. See [ADR-016](../architecture/decisions/016-liquid-glass.md).
+
+## Loaders
+
+A screen waiting for data shows a skeleton of what is coming (a title and glass cards of shimmering blocks), not a word: `LoadingMessage` (`variant="page"`, the default). Inside a card, `LoadingMessage variant="inline"` is a ring with two short blocks. While the app starts and finds out who is signed in, `FullPageLoader` shows the mark inside a turning ring. Every loader fades in after 200 ms (`.loader-in`), so data that arrives at once shows no loader at all; the shimmer and the ring stand still when the person asked for less motion; and each is one announced status with a hidden label (the visible picture is not read out). Build any new loader from `Skeleton` and `Spinner` in `src/components/Loading.tsx`.
+
+**One loader per screen, then the whole screen at once.** A screen lists everything it needs (its own data, the exercise list, record badges, the demonstration data, the gym, a first download of history) and shows the loader until all of it has settled, so nothing fills in or swaps later and the layout does not jump. Data from the server is waited for, but only up to 8 seconds (`within` and `SERVER_WAIT_MS` in `src/lib/withTimeout.ts`): after that the screen is drawn with what it has (the saved gym, the built-in exercises) and says that part is offline. `useSettled` (`src/lib/useSettled.ts`) keeps a screen from going back to the loader on a later background re-read, which would throw away what the person typed.
+
 ## Shared components
 
-Built so far, in `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below). Keep these names identical in code and in Claude Design; the rest come with their features:
+Keep these names identical in code and in Claude Design.
 
-`VoiceButton`, `TranscriptBubble`, `SetConfirmCard`, `WeightBreakdown`, `AmbiguityPrompt`, `SetRow`, `SyncBadge`, `RestTimer`, `ExercisePicker`, `ProgressChart`, `PRBadge`, `SuggestionCard`, `OfflineBanner`.
+**Built** (generic ones in `src/components/`, feature ones next to their feature):
+
+- `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below, floating mic as the phone's Workout entry), `Chip`, `BackLink`, `Switch`, and the shared boxes and messages listed in the next section.
+- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer` and `OfflineBanner` (`src/features/workout`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`).
+
+**Not built yet:** `VoiceButton` (the workout screen has a disabled voice button), `TranscriptBubble`, `SetConfirmCard` (the confirm step for voice sets), `SuggestionCard` (today's suggestion is plain markup on Home, not a component). Status: planned (Phase 3), not built yet, for the three voice ones.
 
 ## Status
 
-Tokens, font, logo, PWA icons, shell, sign-in and home are applied. Not yet designed: gym setup, history, settings, exercise picker, sign-up, empty and error states (due 11 to 15 Oct). The light theme exists in CSS but has no switch until Settings. Run `/design-sync` once the first real feature components exist.
+As of 2026-10-10: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch) and the empty, loading and error states are applied. Not applied: the voice screens and prompts that need voice (listening, parsing, `SetConfirmCard`) and the offline-banner variants for voice, which are planned for Phase 3. Home, settings, units and the shared components below are on `feat/home`, not yet merged. Run `/design-sync` once the first real feature components exist.
+
+## Shared UI components (`src/components`)
+
+Screens are built from these and never copy their classes (`src/components/noCopies.test.ts` fails if they come back):
+
+- `Card` and `cardClasses`: the bordered box. The border colour is its tone (normal, `danger`, `warning`, `success`, `accent`). Callers add only layout classes (`flex flex-col gap-3`): border, background, radius and padding are fixed, because when two Tailwind utilities conflict the stylesheet decides, not their order, so a caller cannot override them.
+- `ErrorMessage` (red box; with `onRetry` it holds a Try again button), `RetryMessage` (plain, with Try again), `LoadingMessage`, `EmptyState` (title, message, ways forward), `NotFound` (title, message, way back), `PageHeader` (back link, title, optional action), `Section` (titled card labelled by its heading), `Switch`, `Button`, `Chip`, `TextField`, `BackLink`.
+- Wrappers do not add landmarks or accessible names of their own: an unlabelled box is not a region.
+
+Left as they are on purpose: an error box with its button outside it (`GymsLoadError` and four pages), the retry messages in Settings and the sign-out panel (their own text style), the sign-in route's loading line, the Choose exercise header (a close link, not a back link), the list of problems on the log screen and the gym form's bar rows (no background).

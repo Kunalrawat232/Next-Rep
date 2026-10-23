@@ -36,7 +36,12 @@ export function createSupabaseExerciseService(client: Client): ExerciseService {
         muscle: row.muscle,
         aliases: row.aliases,
       }));
-      return { status: 'ok', value: parseExercises(rows, 'custom') };
+      try {
+        return { status: 'ok', value: parseExercises(rows, 'custom') };
+      } catch {
+        // A row the app's own rules refuse (a name too long, a repeated alias) is a bad answer, not a crash.
+        return { status: 'error', reason: 'unknown' };
+      }
     },
 
     async create(userId, exerciseId, input) {

@@ -4,10 +4,14 @@ import type { GymSnapshot } from '../../data/local/types';
 import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
 import { aSet, aWorkout } from '../../test/localDb';
+import { tapTogether } from '../../test/doubleTap';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
 type Seed = { status?: 'pending' | 'synced' | 'failed'; totalKg?: number };
 
@@ -158,28 +162,29 @@ describe('the sync badge', () => {
 
 describe('the offline banner', () => {
   it('shows that tap logging works and voice needs internet, only when offline', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', class {});
     const { unmount } = await openWith([]);
-    expect(await screen.findByRole('button', { name: /voice logging/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /tap to speak/i })).toBeEnabled();
     expect(screen.queryByText(/you are offline/i)).not.toBeInTheDocument();
     unmount();
     goOffline();
     await openWith([]);
     expect(await screen.findByText(/you are offline/i)).toBeInTheDocument();
     expect(screen.getAllByText(/tap logging works/i).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /unavailable offline/i })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: /tap to speak/i })).toBeDisabled();
   });
 });
 
-describe('signing out from Home', () => {
+describe('signing out from Settings', () => {
   it('clears what the server already has from this device', async () => {
-    const { user, db, workout } = await openWith([{ status: 'synced' }], '/');
+    const { user, db, workout } = await openWith([{ status: 'synced' }], '/settings');
     await db.workouts.update(workout.id, { syncStatus: 'synced' });
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     await waitFor(async () => expect(await db.sets.count()).toBe(0));
   });
 
   it('warns about sets still waiting, and can stay signed in', async () => {
-    const { user, db } = await openWith([{ status: 'pending' }], '/', offline());
+    const { user, db } = await openWith([{ status: 'pending' }], '/settings', offline());
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     const group = await screen.findByRole('group', { name: 'Sets waiting' });
     expect(group).toHaveTextContent(/still waiting to sync/i);
@@ -190,25 +195,25 @@ describe('signing out from Home', () => {
 
   it('signs out only once when Sign out is tapped twice quickly', async () => {
     // Everything is already on the server, so there is nothing to warn about.
-    const { user, auth, db, workout } = await openWith([{ status: 'synced' }], '/', offline());
+    const { auth, db, workout } = await openWith([{ status: 'synced' }], '/settings', offline());
     await db.workouts.update(workout.id, { syncStatus: 'synced' });
-    await user.dblClick(await screen.findByRole('button', { name: /sign out/i }));
+    tapTogether(await screen.findByRole('button', { name: /sign out/i }));
     await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(auth.service.signOut).toHaveBeenCalledTimes(1);
   });
 
   it('signs out only once when Sign out anyway is tapped twice quickly', async () => {
-    const { user, auth } = await openWith([{ status: 'pending' }], '/', offline());
+    const { user, auth } = await openWith([{ status: 'pending' }], '/settings', offline());
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
-    await user.dblClick(await screen.findByRole('button', { name: 'Sign out anyway' }));
+    tapTogether(await screen.findByRole('button', { name: 'Sign out anyway' }));
     await waitFor(() => expect(auth.service.signOut).toHaveBeenCalled());
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(auth.service.signOut).toHaveBeenCalledTimes(1);
   });
 
   it('signs out anyway on request, and keeps the waiting sets on the device', async () => {
-    const { user, db, auth } = await openWith([{ status: 'pending' }], '/', offline());
+    const { user, db, auth } = await openWith([{ status: 'pending' }], '/settings', offline());
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     await user.click(await screen.findByRole('button', { name: 'Sign out anyway' }));
     await waitFor(() => expect(auth.service.signOut).toHaveBeenCalledTimes(1));

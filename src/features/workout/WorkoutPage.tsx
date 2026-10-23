@@ -1,137 +1,146 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { BackLink, Button, buttonClasses } from '../../components';
+import {
+  Button,
+  buttonClasses,
+  Card,
+  cardClasses,
+  ChevronDown,
+  ErrorMessage,
+  LoadingMessage,
+  PageHeader,
+} from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
-import { formatKg, pickDefaultGym } from '../../domain/gyms';
+import { defaultBarbellKg, summarizeBars } from '../../domain/gyms';
 import { useOnline } from '../../lib/useOnline';
+import { useAuth } from '../auth';
 import { useExerciseService, useExercises } from '../exercises';
+import { useGymService } from '../gyms';
 import { SyncBadge, useLogStore, useSyncControls } from '../sync';
 import { OfflineBanner } from './OfflineBanner';
 import { SetList } from './SetList';
 import { useFreshGym } from './useFreshGym';
-import { PrBadge, useRecordMarks } from '../progress';
+import { PrBadge, useRecordMarksState } from '../progress';
 import { setSummary } from '../../domain/workout';
 import { exerciseQuery, useExerciseParam } from './useExerciseParam';
-import { useGymCatalog } from './useGymCatalog';
+import { RestTimer } from './RestTimer';
+import { VoiceLogger } from './VoiceLogger';
+import { useMyGym } from './useMyGym';
+import { useRestTimer } from './useRestTimer';
 import { useWorkout } from './useWorkout';
+import { usePending } from '../../lib/usePending';
+import { useSettled } from '../../lib/useSettled';
+import { useUnit } from '../settings/UnitProvider';
+import { withUnit } from '../../domain/units';
 
 export function WorkoutPage() {
   const { state, reload } = useWorkout();
-  if (state.status === 'loading')
+  if (state.status === 'loading') return <LoadingMessage />;
+  if (state.status === 'error')
     return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
+      <ErrorMessage onRetry={() => void reload()}>
+        Could not read your workout from this device.
+      </ErrorMessage>
     );
   if (state.status === 'none') return <StartWorkout onStarted={reload} />;
   return <ActiveWorkout workout={state.workout} sets={state.sets} reload={reload} />;
 }
 
 function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
-  const { catalog, reload } = useGymCatalog();
+  const { unit } = useUnit();
+  const { state: auth } = useAuth();
+  const service = useGymService();
+  const { catalog, reload, saved } = useMyGym();
   const store = useLogStore();
   const { notify } = useSyncControls();
-  const [chosen, setChosen] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
-  const [starting, setStarting] = useState(false);
+  const { pending: starting, begin: beginStart, end: endStart } = usePending();
   // One id for this screen, so a second tap starts the same workout instead of another one.
   const workoutId = useRef(crypto.randomUUID());
+  // Likewise for the gym made on the first workout, so a retry finishes the job instead of making a second.
+  const newGymId = useRef(crypto.randomUUID());
 
-  async function start(gymId: string) {
-    if (catalog.status !== 'ready' || starting) return;
-    const gym = catalog.gyms.find((g) => g.id === gymId);
-    if (!gym) return;
+  async function start() {
+    if (catalog.status !== 'ready' || auth.status !== 'signedIn') return;
     setProblem(null);
-    setStarting(true);
+    if (!beginStart()) return;
     try {
+      let gym = catalog.gym;
+      if (!gym) {
+        // The first workout sets the gym up with a standard barbell; Settings changes it.
+        const input = { barbellKg: defaultBarbellKg(unit), bars: [] };
+        const result = await service.save(auth.user.id, newGymId.current, input);
+        if (result.status !== 'ok') {
+          if (result.reason === 'conflict') reload();
+          setProblem(
+            result.reason === 'offline'
+              ? "You're offline. Setting up your gym needs a connection once, so connect and try again."
+              : result.reason === 'conflict'
+                ? 'Your gym was just set up on another device. Try again.'
+                : 'Could not set up your gym. Please try again.',
+          );
+          endStart();
+          return;
+        }
+        gym = { id: newGymId.current, ...input };
+        saved(gym);
+      }
       await store.startWorkout({
         id: workoutId.current,
         gymId: gym.id,
         startedAt: new Date().toISOString(),
-        gymSnapshot: { name: gym.name, barbellKg: gym.barbellKg, bars: gym.bars },
+        gymSnapshot: { barbellKg: gym.barbellKg, bars: gym.bars },
       });
       notify();
       await onStarted();
     } catch {
       setProblem('Could not start the workout. Please try again.');
-      setStarting(false);
+      endStart();
     }
   }
 
+  // One loader until the gym has arrived, then the whole screen at once.
+  if (catalog.status === 'loading') return <LoadingMessage>Loading your gym…</LoadingMessage>;
+
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/" />
-        <h1 className="text-title font-semibold">Workout</h1>
-      </header>
+      <PageHeader back="/" title="Workout" />
       <OfflineBanner />
 
-      {catalog.status === 'loading' && (
-        <p role="status" className="text-ink-muted">
-          Loading your gyms…
-        </p>
-      )}
       {catalog.status === 'error' && (
         <div className="flex flex-col items-start gap-4">
-          <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-            Could not load your gyms. Connect once to load them, and they stay available offline.
-          </p>
+          <ErrorMessage>
+            Could not load your gym. Connect once to load it, and it stays available offline.
+          </ErrorMessage>
           <Button variant="secondary" onClick={reload}>
             Try again
           </Button>
         </div>
       )}
-      {catalog.status === 'ready' && catalog.gyms.length === 0 && (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">Add a gym first</h2>
-          <p className="text-callout text-ink-muted">
-            A workout needs a gym, so the bar weight is added to every weight you log.
-          </p>
-          <Link to="/gyms/new" className={buttonClasses('primary')}>
-            Add a gym
-          </Link>
-        </section>
-      )}
-      {catalog.status === 'ready' && catalog.gyms.length > 0 && (
+      {catalog.status === 'ready' && (
         <>
           {catalog.fromCache && (
-            <p className="text-caption text-ink-muted">Using the gyms saved on this device.</p>
+            <p className="text-caption text-ink-muted">Using the gym saved on this device.</p>
           )}
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-callout font-medium">Where are you training?</legend>
-            {catalog.gyms.map((gym) => {
-              const selected = (chosen ?? pickDefaultGym(catalog.gyms)?.id) === gym.id;
-              return (
-                <label
-                  key={gym.id}
-                  className={`flex min-h-touch items-center gap-3 rounded-md border p-4 ${selected ? 'border-accent' : 'border-line'}`}
-                >
-                  <input
-                    type="radio"
-                    name="gym"
-                    checked={selected}
-                    onChange={() => setChosen(gym.id)}
-                    className="size-5 accent-[var(--color-accent)]"
-                  />
-                  <span>
-                    <span className="block text-body font-semibold">{gym.name}</span>
-                    <span className="block text-callout text-ink-muted">
-                      Barbell {formatKg(gym.barbellKg)} kg
-                    </span>
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
-          {problem && (
-            <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-              {problem}
-            </p>
-          )}
-          <Button
-            disabled={starting}
-            onClick={() => void start(chosen ?? pickDefaultGym(catalog.gyms)!.id)}
-          >
+          <Card as="section" aria-label="Your bars" className="flex flex-col gap-2">
+            {catalog.gym ? (
+              <>
+                <p className="text-callout text-ink-muted">Bars added to your weights</p>
+                <p className="text-body font-semibold">{summarizeBars(catalog.gym, unit)}</p>
+                <Link to="/gym" className="min-h-touch content-center font-semibold text-accent">
+                  Change bars
+                </Link>
+              </>
+            ) : (
+              <p className="text-callout text-ink-muted">
+                Next Rep adds the bar to every weight you log. It starts with a standard{' '}
+                {withUnit(defaultBarbellKg(unit), unit)} barbell, and you can change it any time in
+                Settings.
+              </p>
+            )}
+          </Card>
+          {problem && <ErrorMessage>{problem}</ErrorMessage>}
+          <Button disabled={starting} onClick={() => void start()}>
             Start workout
           </Button>
         </>
@@ -143,6 +152,7 @@ function StartWorkout({ onStarted }: { onStarted: () => Promise<void> }) {
 type ActiveProps = { workout: StoredWorkout; sets: StoredSet[]; reload: () => Promise<void> };
 
 function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
+  const { unit } = useUnit();
   const navigate = useNavigate();
   const exerciseId = useExerciseParam();
   const exercises = useExercises(useExerciseService());
@@ -151,9 +161,13 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const online = useOnline();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [undoing, setUndoing] = useState(false);
+  const { pending: undoing, begin: beginUndo, end: endUndo } = usePending();
   useFreshGym(workout, reload);
-  const marks = useRecordMarks(sets.map((s) => s.exerciseId));
+  const rest = useRestTimer(workout.id);
+  const { marks, loaded: marksLoaded } = useRecordMarksState(sets.map((s) => s.exerciseId));
+  // One loader until the exercise names and the record badges are here, so nothing fills in later.
+  const settled = useSettled(exercises.state.status !== 'loading' && marksLoaded);
+  if (!settled) return <LoadingMessage />;
 
   const nameOf = (id: string) =>
     exercises.state.status === 'ready'
@@ -166,9 +180,8 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
   const lastIsSynced = last?.syncStatus === 'synced';
 
   async function undo() {
-    if (!last || undoing) return;
+    if (!last || !beginUndo()) return;
     setProblem(null);
-    setUndoing(true);
     try {
       // The list on screen can be a moment behind the sync, so the set is read again first.
       const latest = (await store.listSets(workout.id)).at(-1);
@@ -188,13 +201,15 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       ignoreClosed(error);
       setProblem('Could not undo that set. Please try again.');
     } finally {
-      setUndoing(false);
+      endUndo();
     }
   }
 
   async function end() {
     try {
-      await store.endWorkout(workout.id, new Date().toISOString());
+      // A workout with no sets is not kept (see `finishWorkout`).
+      await store.finishWorkout(workout.id, new Date().toISOString());
+      rest.stop();
       notify();
       navigate('/');
     } catch {
@@ -210,33 +225,42 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         <div className="flex items-center justify-between gap-2">
           <Link
             to={`/workout/exercise${query}`}
-            className="flex min-h-touch items-center gap-2 text-title font-semibold"
+            className="flex min-h-touch min-w-0 items-center gap-2 text-title font-semibold"
           >
-            {exerciseId ? nameOf(exerciseId) : 'Choose exercise'}
+            <span className="min-w-0 break-words">
+              {exerciseId ? nameOf(exerciseId) : 'Choose exercise'}
+            </span>
+            <ChevronDown className="shrink-0 text-ink-muted" />
           </Link>
           {confirmingEnd ? null : (
-            <Button variant="secondary" onClick={() => setConfirmingEnd(true)}>
+            <Button
+              variant="secondary"
+              className="shrink-0 whitespace-nowrap"
+              onClick={() => setConfirmingEnd(true)}
+            >
               End workout
             </Button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {gym && (
-            <p className="inline-flex h-8 items-center rounded-full border border-line bg-surface-200 px-3 text-caption font-medium">
-              {gym.name} · {formatKg(gym.barbellKg)} kg bar
+            <p className="inline-flex h-8 items-center rounded-full border border-glass-line glass-flat px-3 text-caption font-medium">
+              {withUnit(gym.barbellKg, unit)} bar
             </p>
           )}
           <SyncBadge />
         </div>
       </header>
+      {/* Outside the header, so it can stay in view at the top while the sets list scrolls. */}
+      <RestTimer timer={rest} />
 
       {confirmingEnd && (
-        <div
-          role="group"
-          aria-label="End workout"
-          className="flex flex-col gap-4 rounded-md border border-danger bg-surface-200 p-4"
-        >
-          <p>End this workout? You can start a new one afterwards.</p>
+        <Card tone="danger" role="group" aria-label="End workout" className="flex flex-col gap-4">
+          <p>
+            {sets.length === 0
+              ? 'This workout has no sets, so it will not be saved. End it?'
+              : 'End this workout? You can start a new one afterwards.'}
+          </p>
           <div className="flex gap-2">
             <Button variant="danger" onClick={() => void end()}>
               Yes, end it
@@ -245,19 +269,16 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
               Keep going
             </Button>
           </div>
-        </div>
+        </Card>
       )}
 
       <OfflineBanner />
 
       {last && marks.get(last.id) && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-md border border-success bg-surface-200 p-4"
-        >
+        <p role="status" className={cardClasses('flex items-center gap-2', 'success')}>
           <PrBadge kind={marks.get(last.id)!} />
           <span>
-            New personal record: {nameOf(last.exerciseId)}, {setSummary(last).headline}
+            New personal record: {nameOf(last.exerciseId)}, {setSummary(last, unit).headline}
           </span>
         </p>
       )}
@@ -267,9 +288,9 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
       )}
       {exerciseId && (
         <SetList
-          title={nameOf(exerciseId)}
+          title="Sets so far"
           sets={selected}
-          empty="No sets yet. Tap instead to log one."
+          empty="No sets yet. Log your first set below."
           marks={marks}
         />
       )}
@@ -282,29 +303,28 @@ function ActiveWorkout({ workout, sets, reload }: ActiveProps) {
         />
       ))}
 
-      {problem && (
-        <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-          {problem}
-        </p>
-      )}
+      {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
       <div className="flex flex-col gap-3">
-        <Button disabled aria-describedby="voice-note" className="w-full">
-          {online ? 'Voice logging coming soon' : 'Voice logging unavailable offline'}
-        </Button>
-        <p id="voice-note" className="text-caption text-ink-muted">
-          {online
-            ? 'Say a set, and it is logged for you.'
-            : 'Voice needs internet. Tap logging works.'}
-        </p>
+        {exercises.state.status === 'ready' && (
+          <VoiceLogger
+            workout={workout}
+            exerciseId={exerciseId ?? null}
+            exercises={exercises.state.exercises}
+            rest={rest}
+            sets={sets}
+            onUndo={undo}
+            onLogged={reload}
+          />
+        )}
         {exerciseId ? (
-          <Link to={`/workout/log${query}`} className={buttonClasses('primary', 'w-full')}>
+          <Link to={`/workout/log${query}`} className={buttonClasses('secondary', 'w-full')}>
             Tap instead
           </Link>
         ) : (
-          <span aria-disabled="true" className={buttonClasses('primary', 'w-full opacity-60')}>
-            Tap instead
-          </span>
+          <Link to="/workout/exercise" className={buttonClasses('secondary', 'w-full')}>
+            Pick an exercise
+          </Link>
         )}
         <Button
           variant="secondary"

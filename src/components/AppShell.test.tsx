@@ -28,13 +28,15 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it.each(['Settings'])('%s is not a link yet, and says why', (name) => {
+  it.each([
+    ['Home', '/'],
+    ['History', '/history'],
+    ['Progress', '/progress'],
+    ['Settings', '/settings'],
+  ])('links %s to %s', (name, href) => {
     renderShell();
-    expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    const item = within(nav).getByText(name).closest('[aria-disabled="true"]');
-    expect(item).not.toBeNull();
-    expect(item).toHaveTextContent('coming soon');
+    expect(within(nav).getByRole('link', { name })).toHaveAttribute('href', href);
   });
 
   it('links Workout in the sidebar to the workout page', () => {
@@ -43,11 +45,38 @@ describe('AppShell', () => {
     expect(within(nav).getByRole('link', { name: 'Workout' })).toHaveAttribute('href', '/workout');
   });
 
-  it('offers a floating mic button as the phone entry to Workout', () => {
+  it('offers a floating Workout button as the phone entry to Workout', () => {
     renderShell();
     const mic = screen
       .getAllByRole('link', { name: 'Workout' })
       .find((link) => link.className.includes('lg:hidden'));
     expect(mic).toHaveAttribute('href', '/workout');
+  });
+
+  it('uses a dumbbell, not a microphone, for Workout', () => {
+    const { container } = renderShell();
+    const paths = [...container.querySelectorAll('svg path')].map((p) => p.getAttribute('d'));
+    expect(paths.filter((d) => d?.startsWith('M6.5 6.5v11'))).toHaveLength(2);
+    expect(paths.some((d) => d?.startsWith('M12 3a3 3 0 0 0'))).toBe(false);
+  });
+
+  it('floats the phone tab bar and the Workout button as glass over the page', () => {
+    const { container } = renderShell();
+    const floating = screen
+      .getAllByRole('link', { name: 'Workout' })
+      .find((link) => link.className.includes('lg:hidden'))!;
+    expect(floating).toHaveClass('glass', 'fixed', 'rounded-full');
+    const dock = container.querySelector('nav')!.parentElement!;
+    expect(dock).toHaveClass('glass', 'fixed', 'rounded-full');
+    // From 1024 px up the same element is the sidebar: not floating, not rounded.
+    expect(dock.className).toContain('lg:static');
+    expect(dock.className).toContain('lg:rounded-none');
+  });
+
+  it('has the colour layer behind the app that the glass shows, hidden from assistive technology', () => {
+    const { container } = renderShell();
+    const ambient = container.querySelector('#ambient');
+    expect(ambient).toHaveAttribute('aria-hidden', 'true');
+    expect(ambient).toHaveClass('fixed');
   });
 });

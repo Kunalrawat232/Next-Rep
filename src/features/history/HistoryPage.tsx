@@ -1,5 +1,12 @@
 import { Link } from 'react-router';
-import { Button, buttonClasses } from '../../components';
+import {
+  Button,
+  buttonClasses,
+  cardClasses,
+  EmptyState,
+  ErrorMessage,
+  LoadingMessage,
+} from '../../components';
 import type { StoredSet, StoredWorkout } from '../../data/local';
 import { dayLabel, durationMinutes, formatDuration } from '../../domain/history';
 import { useSyncStatus } from '../sync';
@@ -13,15 +20,20 @@ export function HistoryPage() {
   const open = useWorkout().state;
   const { pulling } = useSyncStatus();
 
+  // One loader until the workouts, the open workout and any first download of your history are here.
+  if (
+    state.status === 'loading' ||
+    open.status === 'loading' ||
+    (state.status === 'ready' && state.workouts.length === 0 && pulling)
+  )
+    return <LoadingMessage>Loading your history…</LoadingMessage>;
+
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-title font-semibold">History</h1>
 
       {open.status === 'open' && (
-        <Link
-          to="/workout"
-          className="flex flex-col gap-1 rounded-md border border-accent bg-surface-200 p-4"
-        >
+        <Link to="/workout" className={cardClasses('flex flex-col gap-1', 'accent')}>
           <span className="text-headline font-semibold">Workout in progress</span>
           <span className="text-callout text-ink-muted">
             {countLabel(open.sets.length, 'set')} so far. Tap to continue.
@@ -29,41 +41,19 @@ export function HistoryPage() {
         </Link>
       )}
 
-      {state.status === 'loading' && (
-        <p role="status" className="text-ink-muted">
-          Loading…
-        </p>
-      )}
-
       {state.status === 'error' && (
-        <div
-          role="alert"
-          className="flex flex-col items-start gap-3 rounded-md border border-danger bg-surface-200 p-4"
+        <ErrorMessage onRetry={retry}>Could not read your workouts from this device.</ErrorMessage>
+      )}
+
+      {state.status === 'ready' && state.workouts.length === 0 && (
+        <EmptyState
+          title="No finished workouts yet"
+          message="Finish a workout and it shows up here. Workouts from before you last signed out are not kept on this device."
         >
-          <p>Could not read your workouts from this device.</p>
-          <Button variant="secondary" onClick={retry}>
-            Try again
-          </Button>
-        </div>
-      )}
-
-      {state.status === 'ready' && state.workouts.length === 0 && pulling && (
-        <p role="status" className="text-ink-muted">
-          Loading your history…
-        </p>
-      )}
-
-      {state.status === 'ready' && state.workouts.length === 0 && !pulling && (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">No finished workouts yet</h2>
-          <p className="text-callout text-ink-muted">
-            Finish a workout and it shows up here. Workouts from before you last signed out are not
-            kept on this device.
-          </p>
           <Link to="/workout" className={buttonClasses('primary')}>
             Start workout
           </Link>
-        </section>
+        </EmptyState>
       )}
 
       {state.status === 'ready' && state.workouts.length > 0 && (
@@ -94,10 +84,7 @@ function WorkoutRow({ workout, sets }: { workout: StoredWorkout; sets: StoredSet
   const exercises = new Set(sets.map((s) => s.exerciseId)).size;
   const note = syncNote(workout, sets);
   return (
-    <Link
-      to={`/history/${workout.id}`}
-      className="flex flex-col gap-1 rounded-md border border-line bg-surface-200 p-4"
-    >
+    <Link to={`/history/${workout.id}`} className={cardClasses('flex flex-col gap-1')}>
       <span className="flex items-baseline justify-between gap-4">
         <span className="text-headline font-semibold">
           {dayLabel(workout.startedAt, new Date())}
@@ -107,8 +94,7 @@ function WorkoutRow({ workout, sets }: { workout: StoredWorkout; sets: StoredSet
         )}
       </span>
       <span className="text-callout text-ink-muted">
-        {workout.gymSnapshot?.name ?? 'No gym'} · {countLabel(sets.length, 'set')} ·{' '}
-        {countLabel(exercises, 'exercise')}
+        {countLabel(sets.length, 'set')} · {countLabel(exercises, 'exercise')}
       </span>
       {note && <span className="text-caption text-warning">{note}</span>}
     </Link>

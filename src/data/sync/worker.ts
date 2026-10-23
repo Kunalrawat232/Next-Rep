@@ -77,7 +77,9 @@ export function createSyncWorker({
   // A call that throws instead of answering counts as trouble on the server, never as a crash.
   const call = async (send: () => Promise<Result>): Promise<Result> => {
     try {
-      return await send();
+      const result = await send();
+      // An answer that is not a result at all is treated like trouble on the server.
+      return (result as Result | undefined) ?? { status: 'error', reason: 'unknown' };
     } catch {
       return { status: 'error', reason: 'unknown' };
     }

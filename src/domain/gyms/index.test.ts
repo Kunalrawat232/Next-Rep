@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import { formatWeight } from '../units';
 import {
   barFor,
-  formatKg,
-  pickDefaultGym,
-  summarizeBars,
-  validateGymForm,
+  defaultBarbellKg,
+  summarizeBars as summarizeBarsUnit,
+  validateGymForm as validateGymFormUnit,
   type Gym,
   type GymForm,
 } from '.';
 
+// These tests were written for kg, which is still the default unit.
+const validateGymForm = (form: Parameters<typeof validateGymFormUnit>[0]) =>
+  validateGymFormUnit(form, 'kg');
+const summarizeBars = (gym: Parameters<typeof summarizeBarsUnit>[0]) =>
+  summarizeBarsUnit(gym, 'kg');
+
 const form = (over: Partial<GymForm> = {}): GymForm => ({
-  name: 'Home gym',
   barbellKg: '15',
   bars: [],
   ...over,
@@ -22,33 +27,15 @@ const bar = (name: string, weightKg: string, kind: GymForm['bars'][number]['kind
 });
 const gym = (over: Partial<Gym> = {}): Gym => ({
   id: 'g1',
-  name: 'Home gym',
   barbellKg: 15,
-  isDefault: false,
-  createdAt: '2026-10-01T10:00:00Z',
   bars: [],
   ...over,
 });
 
 describe('validateGymForm', () => {
   it('accepts a plain gym and returns trimmed, numeric values', () => {
-    const r = validateGymForm(form({ name: '  Home gym  ', barbellKg: ' 20 ' }));
-    expect(r).toEqual({ ok: true, value: { name: 'Home gym', barbellKg: 20, bars: [] } });
-  });
-
-  it.each([
-    ['', 'empty'],
-    ['   ', 'blank'],
-    ['x'.repeat(81), 'too long'],
-  ])('rejects the name %j (%s)', (name) => {
-    const r = validateGymForm(form({ name }));
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.errors.name).toBeTruthy();
-  });
-
-  it('accepts names of 1 and 80 characters', () => {
-    expect(validateGymForm(form({ name: 'x' })).ok).toBe(true);
-    expect(validateGymForm(form({ name: 'x'.repeat(80) })).ok).toBe(true);
+    const r = validateGymForm(form({ barbellKg: ' 20 ' }));
+    expect(r).toEqual({ ok: true, value: { barbellKg: 20, bars: [] } });
   });
 
   it.each([
@@ -73,7 +60,7 @@ describe('validateGymForm', () => {
     'NaN',
     'Infinity',
     '1e2',
-    '12 kg',
+    '12 Kg',
     '--5',
     '0x10',
   ])('rejects the barbell weight %j', (barbellKg) => {
@@ -132,16 +119,6 @@ describe('validateGymForm', () => {
   });
 });
 
-describe('formatKg', () => {
-  it.each([
-    [15, '15'],
-    [7.5, '7.5'],
-    [7.25, '7.25'],
-    [0, '0'],
-    [20.0, '20'],
-  ])('formats %d as %s', (kg, text) => expect(formatKg(kg)).toBe(text));
-});
-
 describe('summarizeBars', () => {
   it('lists the barbell first, then the other bars in order', () => {
     expect(
@@ -153,38 +130,22 @@ describe('summarizeBars', () => {
           ],
         }),
       ),
-    ).toBe('Barbell 15 kg · EZ bar 7.5 kg · Smith bar 12 kg');
+    ).toBe('Barbell 15 Kg · EZ bar 7.5 Kg · Smith bar 12 Kg');
   });
 
   it('shows just the barbell when there are no other bars', () => {
-    expect(summarizeBars(gym({ barbellKg: 20 }))).toBe('Barbell 20 kg');
+    expect(summarizeBars(gym({ barbellKg: 20 }))).toBe('Barbell 20 Kg');
   });
 });
 
-describe('pickDefaultGym', () => {
-  it('is undefined with no gyms', () => expect(pickDefaultGym([])).toBeUndefined());
+describe('defaultBarbellKg', () => {
+  it('is a 20 Kg bar for kg', () => expect(defaultBarbellKg('kg')).toBe(20));
 
-  it('prefers the gym marked default', () => {
-    const gyms = [
-      gym({ id: 'a' }),
-      gym({ id: 'b', isDefault: true, createdAt: '2026-10-05T00:00:00Z' }),
-    ];
-    expect(pickDefaultGym(gyms)?.id).toBe('b');
+  it('is the stored kg of a 45 Lb bar for lb', () => {
+    expect(Math.round(defaultBarbellKg('lb') * 100) / 100).toBe(20.41);
   });
 
-  it('falls back to the oldest gym when none is marked', () => {
-    const gyms = [
-      gym({ id: 'new', createdAt: '2026-10-05T00:00:00Z' }),
-      gym({ id: 'old', createdAt: '2026-09-01T00:00:00Z' }),
-    ];
-    expect(pickDefaultGym(gyms)?.id).toBe('old');
-  });
-
-  it('does not reorder the list it is given', () => {
-    const gyms = [gym({ id: 'b', createdAt: '2026-10-05T00:00:00Z' }), gym({ id: 'a' })];
-    pickDefaultGym(gyms);
-    expect(gyms.map((g) => g.id)).toEqual(['b', 'a']);
-  });
+  it('shows as 45 Lb', () => expect(formatWeight(defaultBarbellKg('lb'), 'lb')).toBe('45'));
 });
 
 describe('barFor', () => {

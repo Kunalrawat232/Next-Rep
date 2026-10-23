@@ -26,7 +26,7 @@ describe('ignoreClosed with a real closed database', () => {
     db.close();
     await expect(store.activeWorkout().catch(ignoreClosed)).resolves.toBeUndefined();
     await expect(store.listSets(uuid()).catch(ignoreClosed)).resolves.toBeUndefined();
-    await expect(store.cachedGyms().catch(ignoreClosed)).resolves.toBeUndefined();
+    await expect(store.cachedGym().catch(ignoreClosed)).resolves.toBeUndefined();
   });
 
   it('still throws a different Dexie error (a constraint failure on a duplicate key)', async () => {

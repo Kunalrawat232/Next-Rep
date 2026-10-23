@@ -21,17 +21,15 @@ test.describe('workout', () => {
     await page.getByLabel('Email').fill(email!);
     await page.getByLabel('Password').fill(password!);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    await expect(page.getByText(`Signed in as ${email!.toLowerCase()}`)).toBeVisible();
+    await expect(
+      page.getByRole('heading', { level: 1, name: /Ready to lift\?|Welcome to Next Rep/ }),
+    ).toBeVisible();
 
-    await page.getByRole('link', { name: 'Start workout' }).click();
-    if (await page.getByRole('heading', { name: /add a gym first/i }).isVisible()) {
-      await page.getByRole('link', { name: 'Add a gym' }).click();
-      await page.getByLabel('Gym name').fill('E2E gym');
-      await page.getByLabel('Barbell weight (kg)').fill('20');
-      await page.getByRole('button', { name: 'Create gym' }).click();
-      await page.goto('/workout');
-    }
-    await page.getByRole('button', { name: 'Start workout' }).click();
+    await page.goto('/workout');
+    // The first workout sets the gym up with a standard barbell, so there is no gym screen to go through.
+    const start = page.getByRole('button', { name: 'Start workout' });
+    await expect(start).toBeVisible();
+    await start.click();
 
     await page.getByRole('link', { name: 'Choose exercise' }).click();
     await page.getByRole('searchbox', { name: 'Search exercises' }).fill('barbell bench press');

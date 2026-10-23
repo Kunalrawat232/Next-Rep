@@ -65,6 +65,7 @@ beforeAll(async () => {
   await db.exec(read('supabase/migrations/0001_init.sql'));
   await db.exec(read('supabase/migrations/0002_gym_bar_kind.sql'));
   await db.exec(read('supabase/migrations/0003_exercise_muscle.sql'));
+  await db.exec(read('supabase/migrations/0005_rate_limit_scopes.sql'));
 
   // A user squats a public seed id before the seed runs; the seed must reclaim it.
   await as('authenticated', A, () =>

@@ -12,9 +12,10 @@ import {
   offlineServer,
 } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
+import { tapTogether } from '../../test/doubleTap';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
-const NO_EZ: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: [] };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
+const NO_EZ: GymSnapshot = { barbellKg: 15, bars: [] };
 
 type Seed = { totalKg: number; perSide?: boolean };
 
@@ -108,7 +109,7 @@ describe('the weight field and its steppers', () => {
     expect(await weight()).toHaveValue(expected);
   });
 
-  it('steps a dumbbell by 2.5 kg', async () => {
+  it('steps a dumbbell by 2.5 Kg', async () => {
     const { user } = await openLog(DUMBBELL_CURL);
     await user.type(await weight(), '12.5');
     await user.click(screen.getByRole('button', { name: /increase weight/i }));
@@ -162,7 +163,7 @@ describe('saving', () => {
   it('saves one set for a double tap on Log set', async () => {
     const { user, store, workout } = await openLog(BENCH);
     await user.type(await weight(), '60');
-    await user.dblClick(logButton());
+    tapTogether(logButton());
     await waitFor(async () => expect(await store.listSets(workout.id)).not.toHaveLength(0));
     expect(await store.listSets(workout.id)).toHaveLength(1);
   });
@@ -182,7 +183,7 @@ describe('saving', () => {
     await user.type(await weight(), '10');
     await user.click(logButton());
     const dialog = await screen.findByRole('dialog');
-    await user.click(within(dialog).getByRole('button', { name: /without the 15 kg bar/i }));
+    await user.click(within(dialog).getByRole('button', { name: /without the 15 Kg bar/i }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/workout'));
     expect((await store.listSets(workout.id))[0]).toMatchObject({
       totalKg: 10,
@@ -191,9 +192,9 @@ describe('saving', () => {
       inputMode: 'total',
     });
     const [item] = await within(
-      await screen.findByRole('region', { name: 'Barbell Bench Press' }),
+      await screen.findByRole('region', { name: 'Sets so far' }),
     ).findAllByRole('listitem');
-    expect(item).toHaveTextContent('10 kg × 8');
+    expect(item).toHaveTextContent('10 Kg × 8');
     expect(item!.textContent).not.toMatch(/-\d|plates|bar \+/);
   });
 
@@ -201,10 +202,7 @@ describe('saving', () => {
     const { user } = await openLog(BENCH);
     await user.type(await weight(), '10');
     await user.click(logButton());
-    expect(await screen.findByRole('link', { name: 'Change bar' })).toHaveAttribute(
-      'href',
-      `/gyms/${HOME_GYM.id}`,
-    );
+    expect(await screen.findByRole('link', { name: 'Change bar' })).toHaveAttribute('href', '/gym');
   });
 
   it('says it could not save, and lets you try again, when the workout is gone from the device', async () => {
@@ -250,9 +248,8 @@ describe('what the page is asked to show', () => {
 describe('the gym kept on the workout', () => {
   it('uses a bar added to the gym after the workout started, when going back to log', async () => {
     const { gyms, userId, router } = await openLog(EZ_CURL, { snapshot: NO_EZ });
-    expect(await screen.findByRole('heading', { name: /no ez bar set/i })).toBeInTheDocument();
-    await gyms.service.update(userId, HOME_GYM.id, {
-      name: HOME_GYM.name,
+    expect(await screen.findByRole('heading', { name: /no ez bar set up/i })).toBeInTheDocument();
+    await gyms.service.save(userId, HOME_GYM.id, {
       barbellKg: 15,
       bars: [{ name: 'EZ bar', weightKg: 7.5, kind: 'ez_bar' }],
     });
@@ -261,10 +258,10 @@ describe('the gym kept on the workout', () => {
     expect(await screen.findByRole('button', { name: 'Log set' })).toBeInTheDocument();
   });
 
-  it('does not offer a link to a gym that the workout does not have', async () => {
+  it('still offers to set up the bars when the workout has no saved gym', async () => {
     await openLog(BENCH, { snapshot: null, gymId: null });
-    expect(await screen.findByRole('heading', { name: /no barbell set/i })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /set the bar/i })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /no barbell set up/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /set up your bars/i })).toHaveAttribute('href', '/gym');
   });
 
   it('still logs dumbbells and bodyweight in a workout with no saved gym', async () => {

@@ -3,9 +3,12 @@ import { createBrowserRouter, type RouterProvider } from 'react-router';
 import {
   AUTH_STORAGE_KEY,
   createSupabase,
+  createFetchCoachService,
+  createFetchParseService,
   createSupabaseAuthService,
   createSupabaseExerciseService,
   createSupabaseLogRemote,
+  createSupabaseProfileService,
   createSupabaseGymService,
   ensureProfile,
   parseSupabaseEnv,
@@ -15,6 +18,9 @@ import type { AuthService } from '../features/auth';
 import type { RemoteLog } from '../data/sync';
 import type { ExerciseService } from '../features/exercises';
 import type { GymService } from '../features/gyms';
+import type { ProfileService } from '../features/settings';
+import type { CoachService } from '../features/coach';
+import type { ParseService } from '../features/voice';
 import { App } from './App';
 import { ConfigError } from './ConfigError';
 import { appRoutes } from './routes';
@@ -27,6 +33,9 @@ export type BootstrapDeps = {
   createGymService: (client: SupabaseClient) => GymService;
   createExerciseService: (client: SupabaseClient) => ExerciseService;
   createLogRemote: (client: SupabaseClient) => RemoteLog;
+  createProfileService: (client: SupabaseClient) => ProfileService;
+  createParseService: (client: SupabaseClient) => ParseService;
+  createCoachService: (client: SupabaseClient) => CoachService;
   createRouter: () => ComponentProps<typeof RouterProvider>['router'];
   ensureProfile: (client: SupabaseClient, userId: string) => Promise<void>;
 };
@@ -44,6 +53,9 @@ const defaultDeps: BootstrapDeps = {
   createGymService: createSupabaseGymService,
   createExerciseService: createSupabaseExerciseService,
   createLogRemote: createSupabaseLogRemote,
+  createProfileService: createSupabaseProfileService,
+  createParseService: (client) => createFetchParseService(client),
+  createCoachService: (client) => createFetchCoachService(client),
   createRouter: () => createBrowserRouter(appRoutes),
   ensureProfile,
 };
@@ -65,6 +77,9 @@ export function bootstrap(
       gymService={deps.createGymService(client)}
       exerciseService={deps.createExerciseService(client)}
       logRemote={deps.createLogRemote(client)}
+      parseService={deps.createParseService(client)}
+      coachService={deps.createCoachService(client)}
+      profileService={deps.createProfileService(client)}
       router={deps.createRouter()}
       ensureProfile={(userId) => deps.ensureProfile(client, userId)}
     />

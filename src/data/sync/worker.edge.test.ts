@@ -84,6 +84,7 @@ describe('corrupt rows already in IndexedDB', () => {
   it('one workout with a missing startedAt does not stop every other workout from syncing', async () => {
     const { store, db, server, worker } = setup();
     const good = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(good.id));
     await db.workouts.put({
       ...aWorkout(),
       endedAt: null,
@@ -175,6 +176,7 @@ describe('time', () => {
   it('a clock that goes backwards by hours does not leave a backed-off row waiting for hours', async () => {
     const { store, server, worker, clock } = setup({ startAt: 10_000_000 });
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected');
     await worker.run();
     clock.now = 1_000; // the device clock was corrected backwards
@@ -185,6 +187,7 @@ describe('time', () => {
   it('a row waiting until the far future is sent anyway, because that wait can only come from a wrong clock', async () => {
     const { store, db, server, worker } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await db.workouts.update(w.id, { nextAttemptAt: 8.64e15 });
     await worker.run();
     expect(server.workouts.has(w.id)).toBe(true);
@@ -193,6 +196,7 @@ describe('time', () => {
   it('a row due at exactly the current time is sent', async () => {
     const { store, db, server, worker, clock } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await db.workouts.update(w.id, { nextAttemptAt: clock.now });
     await worker.run();
     expect(server.workouts.has(w.id)).toBe(true);
@@ -217,13 +221,14 @@ describe('time', () => {
 
   it('after the last allowed attempt the badge shows it as failed, not pending', async () => {
     const { store, server, worker, clock } = setup();
-    await store.startWorkout(aWorkout());
+    const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     server.failNext('upsertWorkouts', 'rejected', MAX_ATTEMPTS);
     for (let i = 0; i < MAX_ATTEMPTS; i++) {
       clock.now += 10 * 60_000;
       await worker.run();
     }
-    expect(await store.counts()).toEqual({ pending: 0, failed: 1 });
+    expect(await store.counts()).toEqual({ pending: 1, failed: 1 }); // the failed workout; its set still waits
   });
 });
 
@@ -363,6 +368,7 @@ describe('workouts ended around a push', () => {
   it('ending a workout twice before any push sends it once with the last end time', async () => {
     const { store, server, worker } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     await store.endWorkout(w.id, '2026-10-10T11:00:00.000Z');
     await store.endWorkout(w.id, '2026-10-10T12:00:00.000Z');
     await worker.run();
@@ -373,6 +379,7 @@ describe('workouts ended around a push', () => {
   it('sets logged while the workout upload is in flight are sent after it, with nothing lost', async () => {
     const { store, server, worker } = setup();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id)); // the first set is what sends the workout
     const release = server.hold('upsertWorkouts');
     const running = worker.run();
     await waitFor(() => server.callsTo('upsertWorkouts').length > 0);
@@ -381,13 +388,16 @@ describe('workouts ended around a push', () => {
     release();
     await running;
     await worker.run();
-    expect(server.sets.size).toBe(2);
+    expect(server.sets.size).toBe(3);
   });
 
   it('many workouts with the same startedAt all arrive', async () => {
     const { store, server, worker } = setup();
     const same = '2026-10-10T10:00:00.000Z';
-    for (let i = 0; i < 30; i++) await store.startWorkout(aWorkout({ startedAt: same }));
+    for (let i = 0; i < 30; i++) {
+      const w = await store.startWorkout(aWorkout({ startedAt: same }));
+      await store.logSet(aSet(w.id));
+    }
     await worker.run();
     expect(server.workouts.size).toBe(30);
   });
@@ -439,6 +449,7 @@ describe('two tabs on one database', () => {
   it('a late refusal in one tab does not turn a row that the other tab already synced back to pending', async () => {
     const { store, server, worker, second, db } = await twoTabs();
     const w = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(w.id));
     let answer: () => void = () => undefined;
     const late = new Promise<void>((resolve) => (answer = resolve));
     server.remote.upsertWorkouts.mockImplementationOnce(async () => {
@@ -457,8 +468,10 @@ describe('two tabs on one database', () => {
 describe('a forced run that arrives during an ordinary run', () => {
   it('still sends rows that are backing off, as the network-is-back signal promises', async () => {
     const { store, db, server, worker } = setup();
-    await store.startWorkout(aWorkout()); // due now: keeps the ordinary pass busy
+    const busy = await store.startWorkout(aWorkout()); // due now: keeps the ordinary pass busy
+    await store.logSet(aSet(busy.id));
     const backedOff = await store.startWorkout(aWorkout());
+    await store.logSet(aSet(backedOff.id));
     await db.workouts.update(backedOff.id, { nextAttemptAt: 9_000_000 });
     const release = server.hold('upsertWorkouts');
     const ordinary = worker.run();

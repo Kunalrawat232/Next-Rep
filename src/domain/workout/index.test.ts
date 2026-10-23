@@ -1,14 +1,30 @@
 import { describe, expect, it } from 'vitest';
 import {
-  breakdownFor,
-  initialEntry,
-  nextValue,
+  breakdownFor as breakdownForUnit,
+  initialEntry as initialEntryUnit,
+  nextValue as nextValueUnit,
   parseWeight,
-  setSummary,
-  stepFor,
+  setSummary as setSummaryUnit,
+  stepFor as stepForUnit,
   usesModeToggle,
   weightHint,
 } from '.';
+import { kgFromField } from '../units';
+
+// These tests were written for kg, which is still the default unit: the helpers below pass it.
+const breakdownFor = (w: Parameters<typeof breakdownForUnit>[0]) => breakdownForUnit(w, 'kg');
+const setSummary = (s: Parameters<typeof setSummaryUnit>[0]) => setSummaryUnit(s, 'kg');
+const stepFor = (e: Parameters<typeof stepForUnit>[0], m: Parameters<typeof stepForUnit>[1]) =>
+  stepForUnit(e, m, 'kg');
+const nextValue = (c: number, s: number, d: 1 | -1, m: 'total' | 'per_side') =>
+  nextValueUnit(c, s, d, m, 'kg');
+const initialEntry = (
+  e: Parameters<typeof initialEntryUnit>[0],
+  l: Parameters<typeof initialEntryUnit>[1],
+) => {
+  const r = initialEntryUnit(e, l, 'kg');
+  return { mode: r.mode, weight: kgFromField(r.weight, 'kg') ?? 0, reps: r.reps };
+};
 
 describe('usesModeToggle', () => {
   it.each([
@@ -78,7 +94,7 @@ describe('parseWeight', () => {
     ['20.256', 20.26],
   ])('reads %j as %d', (text, kg) => expect(parseWeight(text)).toBe(kg));
 
-  it.each(['', ' ', 'abc', '-5', '1e2', '12 kg', '1,000', '--', '0x10', 'NaN', 'Infinity'])(
+  it.each(['', ' ', 'abc', '-5', '1e2', '12 Kg', '1,000', '--', '0x10', 'NaN', 'Infinity'])(
     'refuses %j',
     (text) => expect(parseWeight(text)).toBeNull(),
   );
@@ -100,39 +116,39 @@ describe('breakdownFor', () => {
   it('shows each side twice, the bar and the total for a per-side set', () => {
     expect(breakdownFor({ totalKg: 60, barKg: 20, perSideKg: 20 })).toEqual({
       lines: [
-        { label: '20 kg each side × 2', value: '40 kg' },
-        { label: '+ bar', value: '20 kg' },
+        { label: '20 Kg each side × 2', value: '40 Kg' },
+        { label: '+ bar', value: '20 Kg' },
       ],
-      total: '60 kg',
+      total: '60 Kg',
     });
   });
 
   it('writes fractions plainly', () => {
     expect(breakdownFor({ totalKg: 60, barKg: 15, perSideKg: 22.5 }).lines[0]?.label).toBe(
-      '22.5 kg each side × 2',
+      '22.5 Kg each side × 2',
     );
   });
 
   it('shows plates and bar when only the bar is known', () => {
     const b = breakdownFor({ totalKg: 61.23, barKg: 20, perSideKg: null });
-    expect(b.total).toBe('61.23 kg');
+    expect(b.total).toBe('61.23 Kg');
     expect(b.lines).toEqual([
-      { label: 'Plates', value: '41.23 kg' },
-      { label: '+ bar', value: '20 kg' },
+      { label: 'Plates', value: '41.23 Kg' },
+      { label: '+ bar', value: '20 Kg' },
     ]);
   });
 
   it('says there are no plates when the total is just the bar', () => {
     expect(breakdownFor({ totalKg: 20, barKg: 20, perSideKg: 0 }).lines[0]).toEqual({
-      label: '0 kg each side × 2',
-      value: '0 kg',
+      label: '0 Kg each side × 2',
+      value: '0 Kg',
     });
   });
 
   it('has just the total when there is no bar', () => {
     expect(breakdownFor({ totalKg: 22, barKg: null, perSideKg: null })).toEqual({
       lines: [],
-      total: '22 kg',
+      total: '22 Kg',
     });
   });
 });
@@ -140,21 +156,21 @@ describe('breakdownFor', () => {
 describe('setSummary', () => {
   it('describes a bar set by its weight, reps and how the weight is made up', () => {
     expect(setSummary({ totalKg: 60, barKg: 15, perSideKg: 22.5, reps: 8 })).toEqual({
-      headline: '60 kg × 8',
-      detail: '15 kg bar + 22.5 kg each side',
+      headline: '60 Kg × 8',
+      detail: '15 Kg bar + 22.5 Kg each side',
     });
   });
 
   it('has no detail without a bar', () => {
     expect(setSummary({ totalKg: 22, barKg: null, perSideKg: null, reps: 10 })).toEqual({
-      headline: '22 kg × 10',
+      headline: '22 Kg × 10',
       detail: null,
     });
   });
 
   it('has no detail when the weight is not exact at two decimals', () => {
     expect(setSummary({ totalKg: 61.23, barKg: 20, perSideKg: null, reps: 5 }).detail).toBe(
-      '20 kg bar + 41.23 kg plates',
+      '20 Kg bar + 41.23 Kg plates',
     );
   });
 });
@@ -217,7 +233,7 @@ describe('initialEntry', () => {
     });
   });
 
-  it('starts empty-handed with no history: 0 kg and 8 reps', () => {
+  it('starts empty-handed with no history: 0 Kg and 8 reps', () => {
     expect(initialEntry('barbell', undefined)).toEqual({ mode: 'total', weight: 0, reps: 8 });
   });
 });

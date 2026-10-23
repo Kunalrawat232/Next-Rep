@@ -1,4 +1,4 @@
-import { Logo } from '../components';
+import { ErrorMessage, Logo } from '../components';
 
 export function ConfigError({ message }: { message: string }) {
   return (
@@ -6,9 +6,7 @@ export function ConfigError({ message }: { message: string }) {
       <h1 className="flex justify-center">
         <Logo width={200} />
       </h1>
-      <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-        {message}
-      </p>
+      <ErrorMessage>{message}</ErrorMessage>
       <p className="text-ink-muted">
         Copy <code>.env.example</code> to <code>.env.local</code>, fill in the Supabase values, then
         restart the dev server.

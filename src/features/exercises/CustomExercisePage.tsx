@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { BackLink, Button, Chip, TextField } from '../../components';
+import {
+  Button,
+  cardClasses,
+  Chip,
+  ErrorMessage,
+  LoadingMessage,
+  PageHeader,
+  TextField,
+} from '../../components';
 import {
   EQUIPMENT_LABEL,
   validateCustomExercise,
@@ -11,6 +19,7 @@ import type { Failure } from '../../lib/result';
 import { useAuth } from '../auth';
 import { useExerciseService } from './ExerciseServiceContext';
 import { useExercises } from './useExercises';
+import { usePending } from '../../lib/usePending';
 
 // The order in the design: the common five, then the two bars.
 const EQUIPMENT_ORDER: EquipmentType[] = [
@@ -44,18 +53,11 @@ export function CustomExercisePage() {
   const { state, reload } = useExercises(service);
 
   if (auth.status !== 'signedIn') return null;
-  if (state.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+  if (state.status === 'loading') return <LoadingMessage />;
   if (state.status === 'error')
     return (
       <div className="flex flex-col items-start gap-4">
-        <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-          Could not load the exercises. Please try again.
-        </p>
+        <ErrorMessage>Could not load the exercises. Please try again.</ErrorMessage>
         <Button variant="secondary" onClick={reload}>
           Try again
         </Button>
@@ -100,7 +102,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
   const [aliasesText, setAliasesText] = useState('');
   const [errors, setErrors] = useState<CustomExerciseErrors>({});
   const [focusTick, setFocusTick] = useState(0);
-  const [pending, setPending] = useState(false);
+  const { pending, begin, end } = usePending();
   const [problem, setProblem] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,7 +128,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
       return;
     }
     setErrors({});
-    setPending(true);
+    if (!begin()) return;
     try {
       const result = await service.create(userId, exerciseId, checked.value);
       if (!mounted.current) return;
@@ -144,15 +146,12 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
     } catch {
       if (mounted.current) setProblem('Could not save the exercise. Please try again.');
     }
-    if (mounted.current) setPending(false);
+    if (mounted.current) end();
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/exercises" />
-        <h1 className="text-title font-semibold">Custom exercise</h1>
-      </header>
+      <PageHeader back="/exercises" title="Custom exercise" />
 
       <form ref={formRef} onSubmit={submit} noValidate className="flex flex-col gap-6">
         <TextField
@@ -234,7 +233,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
           <div
             role="status"
             aria-label="Your exercises"
-            className="flex flex-wrap items-center gap-3 rounded-md border border-line bg-surface-200 p-4"
+            className={cardClasses('flex flex-wrap items-center gap-3')}
           >
             <p className="flex-1 text-callout">
               Your own exercises have not loaded, so we cannot check for repeated names or words
@@ -246,11 +245,7 @@ function CustomExerciseForm({ userId, existing, customProblem, onRetry }: FormPr
           </div>
         )}
 
-        {problem && (
-          <p role="alert" className="rounded-md border border-danger bg-surface-200 p-4">
-            {problem}
-          </p>
-        )}
+        {problem && <ErrorMessage>{problem}</ErrorMessage>}
 
         <Button type="submit" disabled={pending || customProblem !== null}>
           {pending ? 'Saving…' : 'Save exercise'}

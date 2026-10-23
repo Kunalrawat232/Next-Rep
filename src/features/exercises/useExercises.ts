@@ -3,6 +3,7 @@ import type { Exercise } from '../../domain/exercises';
 import { parseExercises } from '../../domain/exercises/catalog';
 import curatedJson from '../../domain/exercises.seed.json';
 import type { Failure } from '../../lib/result';
+import { within } from '../../lib/withTimeout';
 import type { ExerciseService } from './types';
 
 export type ExercisesState =
@@ -40,10 +41,14 @@ export function useExercises(service: ExerciseService): {
     let current = true;
     Promise.all([
       loadImported(),
-      service.listCustom().catch((): { status: 'error'; reason: Failure } => ({
-        status: 'error',
-        reason: 'unknown',
-      })),
+      // The server's answer, or after a few seconds "offline": the built-in exercises show without it.
+      // A browser that already knows it is offline has nothing to wait for.
+      (navigator.onLine === false ? Promise.resolve(null) : within(service.listCustom()))
+        .then((answer) => answer ?? ({ status: 'error', reason: 'offline' } as const))
+        .catch((): { status: 'error'; reason: Failure } => ({
+          status: 'error',
+          reason: 'unknown',
+        })),
     ])
       .then(([imported, custom]) => {
         if (!current) return;

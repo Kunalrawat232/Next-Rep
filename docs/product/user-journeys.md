@@ -1,5 +1,7 @@
 # User journeys
 
+Status (2026-10-10): the tap path, offline sync, history, progress and the suggestion are built (suggestion on `feat/home`, not yet merged). Everything that needs voice (the mic steps, "Misheard number", "Voice unavailable" and "Gemini unavailable" below): Status: planned (Phase 3), not built yet. Until then the same sets are logged by tap.
+
 ## Primary journey (the demo story)
 
 1. The user signs in and sets up their gym once (for example "Home gym, 15 kg bar").

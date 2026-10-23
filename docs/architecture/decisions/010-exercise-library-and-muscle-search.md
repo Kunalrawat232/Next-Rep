@@ -1,6 +1,6 @@
 # ADR-010: A bundled exercise library with muscle search
 
-- **Status:** accepted (2026-10-09)
+- **Status:** accepted (2026-10-09). The "No media" decision below is replaced by [ADR-013](013-hotlinked-exercise-demonstrations.md).
 
 ## Context
 
@@ -8,7 +8,7 @@ The app shipped 56 hand-checked exercises with voice aliases. The developer want
 
 ## Decision
 
-- **Two sources, one list.** The 56 curated exercises stay first-class (hand-checked, with aliases such as "bench", needed for voice logging). About 860 imported exercises sit below them. Both are global rows in `seed.sql`, because a logged set points at an exercise by id and the row must exist.
+- **Two sources, one list.** The curated exercises (56 at the time) stay first-class (hand-checked, with aliases such as "bench", needed for voice logging). The imported exercises (about 830) sit below them, about 890 in all. Both are global rows in `seed.sql`, because a logged set points at an exercise by id and the row must exist.
 - **Import, then review, then commit.** `scripts/import-exercises.mjs` reads the dataset once and writes `src/domain/exercises.extended.json`. It keeps only equipment that maps to how we count weight (barbell, EZ bar, Smith, dumbbell, cable, machine, bodyweight), drops cardio, neck, stretches, mobility and "(male)"-style variants, drops names that duplicate a curated exercise, and maps the dataset's body parts and targets to our three body parts and 16 muscles. It leaves out kettlebell, band, weighted and the other equipment that does not fit. Ids are version 5 UUIDs of the dataset id under a fixed namespace, so re-running changes nothing. The 17 MB source is not stored in the repo.
 - **No media.** Only text fields are used. This keeps us inside the licence; the attribution and MIT text are in `THIRD_PARTY_NOTICES.md`.
 - **Migration 0003 adds `exercises.muscle`** (nullable, 16 values, check constraint). Custom exercises leave it empty and fall back to upper, lower or core.

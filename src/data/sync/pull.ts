@@ -100,13 +100,13 @@ export async function pullHistory({
   const ids = (rows: unknown[]) =>
     new Set(rows.map(idOf).filter((id): id is string => id !== null));
 
-  const gyms = await store.cachedGyms().catch(() => null);
+  const cached = await store.cachedGym().catch(() => null);
   const merged = await store.mergePulled({
     workouts: validWorkouts,
     sets: validSets,
     serverWorkoutIds: ids(workouts.rows),
     serverSetIds: ids(sets.rows),
-    gyms,
+    gym: cached?.gym ?? null,
   });
   const changed =
     merged.addedWorkouts +

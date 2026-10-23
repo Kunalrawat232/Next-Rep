@@ -1,4 +1,6 @@
 import { useId } from 'react';
+import type { Unit } from '../../domain/schemas';
+import { unitLabel } from '../../domain/units';
 
 type Props = {
   /** Names the field and its buttons: "Decrease <label>". */
@@ -6,13 +8,13 @@ type Props = {
   value: string;
   onChange(value: string): void;
   onStep(direction: 1 | -1): void;
-  unit?: string;
+  unit?: Unit;
   error?: string;
   inputMode?: 'decimal' | 'numeric';
 };
 
 const button =
-  'flex size-14 shrink-0 items-center justify-center rounded-full border border-line bg-surface-200 text-ink disabled:opacity-60';
+  'flex size-14 shrink-0 items-center justify-center rounded-full border border-glass-line glass-flat text-ink disabled:opacity-60';
 
 function Icon({ plus }: { plus: boolean }) {
   return (
@@ -43,7 +45,8 @@ export function Stepper({
 }: Props) {
   const id = useId();
   const noteId = `${id}-error`;
-  const lower = label.charAt(0).toLowerCase() + label.slice(1);
+  // An acronym such as RPE keeps its capitals; only an ordinary first letter is lowered.
+  const lower = /^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-callout font-medium text-ink-muted">
@@ -69,7 +72,7 @@ export function Stepper({
             onChange={(e) => onChange(e.target.value)}
             className="w-28 min-w-0 rounded-sm bg-transparent text-center text-metric font-semibold tabular-nums text-ink"
           />
-          {unit && <span className="text-headline text-ink-muted">{unit}</span>}
+          {unit && <span className="text-headline text-ink-muted">{unitLabel(unit)}</span>}
         </div>
         <button
           type="button"

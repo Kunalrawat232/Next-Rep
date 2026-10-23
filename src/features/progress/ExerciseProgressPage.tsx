@@ -1,74 +1,64 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
-import { BackLink, Button, buttonClasses } from '../../components';
-import { formatKg } from '../../domain/gyms';
+import {
+  buttonClasses,
+  Chip,
+  EmptyState,
+  LoadingMessage,
+  NotFound,
+  PageHeader,
+  RetryMessage,
+} from '../../components';
+import { withUnit } from '../../domain/units';
 import { dayLabel } from '../../domain/history';
+import { chartPoints } from '../../domain/progress';
 import { currentRecords, recordMarks, sessionBests } from '../../domain/records';
 import { useExerciseService, useExercises } from '../exercises';
 import { PrBadge } from './PrBadge';
-import { ProgressChart } from './ProgressChart';
+import { ProgressChart, type ChartMetric } from './ProgressChart';
 import { useExerciseSets } from './useExerciseSets';
+import { useUnit } from '../settings/UnitProvider';
 
 const IdSchema = z.uuid();
 
 /** One exercise over time: a chart of the top set per session, the records, and the sessions as a table. */
 export function ExerciseProgressPage() {
+  const { unit } = useUnit();
   const id = IdSchema.safeParse(useParams().exerciseId);
   const exerciseId = id.success ? id.data : undefined;
+  const [metric, setMetric] = useState<ChartMetric>('weight');
   const { state, retry } = useExerciseSets(exerciseId ?? null);
   const { state: exercises } = useExercises(useExerciseService());
 
   if (!exerciseId)
-    return (
-      <div className="flex flex-col items-start gap-4">
-        <h1 className="text-title font-semibold">Exercise not found</h1>
-        <Link to="/progress" className={buttonClasses('secondary')}>
-          Back to progress
-        </Link>
-      </div>
-    );
+    return <NotFound title="Exercise not found" to="/progress" label="Back to progress" />;
   if (state.status === 'error')
-    return (
-      <div role="alert" className="flex flex-col items-start gap-3">
-        <p>Could not read your sets from this device.</p>
-        <Button variant="secondary" onClick={retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  if (state.status === 'loading' || exercises.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+    return <RetryMessage onRetry={retry}>Could not read your sets from this device.</RetryMessage>;
+  if (state.status === 'loading' || exercises.status === 'loading') return <LoadingMessage />;
 
   const name =
     exercises.status === 'ready'
       ? (exercises.exercises.find((e) => e.id === exerciseId)?.name ?? 'Custom exercise')
       : 'Exercise';
   const { sets } = state;
-  const points = sessionBests(sets);
-  const records = currentRecords(sets);
-  const marks = recordMarks(sets);
+  const points = sessionBests(sets, unit);
+  const records = currentRecords(sets, unit);
+  const marks = recordMarks(sets, unit);
   const now = new Date();
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/progress" />
-        <h1 className="text-title font-semibold">{name}</h1>
-      </header>
+      <PageHeader back="/progress" title={name} />
 
       {sets.length === 0 ? (
-        <section className="flex flex-col items-start gap-4 rounded-md border border-line bg-surface-200 p-4">
-          <h2 className="text-headline font-semibold">No sets logged yet</h2>
-          <p className="text-callout text-ink-muted">
-            Log this exercise and its progress shows up here.
-          </p>
+        <EmptyState
+          title="No sets logged yet"
+          message="Log this exercise and its progress shows up here."
+        >
           <Link to="/workout" className={buttonClasses('primary')}>
             Start workout
           </Link>
-        </section>
+        </EmptyState>
       ) : (
         <>
           <section aria-label="Records" className="flex flex-col gap-2">
@@ -79,7 +69,7 @@ export function ExerciseProgressPage() {
                   <PrBadge kind={marks.get(records.heaviest.setId)!} />
                 )}
                 <span>
-                  Heaviest: {formatKg(records.heaviest.totalKg)} kg × {records.heaviest.reps},{' '}
+                  Heaviest: {withUnit(records.heaviest.totalKg, unit)} × {records.heaviest.reps},{' '}
                   {dayLabel(records.heaviest.loggedAt, now)}
                 </span>
               </p>
@@ -89,7 +79,7 @@ export function ExerciseProgressPage() {
                 <li key={r.totalKg}>
                   {r.totalKg === 0
                     ? 'Most reps with body weight'
-                    : `Most reps at ${formatKg(r.totalKg)} kg`}
+                    : `Most reps at ${withUnit(r.totalKg, unit)}`}
                   : {r.reps}
                 </li>
               ))}
@@ -99,7 +89,17 @@ export function ExerciseProgressPage() {
           {points.length === 1 ? (
             <p className="text-callout text-ink-muted">Log another session to see a trend.</p>
           ) : (
-            <ProgressChart points={points} />
+            <section aria-label="Chart" className="flex flex-col gap-3">
+              <div role="group" aria-label="Chart shows" className="flex gap-2">
+                <Chip selected={metric === 'weight'} onClick={() => setMetric('weight')}>
+                  Weight
+                </Chip>
+                <Chip selected={metric === 'reps'} onClick={() => setMetric('reps')}>
+                  Reps
+                </Chip>
+              </div>
+              <ProgressChart points={chartPoints(points, unit)} unit={unit} metric={metric} />
+            </section>
           )}
 
           <section aria-label="Sessions" className="flex flex-col gap-2">
@@ -127,7 +127,7 @@ export function ExerciseProgressPage() {
                     <tr key={p.workoutId} className="border-t border-line">
                       <td className="py-2">{dayLabel(p.at, now)}</td>
                       <td className="py-2 tabular-nums">
-                        {formatKg(p.totalKg)} kg × {p.reps}
+                        {withUnit(p.totalKg, unit)} × {p.reps}
                       </td>
                       <td className="py-2">{kind && <PrBadge kind={kind} />}</td>
                     </tr>

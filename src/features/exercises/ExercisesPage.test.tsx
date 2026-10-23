@@ -2,7 +2,11 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { describe, expect, it } from 'vitest';
+import { createFakeAuthService } from '../../test/fakeAuth';
 import { createFakeExerciseService, customExercise } from '../../test/fakeExercises';
+import { createFakeRemoteLog } from '../../test/fakeRemoteLog';
+import { AuthProvider } from '../auth';
+import { SyncProvider } from '../sync';
 import { ExerciseServiceProvider } from './ExerciseServiceContext';
 import { ExercisesPage } from './ExercisesPage';
 
@@ -15,10 +19,16 @@ function renderPage(fake = createFakeExerciseService(), path = '/exercises') {
     ],
     { initialEntries: [path] },
   );
+  // The page reads the sets on this device (for the history), so it needs a signed-in user and the sync session.
+  const auth = createFakeAuthService({ id: 'u-exercises', email: 'ada@example.com' });
   render(
-    <ExerciseServiceProvider service={fake.service}>
-      <RouterProvider router={router} />
-    </ExerciseServiceProvider>,
+    <AuthProvider service={auth.service}>
+      <ExerciseServiceProvider service={fake.service}>
+        <SyncProvider remote={createFakeRemoteLog().remote} dexieDeps={{ indexedDB, IDBKeyRange }}>
+          <RouterProvider router={router} />
+        </SyncProvider>
+      </ExerciseServiceProvider>
+    </AuthProvider>,
   );
   return { fake, router, user: userEvent.setup() };
 }
@@ -26,9 +36,9 @@ function renderPage(fake = createFakeExerciseService(), path = '/exercises') {
 const search = () => screen.findByRole('searchbox', { name: 'Search exercises' });
 
 describe('ExercisesPage: browsing', () => {
-  it('shows a loading status first', () => {
+  it('shows a loading status first', async () => {
     renderPage();
-    expect(screen.getByRole('status')).toHaveTextContent(/loading/i);
+    expect(await screen.findByRole('status')).toHaveTextContent(/loading/i);
   });
 
   it('shows the popular exercises with equipment and muscle, and no fake "Recent" section', async () => {

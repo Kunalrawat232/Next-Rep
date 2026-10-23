@@ -3,6 +3,7 @@ import { createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { createFakeAuthService } from '../test/fakeAuth';
 import { createFakeExerciseService } from '../test/fakeExercises';
+import { createFakeProfileService } from '../test/fakeProfile';
 import { createFakeRemoteLog } from '../test/fakeRemoteLog';
 import { createFakeGymService } from '../test/fakeGyms';
 import { App } from './App';
@@ -16,6 +17,7 @@ describe('App', () => {
         service={fake.service}
         gymService={createFakeGymService().service}
         exerciseService={createFakeExerciseService().service}
+        profileService={createFakeProfileService().service}
         logRemote={createFakeRemoteLog().remote}
         router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })}
       />,
@@ -31,12 +33,13 @@ describe('App', () => {
         service={fake.service}
         gymService={createFakeGymService().service}
         exerciseService={createFakeExerciseService().service}
+        profileService={createFakeProfileService().service}
         logRemote={createFakeRemoteLog().remote}
-        router={createMemoryRouter(appRoutes, { initialEntries: ['/'] })}
+        router={createMemoryRouter(appRoutes, { initialEntries: ['/settings'] })}
         ensureProfile={async (id) => void calls.push(id)}
       />,
     );
-    await screen.findByText(/signed in as/i);
+    await screen.findByText('a@b.co');
     await waitFor(() => expect(calls).toEqual(['u1']));
   });
 });

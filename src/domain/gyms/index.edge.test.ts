@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   barFor,
-  formatKg,
-  pickDefaultGym,
-  summarizeBars,
-  validateGymForm,
+  summarizeBars as summarizeBarsUnit,
+  validateGymForm as validateGymFormUnit,
   type Gym,
   type GymForm,
 } from '.';
 
+// These tests were written for kg, which is still the default unit.
+const validateGymForm = (form: Parameters<typeof validateGymFormUnit>[0]) =>
+  validateGymFormUnit(form, 'kg');
+const summarizeBars = (gym: Parameters<typeof summarizeBarsUnit>[0]) =>
+  summarizeBarsUnit(gym, 'kg');
+
 const form = (over: Partial<GymForm> = {}): GymForm => ({
-  name: 'Home gym',
   barbellKg: '15',
   bars: [],
   ...over,
@@ -22,10 +25,7 @@ const bar = (name: string, weightKg: string, kind: GymForm['bars'][number]['kind
 });
 const gym = (over: Partial<Gym> = {}): Gym => ({
   id: 'g1',
-  name: 'Home gym',
   barbellKg: 15,
-  isDefault: false,
-  createdAt: '2026-10-01T10:00:00Z',
   bars: [],
   ...over,
 });
@@ -64,7 +64,7 @@ describe('validateGymForm: odd numeric input', () => {
     ['negative', '-5'],
     ['explicit plus', '+5'],
     ['unit suffix', '20kg'],
-    ['unit with space', '20 kg'],
+    ['unit with space', '20 Kg'],
     ['two decimal points', '7.5.1'],
     ['two commas', '7,5,1'],
     ['dot and comma', '7.5,1'],
@@ -94,49 +94,9 @@ describe('validateGymForm: odd numeric input', () => {
     expect(barbellOutcome('15.' + '0'.repeat(10000))).toBe(15);
   });
 
-  it('refuses a thousands separator instead of reading it as a decimal point (1,000 is not 1 kg)', () => {
+  it('refuses a thousands separator instead of reading it as a decimal point (1,000 is not 1 Kg)', () => {
     // "1,000" is 1000 in en-IN / en-GB. Silently storing 1 kg is a wrong number reaching storage.
     expect(barbellOutcome('1,000')).toEqual(expect.any(String));
-  });
-});
-
-describe('validateGymForm: names', () => {
-  it.each<[string, string]>([
-    ['empty', ''],
-    ['spaces', '    '],
-    ['tabs and newlines', '\t\n '],
-    ['non-breaking spaces', '  '],
-    ['ideographic space', '　'],
-  ])('rejects a gym name that is only whitespace: %s', (_label, name) => {
-    const r = validateGymForm(form({ name }));
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.errors.name).toBe('Give the gym a name.');
-  });
-
-  it.each<[string, string]>([
-    ['Devanagari', 'जिम'],
-    ['Hinglish', 'Mera apna gym'],
-    ['accented', 'Café Fitnéss'],
-    ['emoji', '💪 Home'],
-    ['markup stays plain text', '<b>Gym</b> & "co"'],
-    ['sql-ish', "Robert'); DROP TABLE gyms;--"],
-  ])('keeps a %s name byte for byte (after trimming)', (_label, name) => {
-    const r = validateGymForm(form({ name: `  ${name}  ` }));
-    expect(r.ok && r.value.name).toBe(name);
-  });
-
-  it('accepts exactly 80 UTF-16 units and rejects 81', () => {
-    expect(validateGymForm(form({ name: 'é'.repeat(80) })).ok).toBe(true);
-    expect(validateGymForm(form({ name: 'é'.repeat(81) })).ok).toBe(false);
-  });
-
-  it('counts the limit after trimming, so padding cannot push a valid name over', () => {
-    expect(validateGymForm(form({ name: ' ' + 'a'.repeat(80) + ' ' })).ok).toBe(true);
-  });
-
-  it('rejects a gym name of 10000 characters without throwing', () => {
-    const r = validateGymForm(form({ name: 'x'.repeat(10000) }));
-    expect(r.ok).toBe(false);
   });
 });
 
@@ -221,13 +181,12 @@ describe('validateGymForm: many bars and shape', () => {
   });
 
   it('reports gym, barbell and bar errors together, not just the first', () => {
-    const r = validateGymForm(form({ name: '', barbellKg: 'x', bars: [bar('', '')] }));
+    const r = validateGymForm(form({ barbellKg: 'x', bars: [bar('', '')] }));
     expect(r).toEqual({
       ok: false,
       errors: {
-        name: 'Give the gym a name.',
         barbellKg: 'Use numbers only, for example 7.5.',
-        bars: { 0: { name: 'Give the bar a name.', weightKg: 'Enter a weight in kg.' } },
+        bars: { 0: { name: 'Give the bar a name.', weightKg: 'Enter a weight in Kg.' } },
       },
     });
   });
@@ -238,7 +197,7 @@ describe('validateGymForm: many bars and shape', () => {
   });
 
   it('is deterministic: the same form gives equal results twice', () => {
-    const f = form({ name: ' x ', bars: [bar('A', '5,5')] });
+    const f = form({ bars: [bar('A', '5,5')] });
     expect(validateGymForm(f)).toEqual(validateGymForm(f));
   });
 });
@@ -265,7 +224,6 @@ describe('validateGymForm: seeded property checks (fast-check is not a dependenc
     const next = rng(42);
     for (let i = 0; i < 2000; i++) {
       const f = form({
-        name: randomText(next),
         barbellKg: randomText(next),
         bars: Array.from({ length: Math.floor(next() * 4) }, () =>
           bar(randomText(next), randomText(next)),
@@ -284,7 +242,7 @@ describe('validateGymForm: seeded property checks (fast-check is not a dependenc
         });
       } else {
         const e = r.errors;
-        expect(e.name || e.barbellKg || Object.keys(e.bars).length).toBeTruthy();
+        expect(e.barbellKg || Object.keys(e.bars).length).toBeTruthy();
       }
     }
   });
@@ -301,30 +259,6 @@ describe('validateGymForm: seeded property checks (fast-check is not a dependenc
   });
 });
 
-describe('formatKg', () => {
-  it.each<[number, string]>([
-    [0, '0'],
-    [-0, '0'],
-    [20, '20'],
-    [7.5, '7.5'],
-    [7.25, '7.25'],
-    [0.1 + 0.2, '0.3'],
-    [7.504, '7.5'],
-    [7.506, '7.51'],
-    [100, '100'],
-    [1e-7, '0'],
-    [123456.789, '123456.79'],
-  ])('formats %s as %s', (kg, text) => {
-    expect(formatKg(kg)).toBe(text);
-  });
-
-  it('is idempotent through Number()', () => {
-    for (const kg of [0.3, 7.5, 12.34, 99.99, 0.01]) {
-      expect(formatKg(Number(formatKg(kg)))).toBe(formatKg(kg));
-    }
-  });
-});
-
 describe('summarizeBars', () => {
   it('uses the same trimmed number format for every bar and keeps order', () => {
     const g = gym({
@@ -335,7 +269,7 @@ describe('summarizeBars', () => {
         { id: 'c', name: 'Safety', weightKg: 0.1 + 0.2, kind: 'other' },
       ],
     });
-    expect(summarizeBars(g)).toBe('Barbell 20 kg · EZ bar 7.5 kg · Trap 25 kg · Safety 0.3 kg');
+    expect(summarizeBars(g)).toBe('Barbell 20 Kg · EZ bar 7.5 Kg · Trap 25 Kg · Safety 0.3 Kg');
   });
 
   it('handles 100 bars without dropping any', () => {
@@ -350,43 +284,7 @@ describe('summarizeBars', () => {
 
   it('prints bar names as given, including markup and a separator dot', () => {
     const g = gym({ bars: [{ id: 'a', name: '<i>x</i> · y', weightKg: 1, kind: 'other' }] });
-    expect(summarizeBars(g)).toBe('Barbell 15 kg · <i>x</i> · y 1 kg');
-  });
-});
-
-describe('pickDefaultGym', () => {
-  it('takes the first marked gym when data wrongly has two defaults', () => {
-    const a = gym({ id: 'a', isDefault: true });
-    const b = gym({ id: 'b', isDefault: true });
-    expect(pickDefaultGym([a, b])?.id).toBe('a');
-  });
-
-  it('breaks a createdAt tie by list order, without reordering', () => {
-    const a = gym({ id: 'a' });
-    const b = gym({ id: 'b' });
-    expect(pickDefaultGym([a, b])?.id).toBe('a');
-    expect(pickDefaultGym([b, a])?.id).toBe('b');
-  });
-
-  it('picks the oldest among many unmarked gyms, whatever the input order', () => {
-    const gyms = Array.from({ length: 30 }, (_, i) =>
-      gym({ id: `g${i}`, createdAt: `2026-10-${String(30 - i).padStart(2, '0')}T10:00:00Z` }),
-    );
-    expect(pickDefaultGym(gyms)?.id).toBe('g29');
-    expect(pickDefaultGym([...gyms].reverse())?.id).toBe('g29');
-  });
-
-  it('a timestamp with fractional seconds sorts before the same second without them', () => {
-    const early = gym({ id: 'early', createdAt: '2026-10-01T10:00:00+00:00' });
-    const late = gym({ id: 'late', createdAt: '2026-10-01T10:00:00.5+00:00' });
-    expect(pickDefaultGym([late, early])?.id).toBe('early');
-  });
-
-  it('createdAt is compared as text, so a +05:30 timestamp can win over an older UTC one', () => {
-    // 10:00+05:30 is 04:30Z, older than 06:00Z, but sorts after it as a string.
-    const older = gym({ id: 'older', createdAt: '2026-10-01T10:00:00+05:30' });
-    const newer = gym({ id: 'newer', createdAt: '2026-10-01T06:00:00Z' });
-    expect(pickDefaultGym([newer, older])?.id).toBe('older');
+    expect(summarizeBars(g)).toBe('Barbell 15 Kg · <i>x</i> · y 1 Kg');
   });
 });
 

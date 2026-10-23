@@ -3,10 +3,16 @@ import { describe, expect, it } from 'vitest';
 import type { GymSnapshot } from '../../data/local/types';
 import { BENCH, HOME_GYM, renderApp, offlineServer } from '../../test/appHarness';
 import { aSet, aWorkout } from '../../test/localDb';
+import { tapTogether } from '../../test/doubleTap';
 
-const HOME: GymSnapshot = { name: 'Home gym', barbellKg: 15, bars: HOME_GYM.bars };
+const HOME: GymSnapshot = { barbellKg: 15, bars: HOME_GYM.bars };
 
-async function openWith(path: string, totals: number[] = [], snapshot: unknown = HOME) {
+async function openWith(
+  path: string,
+  totals: number[] = [],
+  snapshot: unknown = HOME,
+  server?: ReturnType<typeof offlineServer>,
+) {
   const userId = `fix-${Math.random()}`;
   const first = renderApp('/workout', { userId, server: offlineServer() });
   const workout = await first.store.startWorkout({
@@ -31,7 +37,7 @@ async function openWith(path: string, totals: number[] = [], snapshot: unknown =
     ids.push(set.id);
   }
   first.unmount();
-  return { ...renderApp(path, { userId }), workout, ids };
+  return { ...renderApp(path, { userId, server }), workout, ids };
 }
 
 describe('undo against a status that moved on', () => {
@@ -48,8 +54,8 @@ describe('undo against a status that moved on', () => {
   });
 
   it('removes only one set on a double tap', async () => {
-    const { user, store, workout } = await openWith(`/workout?exercise=${BENCH}`, [50, 60]);
-    await user.dblClick(await screen.findByRole('button', { name: 'Undo last' }));
+    const { store, workout } = await openWith(`/workout?exercise=${BENCH}`, [50, 60]);
+    tapTogether(await screen.findByRole('button', { name: 'Undo last' }));
     await waitFor(async () => expect(await store.listSets(workout.id)).toHaveLength(1));
     await new Promise((resolve) => setTimeout(resolve, 100));
     expect(await store.listSets(workout.id)).toHaveLength(1);
@@ -58,9 +64,9 @@ describe('undo against a status that moved on', () => {
 
 describe('starting twice', () => {
   it('opens one workout on a double tap', async () => {
-    const { user, db } = renderApp('/workout');
-    await user.dblClick(await screen.findByRole('button', { name: 'Start workout' }));
-    await screen.findByText('Home gym · 15 kg bar');
+    const { db } = renderApp('/workout');
+    tapTogether(await screen.findByRole('button', { name: 'Start workout' }));
+    await screen.findByText('15 Kg bar');
     expect(await db.workouts.count()).toBe(1);
   });
 });
@@ -84,21 +90,18 @@ describe('switching how the weight is entered', () => {
 describe('damaged data on the device', () => {
   it('treats a damaged gym snapshot as missing, so the bar is asked for, not guessed', async () => {
     await openWith(`/workout/log?exercise=${BENCH}`, [], {
-      name: 'Home gym',
       barbellKg: 'heavy',
       bars: 7,
     });
-    expect(await screen.findByRole('heading', { name: /no barbell set/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /no barbell set up/i })).toBeInTheDocument();
   });
 
-  it('ignores a damaged saved gym list', async () => {
+  it('ignores a damaged saved gym', async () => {
     const { store } = renderApp('/workout');
-    await store.saveGyms([
-      { id: 'g', name: 'x', barbellKg: Number.NaN, isDefault: true, createdAt: 'x', bars: [] },
-    ]);
-    expect(await store.cachedGyms()).toBeNull();
-    await store.saveGyms('nonsense' as never);
-    expect(await store.cachedGyms()).toBeNull();
+    await store.saveGym({ id: 'g', barbellKg: Number.NaN, bars: [] });
+    expect(await store.cachedGym()).toBeNull();
+    await store.saveGym('nonsense' as never);
+    expect(await store.cachedGym()).toBeNull();
   });
 });
 
@@ -115,10 +118,11 @@ describe('the question dialog', () => {
 
 describe('signing out', () => {
   it('changes nothing on the device when you stay signed in', async () => {
-    const { user, store } = await openWith('/', [60]);
-    await store.saveGyms([HOME_GYM]);
+    // Offline, so the set stays waiting and the warning appears whatever the machine's speed.
+    const { user, store } = await openWith('/settings', [60], HOME, offlineServer());
+    await store.saveGym(HOME_GYM);
     await user.click(await screen.findByRole('button', { name: /sign out/i }));
     await user.click(await screen.findByRole('button', { name: 'Stay signed in' }));
-    expect(await store.cachedGyms()).not.toBeNull();
+    expect(await store.cachedGym()).not.toBeNull();
   });
 });

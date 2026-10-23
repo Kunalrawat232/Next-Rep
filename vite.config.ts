@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config';
 import type { Plugin } from 'vite';
 import { unsafePublicEnvProblems } from './src/data/remote/env';
 import { manifest } from './pwa.config';
+import { devApi } from './vite.devApi';
 
 /** Stops the dev server and the build when a secret would be published through a VITE_ variable. */
 function guardPublicEnv(): Plugin {
@@ -23,6 +24,7 @@ function guardPublicEnv(): Plugin {
 export default defineConfig({
   plugins: [
     guardPublicEnv(),
+    devApi(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -32,6 +34,9 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//],
         // The app shell, icons and the Latin font cut, so a cold start offline looks right.
         globPatterns: ['**/*.{js,css,html,svg,png}', '**/geist-latin-wght-normal*.woff2'],
+        // The liquid glass library (about 300 KB) is optional and loaded on demand where WebGL exists, so it is
+        // not stored for offline use: without it the CSS glass is already there.
+        globIgnores: ['**/liquidGL*.js'],
       },
     }),
   ],
@@ -39,6 +44,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'tests/design/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}', 'api/**/*.test.ts', 'tests/design/**/*.test.ts'],
   },
 });

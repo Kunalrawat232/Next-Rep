@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { z } from 'zod';
-import { BackLink, Button, buttonClasses } from '../../components';
+import {
+  buttonClasses,
+  LoadingMessage,
+  NotFound,
+  PageHeader,
+  RetryMessage,
+} from '../../components';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import { dayLabel, durationMinutes, formatDuration, groupByExercise } from '../../domain/history';
 import { useExerciseService, useExercises } from '../exercises';
 import { useLogStore, useSyncStatus } from '../sync';
-import { useRecordMarks } from '../progress';
+import { useRecordMarksState } from '../progress';
 import { SetList } from '../workout';
 import { countLabel, syncNote } from './rows';
 
@@ -53,32 +59,24 @@ export function WorkoutDetailPage() {
 
   const here = loaded?.workoutId === workoutId ? loaded : null;
   const shownSets = here?.status === 'ready' ? here.sets : [];
-  const marks = useRecordMarks(shownSets.map((s) => s.exerciseId));
+  const { marks, loaded: marksLoaded } = useRecordMarksState(shownSets.map((s) => s.exerciseId));
   if (here?.status === 'error')
     return (
-      <div role="alert" className="flex flex-col items-start gap-3">
-        <p>Could not read this workout from the device.</p>
-        <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
-          Try again
-        </Button>
-      </div>
+      <RetryMessage onRetry={() => setAttempt((n) => n + 1)}>
+        Could not read this workout from the device.
+      </RetryMessage>
     );
   if (!workoutId || here?.status === 'missing')
     return (
-      <div className="flex flex-col items-start gap-4">
-        <h1 className="text-title font-semibold">Workout not found</h1>
-        <p className="text-callout text-ink-muted">It may have been cleared from this device.</p>
-        <Link to="/history" className={buttonClasses('secondary')}>
-          Back to history
-        </Link>
-      </div>
+      <NotFound
+        title="Workout not found"
+        message="It may have been cleared from this device."
+        to="/history"
+        label="Back to history"
+      />
     );
-  if (!here || here.status !== 'ready' || exercises.status === 'loading')
-    return (
-      <p role="status" className="text-ink-muted">
-        Loading…
-      </p>
-    );
+  if (!here || here.status !== 'ready' || exercises.status === 'loading' || !marksLoaded)
+    return <LoadingMessage />;
 
   const { workout, sets } = here;
   const note = syncNote(workout, sets);
@@ -91,12 +89,9 @@ export function WorkoutDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-2">
-        <BackLink to="/history" />
-        <h1 className="text-title font-semibold">{dayLabel(workout.startedAt, new Date())}</h1>
-      </header>
+      <PageHeader back="/history" title={dayLabel(workout.startedAt, new Date())} />
       <p className="text-callout text-ink-muted">
-        {workout.gymSnapshot?.name ?? 'No gym'} · {countLabel(sets.length, 'set')}
+        {countLabel(sets.length, 'set')}
         {minutes !== null && ` · ${formatDuration(minutes)}`}
       </p>
       {workout.endedAt === null && (

@@ -15,12 +15,12 @@ const set = (
   loggedAt: `2026-10-0${at}T10:00:00.000Z`,
 });
 const marks = (sets: ReturnType<typeof set>[]) =>
-  Object.fromEntries([...recordMarks(sets)].map(([id, kind]) => [id, kind] as const));
+  Object.fromEntries([...recordMarks(sets, 'kg')].map(([id, kind]) => [id, kind] as const));
 
 describe('recordMarks', () => {
   it('never marks the first set', () => {
-    expect(recordMarks([set(100, 5, '1')]).size).toBe(0);
-    expect(recordMarks([]).size).toBe(0);
+    expect(recordMarks([set(100, 5, '1')], 'kg').size).toBe(0);
+    expect(recordMarks([], 'kg').size).toBe(0);
   });
 
   it.each<[string, [number, number][], (RecordKind | undefined)[]]>([
@@ -119,21 +119,21 @@ describe('recordMarks', () => {
     ],
   ])('%s', (_name, input, expected) => {
     const sets = input.map(([kg, reps], i) => set(kg, reps, String(i + 1)));
-    const result = recordMarks(sets);
+    const result = recordMarks(sets, 'kg');
     expect(sets.map((s) => result.get(s.id))).toEqual(expected);
   });
 
   it('compares weights as hundredths, so float dust is the same weight', () => {
     const a = set(62.5, 8, '1');
     const b = set(62.5 + 1e-12, 9, '2');
-    expect(recordMarks([a, b]).get(b.id)).toBe('reps');
+    expect(recordMarks([a, b], 'kg').get(b.id)).toBe('reps');
   });
 
   it('judges by logged time, not the order the sets are given in', () => {
     const early = set(60, 8, '1');
     const late = set(70, 5, '2');
-    expect(recordMarks([late, early]).get(late.id)).toBe('weight');
-    expect(recordMarks([late, early]).get(early.id)).toBeUndefined();
+    expect(recordMarks([late, early], 'kg').get(late.id)).toBe('weight');
+    expect(recordMarks([late, early], 'kg').get(early.id)).toBeUndefined();
   });
 
   it('breaks a tie in logged time by id', () => {
@@ -148,7 +148,7 @@ describe('recordMarks', () => {
       set(100, 5, '1', { exerciseId: 'squat' }),
       set(100, 5, '2', { exerciseId: 'squat' }),
     ];
-    const result = recordMarks([...bench, ...squat]);
+    const result = recordMarks([...bench, ...squat], 'kg');
     expect(result.get(bench[1]!.id)).toBe('weight');
     expect(result.get(squat[1]!.id)).toBeUndefined();
   });
@@ -156,7 +156,7 @@ describe('recordMarks', () => {
   it('does not change its input', () => {
     const input = [set(70, 5, '2'), set(60, 8, '1')];
     const copy = [...input];
-    recordMarks(input);
+    recordMarks(input, 'kg');
     expect(input).toEqual(copy);
   });
 
@@ -177,7 +177,7 @@ describe('recordMarks', () => {
       const ordered = [...sets].sort((x, y) =>
         x.loggedAt === y.loggedAt ? (x.id < y.id ? -1 : 1) : x.loggedAt < y.loggedAt ? -1 : 1,
       );
-      const result = recordMarks(sets);
+      const result = recordMarks(sets, 'kg');
       ordered.forEach((s, i) => {
         const earlier = ordered.slice(0, i).filter((e) => e.exerciseId === s.exerciseId);
         const w = Math.round(s.totalKg * 100);
@@ -201,13 +201,16 @@ describe('sessionBests', () => {
   });
 
   it('takes the heaviest set of each workout, then the one with more reps, oldest workout first', () => {
-    const result = sessionBests([
-      inWorkout('w2', 65, 5, '5'),
-      inWorkout('w1', 60, 8, '1'),
-      inWorkout('w1', 62.5, 6, '2'),
-      inWorkout('w1', 62.5, 8, '3'),
-      inWorkout('w2', 60, 10, '4'),
-    ]);
+    const result = sessionBests(
+      [
+        inWorkout('w2', 65, 5, '5'),
+        inWorkout('w1', 60, 8, '1'),
+        inWorkout('w1', 62.5, 6, '2'),
+        inWorkout('w1', 62.5, 8, '3'),
+        inWorkout('w2', 60, 10, '4'),
+      ],
+      'kg',
+    );
     expect(result.map((r) => [r.workoutId, r.totalKg, r.reps])).toEqual([
       ['w1', 62.5, 8],
       ['w2', 65, 5],
@@ -215,19 +218,17 @@ describe('sessionBests', () => {
   });
 
   it('is empty for no sets and one point for one set', () => {
-    expect(sessionBests([])).toEqual([]);
-    expect(sessionBests([inWorkout('w', 60, 8, '1')])).toHaveLength(1);
+    expect(sessionBests([], 'kg')).toEqual([]);
+    expect(sessionBests([inWorkout('w', 60, 8, '1')], 'kg')).toHaveLength(1);
   });
 });
 
 describe('currentRecords', () => {
   it('has the heaviest set and the most reps at each weight', () => {
-    const records = currentRecords([
-      set(60, 8, '1'),
-      set(60, 10, '2'),
-      set(70, 3, '3'),
-      set(70, 3, '4'),
-    ]);
+    const records = currentRecords(
+      [set(60, 8, '1'), set(60, 10, '2'), set(70, 3, '3'), set(70, 3, '4')],
+      'kg',
+    );
     expect(records.heaviest).toMatchObject({ totalKg: 70, reps: 3 });
     expect(records.repsAtWeight.map((r) => [r.totalKg, r.reps])).toEqual([
       [70, 3],
@@ -238,17 +239,17 @@ describe('currentRecords', () => {
   it('keeps the earlier set when reps tie', () => {
     const a = set(60, 8, '1', { id: 'a' });
     const b = set(60, 8, '2', { id: 'b' });
-    expect(currentRecords([b, a]).heaviest?.setId).toBe('a');
+    expect(currentRecords([b, a], 'kg').heaviest?.setId).toBe('a');
   });
 
   it('has nothing without sets', () => {
-    expect(currentRecords([])).toEqual({ heaviest: null, repsAtWeight: [] });
+    expect(currentRecords([], 'kg')).toEqual({ heaviest: null, repsAtWeight: [] });
   });
 });
 
 describe('currentRecords for bodyweight', () => {
   it('has no heaviest when every set is at 0 kg, but keeps the most reps', () => {
-    const records = currentRecords([set(0, 10, '1'), set(0, 12, '2')]);
+    const records = currentRecords([set(0, 10, '1'), set(0, 12, '2')], 'kg');
     expect(records.heaviest).toBeNull();
     expect(records.repsAtWeight.map((r) => [r.totalKg, r.reps])).toEqual([[0, 12]]);
   });

@@ -14,7 +14,7 @@ Done when:   code + tests pass, lint and types clean, docs updated, ai-log entry
 ## Principles
 
 - Plan before coding; ask before adding dependencies, changing the data model or changing a decision.
-- One feature or fix per task; commit after each working step.
+- One feature or fix per task; one commit per finished task. Ask before any other commit and never push without approval (rule in [`CLAUDE.md`](../../CLAUDE.md) section 3).
 - Name the docs the AI must read, rather than pasting them.
 - Say what to do when unsure: check docs, say so, do not guess.
 - After each task, log it in [`docs/learning/ai-log.md`](../learning/ai-log.md).

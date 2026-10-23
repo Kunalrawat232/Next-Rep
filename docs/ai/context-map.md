@@ -6,7 +6,7 @@ Context engineering is judged, so every context file has a clear job. Keep them 
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `CLAUDE.md`                             | Entry point for AI assistants. Short: product summary, commands, non-negotiable rules, folder map, links. No duplicated docs. |
 | `README.md`                             | Product, setup, stack, limitations for humans and judges.                                                                     |
-| `.claude/settings.json`                 | Enabled plugins, permission denies (`.env*`), hooks (lint/typecheck on edit, tests on stop).                                  |
+| `.claude/settings.json`                 | Enabled plugins, permission denies (the common `.env` files), hooks (lint/typecheck on edit, tests on stop).                  |
 | `.claude/hooks/*.sh`                    | The hook scripts the settings call.                                                                                           |
 | `.claude/agents/*.md`                   | Five subagents with scoped tools. See [agents](agents.md).                                                                    |
 | `.claude/skills/*/SKILL.md`             | `new-feature` and `parser-test-cases` workflows.                                                                              |
@@ -20,7 +20,7 @@ Context engineering is judged, so every context file has a clear job. Keep them 
 
 ## Experiment
 
-One with/without-context comparison is recorded in the AI log: the same task run with and without the context files, and what differed.
+Planned, not done yet: one with/without-context comparison (the same task run with and without the context files, and what differed) to be recorded in the AI log. No such entry exists today.
 
 ## Maintenance
 

@@ -37,6 +37,24 @@
   --radius-full: 999px;
 
   --spacing-touch: 48px;
+
+  /* The edge of a glass surface (see the glass tokens below). */
+  --color-glass-line: var(--glass-line);
+}
+
+/* Glass tokens: translucent fills, a hairline highlight, and the soft colour behind everything that gives
+   the glass something to show. Fills are rgb() with alpha, so they stay out of the hex colour tokens above. */
+:root {
+  --glass-fill: rgb(14 16 24 / 0.55);
+  --glass-fill-strong: rgb(14 16 24 / 0.72);
+  --glass-line: rgb(255 255 255 / 0.2);
+  --glass-highlight: rgb(255 255 255 / 0.3);
+  --glass-shadow: rgb(0 0 0 / 0.5);
+  --glass-blur: 22px;
+  --glass-saturate: 170%;
+  --ambient-a: rgb(91 140 255 / 0.42);
+  --ambient-b: rgb(170 90 255 / 0.36);
+  --ambient-c: rgb(40 210 180 / 0.26);
 }
 
 [data-theme='light'] {
@@ -51,6 +69,15 @@
   --color-success: #18793a;
   --color-warning: #b25e00;
   --color-danger: #d70015;
+
+  --glass-fill: rgb(255 255 255 / 0.88);
+  --glass-fill-strong: rgb(255 255 255 / 0.9);
+  --glass-line: rgb(0 0 0 / 0.1);
+  --glass-highlight: rgb(255 255 255 / 0.95);
+  --glass-shadow: rgb(20 30 60 / 0.16);
+  --ambient-a: rgb(37 99 235 / 0.18);
+  --ambient-b: rgb(139 92 246 / 0.18);
+  --ambient-c: rgb(16 185 129 / 0.16);
 }
 
 html {
@@ -79,4 +106,154 @@ body {
 input[type='search']::-webkit-search-cancel-button {
   appearance: none;
   display: none;
+}
+
+/* The end pose of an exercise photo fades in over the start pose and back: a smooth up-and-down, not video. */
+@keyframes demo-fade {
+  0%,
+  12% {
+    opacity: 0;
+  }
+  42%,
+  58% {
+    opacity: 1;
+  }
+  88%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.demo-fade {
+  animation: demo-fade 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-fade {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Liquid glass. The page has soft colour behind it (#ambient, in the app shell), and these classes lay
+   translucent surfaces over it.
+   - glass-flat: a translucent fill, a hairline edge and a highlight. For cards, buttons and chips, which are
+     many on a page: no blur, so it costs nothing, and over a smooth background it looks the same.
+   - glass: the same, plus a blur of what scrolls behind it. For the few overlays that sit over content: the
+     bars, the floating button, dialogs. Without backdrop-filter support, or when the person asked for less
+     transparency, it is a solid surface. */
+.glass-flat,
+.glass {
+  background: var(--glass-fill);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 10px 28px -12px var(--glass-shadow);
+}
+
+.glass {
+  background: var(--color-surface-200);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass-flat,
+  .glass {
+    background: var(--color-surface-200);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* The colour behind the app, fixed to the screen. Glass shows it; text never sits on it directly. */
+#ambient {
+  background:
+    radial-gradient(70% 45% at 10% 6%, var(--ambient-a), transparent 70%),
+    radial-gradient(60% 45% at 95% 30%, var(--ambient-b), transparent 70%),
+    radial-gradient(70% 55% at 35% 100%, var(--ambient-c), transparent 70%),
+    var(--color-surface-100);
+}
+
+/* Loaders. They fade in after a moment, so something that loads at once never flashes a loader. */
+@keyframes loader-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.loader-in {
+  opacity: 0;
+  animation: loader-in 0.3s ease-out 0.2s forwards;
+}
+
+/* A placeholder block with a soft light sweeping across it. */
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--color-surface-300) 30%,
+    color-mix(in srgb, var(--color-ink) 14%, var(--color-surface-300)) 50%,
+    var(--color-surface-300) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* "The coach is typing": three dots that rise and fall one after another. */
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* liquid-gl switches pointer events off on the element it lenses (it assumes a decoration); the tab bar and the
+   Workout button are controls, so they must stay clickable. */
+[data-liquid] {
+  pointer-events: auto !important;
 }

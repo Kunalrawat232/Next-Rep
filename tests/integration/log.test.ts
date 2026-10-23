@@ -103,6 +103,20 @@ describe.skipIf(!configured)('recording and syncing on the hosted project', () =
       gymId: null,
       startedAt: new Date(Date.now() - 60_000).toISOString(),
     });
+    // An empty workout is never sent (it is dropped on End), so this one needs a set to be synced.
+    await store.logSet({
+      id: crypto.randomUUID(),
+      workoutId: id,
+      exerciseId: BENCH,
+      totalKg: 60,
+      barKg: 20,
+      perSideKg: 20,
+      inputMode: 'per_side',
+      reps: 8,
+      source: 'tap',
+      rawTranscript: null,
+      loggedAt: new Date().toISOString(),
+    });
     await worker.run();
     const endedAt = new Date().toISOString();
     await store.endWorkout(id, endedAt);
