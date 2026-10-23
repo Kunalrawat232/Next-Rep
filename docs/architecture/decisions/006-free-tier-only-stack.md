@@ -1,6 +1,6 @@
 # ADR-006: Free-tier-only stack
 
-- **Status:** accepted (2026-10-08)
+- **Status:** accepted (2026-10-08). Amended by [ADR-018](018-coach-second-provider.md): Groq (free tier, no billing account) is a fourth free service, used only as the coach's second provider.
 
 ## Context
 

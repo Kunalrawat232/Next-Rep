@@ -1,6 +1,6 @@
 # User journeys
 
-Status (2026-10-10): the tap path, offline sync, history, progress and the suggestion are built (suggestion on `feat/home`, not yet merged). Everything that needs voice (the mic steps, "Misheard number", "Voice unavailable" and "Gemini unavailable" below): Status: planned (Phase 3), not built yet. Until then the same sets are logged by tap.
+Status (2026-10-23): every journey below is built and merged: the tap path, offline sync, history, progress and the suggestion, and the voice path (the mic steps, "Misheard number", "Voice unavailable" and "Gemini unavailable").
 
 ## Primary journey (the demo story)
 

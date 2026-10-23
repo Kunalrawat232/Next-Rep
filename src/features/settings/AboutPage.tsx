@@ -33,7 +33,9 @@ export function AboutPage() {
         <p className="text-callout">
           The liquid glass buttons use{' '}
           <External href="https://github.com/naughtyduk/liquidGL">liquid-gl</External> (MIT
-          licence).
+          licence). The text is set in{' '}
+          <External href="https://github.com/vercel/geist-font">Geist</External> (SIL Open Font
+          License 1.1).
         </p>
       </Section>
 

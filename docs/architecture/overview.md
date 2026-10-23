@@ -1,32 +1,35 @@
 # Architecture overview
 
-Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API). Also built: auth, gyms, exercises, tap logging, offline log and sync, history, progress, Home and Settings. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
+Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API), and the AI coach (`/api/coach`, Gemini with an optional Groq second provider; [ADR-017](decisions/017-ai-coach.md), [ADR-018](decisions/018-coach-second-provider.md)). Also built: auth, one gym per user, exercises, tap logging, offline log and sync, history, progress, Home, Settings and About. Deployed as a Vercel preview (2026-10-23); production is not deployed yet. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
 
 ## Components
 
 ```
 Phone: installable web app (PWA)
-├── UI screens ............ logging, history, charts, PRs, settings
+├── UI screens ............ logging, history, charts, PRs, coach chat, settings
 ├── Voice input ........... browser Web Speech API (online only)
 ├── Parser + validators ... pure TypeScript domain logic (works offline)
-└── Local store ........... IndexedDB (Dexie) + sync queue
+└── Local store ........... IndexedDB (Dexie): sets, sync queue, coach chat
 
 Vercel
 ├── Static hosting ........ the PWA
-└── /api/parse ............ serverless function, holds GEMINI_API_KEY
+├── /api/parse ............ serverless function, holds GEMINI_API_KEY
+└── /api/coach ............ serverless function, text advice; GEMINI_API_KEY and the optional FALLBACK_* settings
 
 Supabase (free)
 ├── Auth .................. email + password sign-in
 └── Postgres + RLS ........ each user can only access their own rows
 
-Google Gemini API (free tier) ... called ONLY by /api/parse, ONLY as a fallback
+Google Gemini API (free tier) ... called ONLY by /api/parse (as a fallback for voice) and /api/coach
 
-Laya (later, optional) .......... intent model, not part of the MVP (ADR-004)
+Groq API (free tier, optional) .. the coach's second provider, asked only when Gemini cannot answer (ADR-018)
+
+Laya ............................ dropped, never built (ADR-004)
 ```
 
-## Data flow: logging a set by voice (planned, Phase 3)
+## Data flow: logging a set by voice
 
-Status: planned (Phase 3), not built yet. Tap logging, which is built, follows steps 3, 6 (for tap, the ambiguity prompt), 7 and 8.
+Status: built. Tap logging follows steps 3, 6 (for tap, the ambiguity prompt), 7 and 8.
 
 1. The user holds the mic button; the Web Speech API returns a transcript (plus alternatives if available).
 2. The **parser** (local, deterministic) extracts intent, exercise, weight, unit, reps and weight mode, and returns a confidence score. See [voice grammar](../domain/voice-grammar.md).
@@ -39,7 +42,7 @@ Status: planned (Phase 3), not built yet. Tap logging, which is built, follows s
 
 ## Principle: "AI listens, code verifies"
 
-Speech recognition and Gemini are treated as **untrusted inputs**. All numbers that reach storage must pass deterministic validation and be visible to the user before saving.
+Speech recognition and the AI models (Gemini, and Groq for the coach) are treated as **untrusted inputs**. The coach is read only: its text is shown as plain text and never becomes a stored number. All numbers that reach storage must pass deterministic validation and be visible to the user before saving.
 
 ## Folder structure
 

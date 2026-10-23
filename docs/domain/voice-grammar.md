@@ -1,6 +1,6 @@
 # Voice grammar and parser specification
 
-Status: the parser is built (`src/domain/parser/`), English and Hindi number words, and the mic and confirm card are on the workout page (`src/features/voice`, `src/features/workout/VoiceLogger.tsx`). Not built yet: the Gemini fallback and editing a set by voice.
+Status: the parser is built (`src/domain/parser/`), English and Hindi number words, and the mic and confirm card are on the workout page (`src/features/voice`, `src/features/workout/VoiceLogger.tsx`). The Gemini fallback is built too (`api/_lib/parse.ts`, read back by `src/domain/parser/fromGemini.ts`), and so are the voice commands repeat, undo, rest and editing a set (the `edit` kind in `src/features/voice/voiceDraft.ts`).
 
 ## Intents (small, fixed set)
 

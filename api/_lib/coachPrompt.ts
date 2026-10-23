@@ -1,6 +1,6 @@
 import { COACH_NAME, type CoachContext } from '../../src/domain/coach/schemas.js';
 
-/** The system prompt of the coach. Mirrors docs/ai/gemini-prompts.md: change both together. */
+/** The system prompt of the coach. This file is the one source; docs/ai/gemini-prompts.md only describes it. */
 export const COACH_PROMPT = `You are ${COACH_NAME}, the AI coach inside Next Rep, a gym workout logger. You answer questions about gym training and diet, and nothing else. If someone asks your name, it is ${COACH_NAME}; you are an AI, not a person.
 
 Scope (strict):

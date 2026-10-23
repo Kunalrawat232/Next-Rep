@@ -1,14 +1,14 @@
 # Security checklist
 
-Status as of 2026-10-10. `[x]` = in place, `[ ]` = to do (with the phase that delivers it).
+Status as of 2026-10-23. `[x]` = in place, `[ ]` = to do (with the phase that delivers it). The AI coach, its second provider (Groq) and the project-wide daily ceiling were reviewed in the security audit of 2026-10-17 (see the [AI QA report](../qa/ai-qa-report.md)); its fixes are in [ADR-017](../architecture/decisions/017-ai-coach.md).
 
 - [x] `.env` and `.env.*` (except `.env.example`) in `.gitignore` **before the first commit**.
 - [x] Gitleaks runs as a pre-commit hook (`.githooks/pre-commit`, enabled by the npm `prepare` script) and in CI (`.github/workflows/ci.yml`, full-history scan). The hook was verified to block a fake token.
 - [x] `.claude/settings.json` denies reading the common `.env` files (`.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`); `.env.example` stays readable.
 - [x] Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are exposed to the client (the anon key is designed to be public; RLS is what protects data). The service role key is **never** used in the client and is not needed at all for the MVP. _(Enforced in `src/data/remote/env.ts`, which rejects secret and service_role keys; the built bundle was checked for the project host and key.)_
-- [x] RLS enabled on every table (all seven tables in the migrations), with tests proving isolation. _(Update 2026-10-09: `workouts` and `sets` isolation, including changing a row's owner, pointing a set at another user's workout and the `anon` role, is covered in `tests/db/log.test.ts` and `tests/integration/log.test.ts`.)_ _(All tables are covered by `npm run test:db` in PGlite. On the hosted project, `npm run test:integration` proved the `profiles` rules on 2026-10-08: own row only, other users hidden, cross-user insert refused with 42501, cross-user update changes nothing, signed-out closed. Hosted tests for later tables were added with each feature; they are run by the developer, not in CI.)_
-- [ ] `/api/parse` verifies the Supabase JWT, validates input with Zod, limits transcript length, rate-limits per user, and never logs full transcripts with user identifiers. _(Status: built 2026-10-13 and covered by `api/_lib/parse.test.ts`; checked once against the live API.)_
-- [ ] `/api/coach` verifies the Supabase JWT, validates the question and the summary with a strict Zod schema, caps lengths, rate-limits per user, never logs questions or replies, and the screen shows replies as text only. _(Status: built 2026-10-17 and covered by `api/_lib/coach.test.ts` and `src/features/coach`; not yet run against the live API.)_
+- [x] RLS enabled on every table (every table in the migrations, including `api_daily_totals`), with tests proving isolation. _(Update 2026-10-09: `workouts` and `sets` isolation, including changing a row's owner, pointing a set at another user's workout and the `anon` role, is covered in `tests/db/log.test.ts` and `tests/integration/log.test.ts`.)_ _(All tables are covered by `npm run test:db` in PGlite. On the hosted project, `npm run test:integration` proved the `profiles` rules on 2026-10-08: own row only, other users hidden, cross-user insert refused with 42501, cross-user update changes nothing, signed-out closed. Hosted tests for later tables were added with each feature; they are run by the developer, not in CI.)_
+- [x] `/api/parse` verifies the Supabase JWT, validates input with Zod, limits transcript length, rate-limits per user, counts against the daily ceiling, and never logs transcripts (only the error name). _(Done 2026-10-23: built 2026-10-13, covered by `api/_lib/parse.test.ts`; checked once against the live API.)_
+- [x] `/api/coach` verifies the Supabase JWT, validates the question and the summary with a strict Zod schema, caps lengths, rate-limits per user, counts against the daily ceiling, never logs questions or replies (`api/_lib/coach.ts` logs only the failing step, the error kind and the status), and the screen shows replies as text only. _(Done 2026-10-23: built 2026-10-17, covered by `api/_lib/coach.test.ts`, `coachScope.test.ts`, `fallbackProvider.test.ts` and `src/features/coach`; `npm run check:coach` passed for Gemini and Groq on 2026-10-19.)_
 - [x] All user input validated client-side AND enforced by DB constraints (shared Zod schemas, check constraints in the migrations, `tests/db`).
 - [x] No `dangerouslySetInnerHTML`; React escaping only. _(Enforced by review and the coding standards.)_
 - [ ] Dependencies kept minimal and pinned; run `npm audit` before submission and document known issues. _(Clean at scaffold: 0 vulnerabilities. Re-run in Phase 5.)_
@@ -18,8 +18,8 @@ Status as of 2026-10-10. `[x]` = in place, `[ ]` = to do (with the phase that de
 
 - [x] The browser key is allowlisted (publishable or anon only); a Vite plugin refuses to run when a secret-looking `VITE_` variable or a bad key is present, and CI fails if a secret-looking key is in `dist/`.
 - [x] Security headers in `vercel.json` (frame-ancestors, nosniff, referrer and permissions policy).
-- [ ] Full Content Security Policy: test it on a real Vercel preview first. _(Phase 5.)_
-- [ ] Switch "Confirm email" on at code freeze so sign-up no longer reveals registered addresses (ADR-007; date in the [roadmap](../plans/roadmap.md)). _(Before code freeze.)_
+- [ ] Full Content Security Policy: test it on the Vercel preview (one was deployed on 2026-10-23) before production. _(Phase 5.)_
+- [ ] Switch on, in the Supabase dashboard, "Confirm email" (so sign-up no longer reveals registered addresses, ADR-007), CAPTCHA and leaked-password protection at code freeze; date in the [roadmap](../plans/roadmap.md). _(Planned for 23 to 24 Oct, before the freeze.)_
 
 ## Supabase-specific traps to check in every schema or policy change
 

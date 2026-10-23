@@ -34,6 +34,11 @@ describe('About and credits', () => {
       'href',
       'https://github.com/naughtyduk/liquidGL',
     );
+    expect(main.getByRole('link', { name: 'Geist' })).toHaveAttribute(
+      'href',
+      'https://github.com/vercel/geist-font',
+    );
+    expect(main.getByText(/SIL Open Font License/)).toBeInTheDocument();
   });
 
   it('opens every outside link safely in a new tab', async () => {

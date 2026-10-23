@@ -9,8 +9,8 @@
 | Bar weight                | Weight of the empty bar (commonly 15 or 20 kg); set per gym (the user can choose a different bar of that gym).                                                                          |
 | Input mode                | How the weight was entered: `total` or `per_side`. Tap logging stores the mode the user actually used, with `source = 'tap'`; `tap` as an input mode is no longer written.              |
 | Confidence                | 0 to 1 score of how sure the parser is, from match scores and completeness.                                                                                                             |
-| Confirmation card         | Planned (Phase 3) for voice: the card showing the parsed set before saving. Built today for tap logging: `BreakdownCard`.                                                               |
-| Ambiguity prompt          | The `AmbiguityPrompt` with big tap buttons used when weight mode or a number is unclear.                                                                                                |
+| Confirmation card         | The card showing the set before saving: `VoiceConfirmCard` for voice (`src/features/workout`), `BreakdownCard` for tap logging.                                                         |
+| Ambiguity prompt          | The `AmbiguityPrompt` with big tap buttons used when weight mode or a number is unclear (built, `src/features/workout`).                                                                |
 | Confusable                | A pair of numbers speech recognition mixes up (list in [weight rules](weight-rules.md)).                                                                                                |
 | Working set               | A set at the heaviest weight of the last session; it counts toward progression, so lighter warm-up sets never count. See [ADR-005](../architecture/decisions/005-progression-rules.md). |
 | Unit                      | The weight unit the user chose (kg or lb). It only decides how weights are shown and typed; storage is always kg. See [weight rules](weight-rules.md).                                  |

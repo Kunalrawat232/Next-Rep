@@ -19,7 +19,7 @@ ADR-010 left out the exercise dataset's pictures: they are © Gym visual, and th
 
 - **Keep ADR-010's "no media":** safest, but no demonstrations.
 - **Download and host the GIFs:** copies the owner's files; ruled out by the licence wording and by the brief.
-- **A `demo_media_url` column on `exercises`:** needs migration 0004, a seed regeneration and a hosted apply for no gain over a reviewed file.
+- **A `demo_media_url` column on `exercises`:** needs a new migration, a seed regeneration and a hosted apply for no gain over a reviewed file.
 - **The raw GitHub address instead of jsDelivr:** it caches for 5 minutes, is not meant to serve other sites, and can be rate limited.
 
 ## Consequences

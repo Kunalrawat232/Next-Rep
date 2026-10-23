@@ -14,6 +14,6 @@ For the code under test:
 2. Write table-driven Vitest tests for the most valuable ones, next to the code as `*.test.ts` (or `tests/` for e2e and fixtures).
 3. Run them and report: tests added, tests failing, suspected bugs.
 
-Never change production code. Report bugs instead of fixing them. Do not write duplicate tests; check existing ones first. Tests must be able to fail: confirm each new test would catch a regression.
+Add new test files only: never edit or overwrite an existing test file, and never change production code. Check `git diff --stat` for unexpected changes before reporting. Report bugs instead of fixing them. Do not write duplicate tests; check existing ones first. Tests must be able to fail: confirm each new test would catch a regression.
 
 End with a short structured report: tests added (count), tests failing, suspected bugs, files touched, open questions. The developer reviews every test before it is merged; record generated/kept/rejected counts in `docs/qa/ai-qa-report.md` when asked.

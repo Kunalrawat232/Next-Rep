@@ -19,7 +19,7 @@ Free projects pause after inactivity: check the project is awake before demos an
 
 ### 1.2 Apply the schema and seed
 
-**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`, `0003_exercise_muscle.sql` and `0004_one_gym_per_user.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
+**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`, `0003_exercise_muscle.sql`, `0004_one_gym_per_user.sql` and `0005_rate_limit_scopes.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
 
 **Option B: Supabase CLI** (installed, v2.120.0).
 
@@ -45,9 +45,11 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 ### 1.4 Auth settings
 
 - **Email provider** is enabled by default. The app uses email + password.
-- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **At code freeze turn it back on** (see the [roadmap](../plans/roadmap.md)): the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
+- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **Switch it on on 23 to 24 Oct, before the 25 Oct freeze** (see the [roadmap](../plans/roadmap.md)), then check that mail arrives: the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
+- **CAPTCHA:** to switch on in the Auth settings (Attack Protection) on 23 to 24 Oct, with the other two settings here. Not done yet.
+- **Leaked-password protection:** to switch on in the Auth settings on 23 to 24 Oct. Not done yet.
 - Set a sensible minimum password length in the Auth settings.
-- **Site URL / redirect URLs:** set the Site URL to your Vercel production URL once you have it; add `http://localhost:5173` for local dev.
+- **Site URL / redirect URLs:** set the Site URL to your Vercel production URL once you have it (production is not deployed yet); add `http://localhost:5173` for local dev.
 
 ### 1.5 Test users (for E2E and the RLS isolation suite)
 
@@ -68,7 +70,7 @@ The same credentials let you run `npm run test:integration` (profile access rule
 **Hosted checks: what ran and what has not** (single statement; as recorded in the AI log, 2026-10-10):
 
 - Ran, 2026-10-08, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
-- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). Checked on 2026-10-11 through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
+- Run on 2026-10-10: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). The suite now has 5 tests in 4 files (auth x2, workout, exerciseDemo, smoke) and all passed on 2026-10-23. Checked on 2026-10-11 through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
 
 ## 2. Gemini API key (free tier, no billing)
 
@@ -80,21 +82,29 @@ The same credentials let you run `npm run test:integration` (profile access rule
 
 Free-tier prompts may be used by Google to improve its products, which is why only the transcript is sent ([threat model](../security/threat-model.md)).
 
-## 3. Vercel (hosting + `/api/parse`)
+### 2.1 AI coach and the Groq second provider (optional)
+
+The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)) uses the same `GEMINI_API_KEY`. It may use another free-tier model through `COACH_MODEL`; empty means `GEMINI_MODEL`. When Gemini cannot answer, the coach asks one second free provider with the same prompt and checks ([ADR-018](../architecture/decisions/018-coach-second-provider.md)): create a key at console.groq.com on its free tier, with no billing, and set `FALLBACK_API_KEY`, `FALLBACK_BASE_URL` and `FALLBACK_MODEL` (all three or none; the model id comes from your account's model list). Without them the coach has no second provider. Check with `npm run check:coach`, which you run yourself.
+
+## 3. Vercel (hosting + `/api/parse` and `/api/coach`)
 
 1. Sign in at vercel.com with the **Hobby** plan.
-2. **The repo is on GitHub** (`main`, with PRs up to #11 merged, as of 2026-10-10). Branches that are not pushed yet (the work on `feat/home` and below) need your explicit go-ahead to push. Then **Add New > Project** and import the repo.
+2. **The repo is on GitHub** (`main` and 12 other branches pushed, as of 2026-10-23; CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
 3. Settings: Framework preset **Vite** (auto-detected), build command `npm run build`, output directory `dist`, Node.js version **22.x**.
 4. **Environment variables** (add before the first deploy). The names are single-sourced in `.env.example`; this table says where each one is set:
 
-| Name                     | Value                          | Environments                     | Notes                                            |
-| ------------------------ | ------------------------------ | -------------------------------- | ------------------------------------------------ |
-| `VITE_SUPABASE_URL`      | Project URL                    | Production, Preview, Development | Public (baked into the client at build time)     |
-| `VITE_SUPABASE_ANON_KEY` | publishable key                | Production, Preview, Development | Public by design; RLS protects data              |
-| `SUPABASE_URL`           | Project URL                    | Production, Preview              | Server only (token verification in `/api/parse`) |
-| `SUPABASE_ANON_KEY`      | publishable key                | Production, Preview              | Server only                                      |
-| `GEMINI_API_KEY`         | key from section 2             | Production, Preview              | Server only; mark as sensitive                   |
-| `GEMINI_MODEL`           | free-tier Flash-class model id | Production, Preview              | Server only                                      |
+| Name                     | Value                            | Environments                     | Notes                                                 |
+| ------------------------ | -------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| `VITE_SUPABASE_URL`      | Project URL                      | Production, Preview, Development | Public (baked into the client at build time)          |
+| `VITE_SUPABASE_ANON_KEY` | publishable key                  | Production, Preview, Development | Public by design; RLS protects data                   |
+| `SUPABASE_URL`           | Project URL                      | Production, Preview              | Server only (token verification in `/api/*`)          |
+| `SUPABASE_ANON_KEY`      | publishable key                  | Production, Preview              | Server only                                           |
+| `GEMINI_API_KEY`         | key from section 2               | Production, Preview              | Server only; mark as sensitive                        |
+| `GEMINI_MODEL`           | free-tier Flash-class model id   | Production, Preview              | Server only                                           |
+| `COACH_MODEL`            | another free-tier model id       | Production, Preview              | Optional, server only; empty means `GEMINI_MODEL`     |
+| `FALLBACK_API_KEY`       | key from section 2.1             | Production, Preview              | Optional, server only; mark as sensitive              |
+| `FALLBACK_BASE_URL`      | `https://api.groq.com/openai/v1` | Production, Preview              | Optional, server only; all three `FALLBACK_*` or none |
+| `FALLBACK_MODEL`         | model id from the Groq console   | Production, Preview              | Optional, server only                                 |
 
 `VITE_*` values are baked in at build time, so redeploy after changing them. Do not add any service-role or secret key. 5. Deploy. `vercel.json` already contains the single-page-app fallback rewrite so React Router deep links work. 6. **Preview deployments** give you HTTPS URLs, which phones need for voice. If previews show a Vercel login wall, adjust **Deployment Protection** in the project settings. 7. Optional: put the functions in the region closest to your Supabase project (Settings > Functions).
 
@@ -120,7 +130,7 @@ cp .env.example .env.local
 
 ## 5. GitHub
 
-- Push approval: tell Claude Code explicitly when you want a branch pushed. `chore/phase-0` was merged to `main` as PR #1 long ago; the branches still local are `fix/double-tap-guards`, `feat/settings`, `feat/units`, `refactor/shared-ui` and `feat/home` (as of 2026-10-10).
+- Push approval: tell Claude Code explicitly when you want a branch pushed. As of 2026-10-23 `main` and 12 other branches are pushed, and `feat/coach`, `feat/home`, `feat/liquid-glass`, `feat/settings`, `feat/units`, `fix/double-tap-guards` and `refactor/shared-ui` (still local only) are all merged into `main`.
 - **CI** (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, `test:db`, `seed:check`, build, a grep of the built bundle for secrets, and a gitleaks full-history scan; it needs no secrets.
 - The hosted integration suite and the E2E smoke are run by you, not by CI (CI has no step for them). Only if you later add such a step, add the Supabase URL, publishable key and the four `E2E_*` values as **repository secrets**.
 - **GitHub plugin:** it failed to connect with "Authorization header is badly formatted". Run `/mcp` in Claude Code and re-authenticate it. This is optional; `git` and the web UI are enough.
@@ -137,13 +147,15 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin on 2026-10-16 (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
 - [x] Advisors reviewed (healthy, no issues on 2026-10-08)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in, 2026-10-08)
+- [ ] Confirm email, CAPTCHA and leaked-password protection switched on (23 to 24 Oct, before the 25 Oct freeze)
 - [ ] Site URL set (needs the Vercel production URL)
-- [ ] Gemini key created with **no billing**; `GEMINI_MODEL` chosen
-- [x] Repo pushed (GitHub, `main` up to PR #11)
-- [ ] Vercel project imported; env vars set; deployed (no deployment exists yet)
+- [x] Gemini key created with **no billing**; `GEMINI_MODEL` chosen (Gemini verified live on a preview deploy)
+- [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`, 2026-10-23)
+- [x] Vercel project `next-rep` imported; env vars set; preview deployed (2026-10-13 and 2026-10-23)
+- [ ] Production deployed (not yet)
 - [ ] Production page loads; `POST /api/parse` with no token returns 401 JSON
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, 2026-10-08, before migrations 0002 and 0003)
-- [ ] A phone opens the preview URL over HTTPS
+- [ ] A phone opens the preview URL over HTTPS (not recorded; check it yourself)
 
 ## Troubleshooting
 

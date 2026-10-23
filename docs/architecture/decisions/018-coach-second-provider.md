@@ -1,6 +1,6 @@
 # ADR-018: A second provider for the coach, used only when Gemini cannot answer
 
-- **Status:** accepted (2026-10-19), on branch `feat/coach`. Builds on [ADR-017](017-ai-coach.md).
+- **Status:** accepted (2026-10-19); merged to main. Builds on [ADR-017](017-ai-coach.md). Timeouts and token caps: [API contracts](../api-contracts.md).
 
 ## Context
 
@@ -21,13 +21,12 @@ chosen instead.
   is a settings change.
 - **When it is asked,** once per question: the first provider throws or answers in an unreadable form, or the
   project's day of Gemini calls (`consume_daily_ceiling`) is already used up, in which case Gemini is skipped.
-  Timeouts: 12 s for Gemini and 8 s for the second provider when both are set up, so the two fit inside the app's own
-  25 s wait; 20 s for Gemini alone, as before. If the day is used up and the second provider also fails, the answer
+  Timeouts are split so the two fit inside the app's own wait (numbers in the API contracts). If the day is used up and the second provider also fails, the answer
   is "busy" (`limited`), as before.
 - **Same rules for both.** The second provider gets the same system prompt and chat, and its answer goes through the
   same checks: the agreed `{onTopic, reply}` form, our own refusal for off-topic, the length cap and the "no links,
   code or tags" check. The per-person limits still apply first.
-- **The reply may think first.** The second provider is asked for up to 1500 tokens, because a model that reasons before it answers counts that thinking against the limit and would otherwise be cut off mid-answer. `npm run check:coach` passed for `openai/gpt-oss-20b` on Groq on 2026-10-19.
+- **The reply may think first.** The second provider gets a larger token cap than Gemini (see the API contracts), because a model that reasons before it answers counts that thinking against the limit and would otherwise be cut off mid-answer. `npm run check:coach` passed for `openai/gpt-oss-20b` on Groq on 2026-10-19.
 - **Nothing secret in the log.** A refused request carries only its HTTP status in the error; the log never gets the
   provider's message (which can echo the chat), the question or the reply.
 

@@ -1,5 +1,7 @@
 # Documentation audit report
 
+> **Historical report, dated 2026-10-10.** It is superseded by the documentation audit of 2026-10-23 (recorded in `docs/learning/ai-log.md`, entry "Documentation audit and fixes"); the body below is kept unchanged as the record of that day. Since then: the branches were merged and pushed (CI green), the voice parser, mic, `/api/parse`, the AI coach (`/api/coach`), the Groq second provider, the daily ceiling and the empty-workout rule were built, `agent_docs/` was added, and the suite grew from 3530 tests in 139 files to 4501 in 182 files (34 `*.qa.test.*` files). A Vercel preview was deployed on 2026-10-23; production is not.
+
 Audit date: 2026-10-10. State audited: branch `feat/home` at `d30e38b` (8 commits ahead of `main` at `1212fb8`, not pushed), `CLAUDE.md` modified and `AGENT_CONTEXT.md` untracked in the working tree. Read-only: nothing was edited, moved or deleted; this file is the only addition.
 
 Scope: `CLAUDE.md`, `AGENT_CONTEXT.md`, `README.md`, everything under `docs/` (ADRs and `docs/learning/` included). Three read-only agents each checked one slice against the code, `package.json`, the migrations, the CI workflow and `git`; the highest-impact findings were then re-checked by hand (marked **verified**). Claims that were not re-checked are as reported by the agent and are labelled where they are uncertain. The current test run was not repeated for this audit: the latest full run (before this audit) was 139 test files and 3530 tests, all passing.

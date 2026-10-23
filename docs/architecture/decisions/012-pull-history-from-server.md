@@ -1,6 +1,6 @@
 # ADR-012: Pulling history from the server
 
-- **Status:** accepted (2026-10-09)
+- **Status:** accepted (2026-10-09). Amended by [ADR-015](015-one-gym-per-user.md): gyms no longer have a visible name, and a pulled workout gets a snapshot of the bars from the cached single gym (`src/data/local/logStore.ts`, `src/data/sync/pull.ts`) instead of a gym name.
 
 ## Context
 

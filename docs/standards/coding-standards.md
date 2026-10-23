@@ -15,7 +15,7 @@
 
 Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`. Meaningful, one per finished task.
 
-One finished task = one commit: a single short Conventional Commit subject line, no body, plus the Co-Authored-By attribution trailer when the harness asks for one (the trailer is the only allowed body). Ask before any other commit. Never push without approval. The detail belongs in the docs and `docs/learning/ai-log.md`.
+One finished task = one commit, subject line only. The full rule (trailer, when to ask, pushing) is in the [working agreement](working-agreement.md).
 
 ## Accessibility
 

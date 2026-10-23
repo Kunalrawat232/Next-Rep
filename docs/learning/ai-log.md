@@ -17,11 +17,11 @@ Running log of how AI was used, what went wrong and how it was validated. Append
 
 ## Open checks
 
-What has not been verified, as of 2026-10-19. Earlier entries may say "not yet run" for things that have since been done; this is the current list.
+What has not been verified, as of 2026-10-23. Earlier entries may say "not yet run" for things that have since been done; this is the current list.
 
 - **Real devices:** the app on a real phone (touch, the glass lenses with the real library, the photo crossfade, rest-timer vibration, battery), and the microphone (permission prompt, accuracy in en-IN with Hinglish). Everything visual was checked in desktop Chrome and in phone-sized frames only.
 - **Hosted checks after the latest changes:** `npm run check:supabase`, `npm run test:integration` and `npm run test:e2e` (the developer runs these; they load `.env.local`). `npm run check:coach` passed on 2026-10-19 for Gemini and Groq.
-- **Deployment:** nothing from the three feature branches is deployed. The coach, the second provider and the rate-limit functions have not been tried on Vercel.
+- **Deployment:** a Vercel preview with the coach was deployed on 2026-10-23 and checked in a browser. Production is not deployed yet.
 - **Sign-up protection:** email confirmation, CAPTCHA and leaked-password protection are not switched on yet (Supabase dashboard).
 - **The coach's real answers:** a read-through of real answers for quality and safety, and the data policy of the second provider (Groq).
 - **Licences:** the exercise demonstrations are (c) Gym visual, hotlinked for non-commercial use only; a licence would be needed for any commercial use.
@@ -291,7 +291,7 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 - Asked: find what the tests so far do not cover, now that the UI is complete.
 - AI produced: 26 new `*.qa.test.*` files (the agents first reported 614 tests in 27 files; not re-counted) and 22 reported bugs; none were in the highest severity class.
 - Problems found: Home crashed on a damaged set row and missed the last real workout behind ten empty ones; a corrupt custom exercise row made loading throw; half-cent rounding was wrong; the rest timer misbehaved after a clock change, with NaN, and for focus and double taps. All fixed and the tests turned into normal ones. The developer then asked for all open items to be fixed: records now compare weights as shown, in the unit shown (a first attempt with a fixed tolerance of two hundredths broke the tests that say one hundredth of a kg is a record, and was dropped); a row-level-security refusal is now a refusal of the row, while a plain permission denied or an expired session stays "tried again later"; a failing local read shows a message with Try again on the workout screens. Not changed, and why: making a gym edit atomic needs a database function, which ADR-009 deferred on purpose and is a change to the data layer to be decided first; the "Today" label on an open History screen is not refreshed after midnight.
-- Decisions by the developer: _(to fill)_ which of the open items to fix before the freeze.
+- Decisions by the developer: fix all the open items before the freeze (as recorded in "Problems found" above); the two left unchanged are the non-atomic gym edit (ADR-009) and the "Today" label after midnight.
 - How validated: all 22 bugs fixed and 0 expected-failure tests left; the last full run on 2026-10-10 was 139 test files and about 3530 tests, all passing (an earlier run in the same task showed 3514 passing with 7 expected failures, before the later fixes). Not mutation-tested: the agents' passing tests (the earlier tasks' tests were).
 - Lesson: ask the tester to keep a real bug as an expected failure; the suite stays green, the list of bugs stays visible, and fixing one turns into a loud "unexpectedly passed".
 
@@ -559,3 +559,14 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 - Not applied (bigger, for later or never): the shared database test harness, the shared handler tests, the shared HTTP helpers, the duplicated match scripts and the dead `weightBreakdown` and `kgToLb` helpers.
 - How validated: the full suite (4501 tests), typecheck, lint and formatting pass; the hook pattern was proven equivalent on 8 sample paths.
 - Lesson: the audit's value is in the checking: a quarter of the findings did not hold up, or were not worth the churn, when read against the code.
+
+## 2026-10-23: Documentation audit and fixes
+
+- Tool: Claude Code, with four read-only reviewers (one per document group) and then five documentation editors working on separate files.
+- Asked: find every place where the docs repeat themselves, contradict each other, are wrong against the code, or describe an old state; then fix all of it.
+- Found: about 125 problems. The biggest groups: statuses frozen at 10 Oct that still called voice, `/api/parse`, the coach and deployment "planned" or "not built" (about 17 docs, including the README); an ADR file (009) that had been emptied by an earlier commit and was linked from about 17 docs; ADRs that had not been marked as amended by the later ones (003, 006, 012, 013, 016 to 018); facts that no longer matched the code (a token cap of 700 instead of 1200, "the only SECURITY DEFINER function", "seven tables", "no daily window" for `/api/parse`, "nothing is logged"); a prompt copy in `docs/ai/gemini-prompts.md` that did not match the real prompt; the Geist font licence missing from the notices; and numbers repeated in 4 or more places.
+- AI produced: every finding was fixed or answered. ADR-009 was restored from history and marked as superseded in part by ADR-015; statuses and dates were refreshed; the prompt copies were replaced by short descriptions that point to the code as the one source (and the two code comments that said "mirrors the doc" were corrected); the rate limits, the list of commands agents must not run, the dashboard settings and several detail lists now live in one place and are linked from the others; the Geist notice was added to `THIRD_PARTY_NOTICES.md` and to the About page (with a test); the agent definitions and the `new-feature` skill were brought in line with the rules in `CLAUDE.md`; 9 lessons were added to `docs/learning/lessons.md`.
+- Checked afterwards: Prettier is clean, no unexpected deletions (the only large cut was the pasted prompt), every relative link resolves, every file path written in backticks exists (two historical ai-log entries name files that have since been removed), a search for the old status phrases finds only one historical line in ADR-008, and the coach summary switch was confirmed to start off in the code.
+- Left on purpose: the old coach name "Kai" in an early ai-log entry (a historical record), and older ai-log entries that quote 4499 tests (correct on their dates).
+- Not verified: that no new wrong statement was introduced in the roughly 50 edited files; the editors verified their own edits against the code and a second read-only pass is the way to check.
+- Lesson: a status written as a date goes stale in days; the docs that stayed right were the ones that named a file or a command instead of a state.

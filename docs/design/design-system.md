@@ -43,13 +43,13 @@ Keep these names identical in code and in Claude Design.
 **Built** (generic ones in `src/components/`, feature ones next to their feature):
 
 - `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below, floating mic as the phone's Workout entry), `Chip`, `BackLink`, `Switch`, and the shared boxes and messages listed in the next section.
-- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer` and `OfflineBanner` (`src/features/workout`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`).
+- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer`, `OfflineBanner`, `VoiceLogger` (the mic and its listening state, the design's `VoiceButton` and `TranscriptBubble`) and `VoiceConfirmCard` (the design's `SetConfirmCard`) (`src/features/workout`; the speech hook and phrase-to-draft logic are in `src/features/voice`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`).
 
-**Not built yet:** `VoiceButton` (the workout screen has a disabled voice button), `TranscriptBubble`, `SetConfirmCard` (the confirm step for voice sets), `SuggestionCard` (today's suggestion is plain markup on Home, not a component). Status: planned (Phase 3), not built yet, for the three voice ones.
+**Not built as a component:** `SuggestionCard` (today's suggestion is plain markup on Home).
 
 ## Status
 
-As of 2026-10-10: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch) and the empty, loading and error states are applied. Not applied: the voice screens and prompts that need voice (listening, parsing, `SetConfirmCard`) and the offline-banner variants for voice, which are planned for Phase 3. Home, settings, units and the shared components below are on `feat/home`, not yet merged. Run `/design-sync` once the first real feature components exist.
+As of 2026-10-23, all merged into `main`: tokens, font, logo, PWA icons, shell, sign-in, Home, gym setup, exercise picker, history, progress, settings (with the light theme switch), the voice mic and confirm card, the ambiguity prompt, the offline banner, the AI Coach and About pages, the liquid-glass surfaces and the empty, loading and error states are applied. Run `/design-sync` to compare the handoff with the built components.
 
 ## Shared UI components (`src/components`)
 

@@ -1,6 +1,6 @@
 # ADR-004: Laya intent model deferred
 
-- **Status:** accepted (2026-10-08)
+- **Status:** accepted (2026-10-08). Outcome (2026-10-23): the spike was not done and Laya is dropped.
 
 ## Context
 
