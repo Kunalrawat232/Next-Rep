@@ -580,3 +580,12 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - Effect: the order of the log and of the ADRs is now the only record of sequence inside the documents; the git history keeps the commit dates. Status lines that used to say "as of" now say "now" or nothing, and counts such as the number of tests no longer say when they were true.
 - How validated: a search of every Markdown file for ISO dates and for "day month" dates finds only the items above; every relative link and every heading anchor still resolves; Prettier is clean; the full test suite passes.
 - Lesson: a date inside a status sentence is a claim that nobody revisits; where a date was only there to say when, removing it lost nothing, and where it was the whole point of the sentence the sentence needed a small rewrite.
+
+## A timing test that failed only on GitHub
+
+- Tool: Claude Code.
+- Asked: find out why CI failed on a push that passed every step locally.
+- Found: `useWorkout.error.test.tsx` made the device read fail once, but the hook also re-reads by itself whenever the sync status changes. On a slow machine that re-read could use up the one-time failure, so the test's own reload got the real answer ("none") and the test saw no error.
+- AI produced: the test now keeps the failure on until the error shows (retrying the reload inside `waitFor`), then removes it and waits for the recovery. The hook is unchanged: the behaviour was right, the test assumed an order.
+- How validated: the file passed 12 out of 12 runs, and 8 out of 8 under heavy CPU load; the full suite passes. The failing run itself was not reproduced locally.
+- Lesson: a "fail once" mock in a test of a hook that also reads on its own is a race; make the failure last until the thing under test has been seen to react, then take it away.

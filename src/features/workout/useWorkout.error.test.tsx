@@ -43,11 +43,20 @@ describe('useWorkout when the device cannot be read', () => {
   it('says error, not Loading, when a read fails, and recovers on the next read', async () => {
     const holder = mount();
     await screen.findByText('none');
-    vi.spyOn(holder.api!.store, 'activeWorkout').mockRejectedValueOnce(new Error('disk'));
-    await act(async () => holder.api!.reload());
-    expect(screen.getByText('error')).toBeInTheDocument();
-    await act(async () => holder.api!.reload());
-    await waitFor(() => expect(screen.getByText('none')).toBeInTheDocument());
+    // The hook also reads again by itself when the sync status changes, so the failure stays on until the
+    // error shows (a read that started before it was set can still land late), then it is taken away.
+    const failing = vi
+      .spyOn(holder.api!.store, 'activeWorkout')
+      .mockRejectedValue(new Error('disk'));
+    await waitFor(async () => {
+      await act(async () => holder.api!.reload());
+      expect(screen.getByText('error')).toBeInTheDocument();
+    });
+    failing.mockRestore();
+    await waitFor(async () => {
+      await act(async () => holder.api!.reload());
+      expect(screen.getByText('none')).toBeInTheDocument();
+    });
   });
 
   it('does not throw out of reload when the read fails', async () => {
