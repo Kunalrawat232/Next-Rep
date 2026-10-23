@@ -1,6 +1,5 @@
 import { THEME_COLOR, THEME_KEY } from './themeColors';
 
-export { THEME_COLOR, THEME_KEY };
 export type Theme = 'dark' | 'light';
 
 export const DEFAULT_THEME: Theme = 'dark';

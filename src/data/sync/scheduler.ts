@@ -40,7 +40,7 @@ export type SyncScheduler = {
   subscribe(listener: (status: SyncStatus) => void): () => void;
 };
 
-export const SYNC_INTERVAL_MS = 15_000;
+const SYNC_INTERVAL_MS = 15_000;
 /** After a pull fails for a reason other than being offline, the next try waits this long (unless the network event forces it). */
 export const PULL_RETRY_MS = 60_000;
 

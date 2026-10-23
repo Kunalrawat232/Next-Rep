@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/local';
 import { useLogStore, useSyncStatus } from '../sync';
 
-export const PAGE_SIZE = 20;
+const PAGE_SIZE = 20;
 
 export type HistoryState =
   | { status: 'loading' }

@@ -38,7 +38,6 @@ export const needsFallback = (result: ParseResult): boolean =>
 export { ISSUE } from './issues';
 export { fromGemini } from './fromGemini';
 export {
-  GEMINI_MAX_TRANSCRIPT,
   GeminiOutputSchema,
   ParseRequestSchema,
   ParseResponseSchema,

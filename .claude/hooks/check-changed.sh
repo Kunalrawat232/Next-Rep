@@ -9,7 +9,7 @@ file=$(jq -r '.tool_response.filePath // .tool_input.file_path // empty')
 root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 rel="${file#"$root"/}"
 case "$rel" in
-  src/*.ts | src/*.tsx | src/**/*.ts | src/**/*.tsx | api/*.ts | tests/*.ts | tests/**/*.ts) ;;
+  src/*.ts | src/*.tsx | api/*.ts | tests/*.ts) ;;
   *) exit 0 ;;
 esac
 

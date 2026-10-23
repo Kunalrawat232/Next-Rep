@@ -3,17 +3,16 @@
 // read through GeminiOutputSchema, mapped by fromGemini and then validated like any other set.
 import { z } from 'zod';
 import { UnitSchema } from '../schemas.js';
+import { PARSER_CONFIG } from './config.js';
 import { INTENTS, WEIGHT_MODES } from './schema.js';
 
-/** Longest transcript the function accepts: the same limit the parser has (PARSER_CONFIG.maxChars). */
-export const GEMINI_MAX_TRANSCRIPT = 300;
 const NAME_MAX = 80;
 
 const NameSchema = z.string().trim().min(1).max(NAME_MAX);
 
 /** What the app sends. No user id, email or exercise ids: only what Gemini needs to fill a gap. */
 export const ParseRequestSchema = z.strictObject({
-  transcript: z.string().trim().min(1).max(GEMINI_MAX_TRANSCRIPT),
+  transcript: z.string().trim().min(1).max(PARSER_CONFIG.maxChars),
   context: z.strictObject({
     unit: UnitSchema,
     currentExercise: NameSchema.optional(),

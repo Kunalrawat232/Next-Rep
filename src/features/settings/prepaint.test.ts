@@ -2,7 +2,7 @@
 // app when the user changes it. Both have to agree with each other and with the CSS tokens.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import html from '../../../index.html?raw';
-import { THEME_COLOR, THEME_KEY } from './theme';
+import { THEME_COLOR, THEME_KEY } from './themeColors';
 
 const inline = /<script>([\s\S]*?)<\/script>/.exec(html)?.[1];
 

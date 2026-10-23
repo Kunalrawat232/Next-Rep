@@ -549,3 +549,13 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 - AI produced: `useExercises` does not wait for the server when `navigator.onLine` is false (the built-in exercises ship with the app); 2 new tests (offline is ready at once; online still waits). The first fails without the fix.
 - How validated: the full suite (4501 tests), typecheck and lint pass. Not yet checked: the e2e test itself, which needs the developer to run it against the hosted project.
 - Lesson: a loader that waits for the network is an offline bug; the unit tests used fakes that answer at once, so only a browser set offline showed it.
+
+## 2026-10-23: Whole-repo audit for over-engineering, and the first cleanup
+
+- Tool: Claude Code, with four read-only reviewers (one per area) following the ponytail-audit method: rank what can be deleted, simplified or reused, and change nothing.
+- Asked: audit the whole codebase, then fix the small dead-code items and the duplicated docs.
+- AI produced: 43 findings in total. Applied: the two alias wrappers in `domain/workout` (`usesModeToggle`, `parseWeight`), the unused `useRecordMarks` wrapper, a theme re-export, exports that nothing imported (barrels and constants), the empty `src/lib/index.ts`, the duplicate transcript limit in the Gemini schema, the page-size guard in the history pull, the unused `format:check` script, a simpler hook pattern, one trim instead of two in the fallback config, and three duplicated bullets in `agent_docs/api/coach.md` (now a pointer to ADR-017 and 018).
+- Checked before applying: the reviewers' claims were re-read in the code. Two were wrong or not worth it and were left: the `AGENT_CONTEXT.md` folder map is the full map that `CLAUDE.md` points to, not a copy; and the two `SyncStatus` types have the same name but are different types. Also left on purpose: the duplicate `Skeleton` in `ExerciseDemo` (it looks different and needs its own test id), `ChevronDown` (inlining it only moves code), the `fetch` seam in the fallback provider (4 tests use it for 2 lines), and `tests/e2e/smoke.spec.ts` (it is the only e2e test that runs without credentials).
+- Not applied (bigger, for later or never): the shared database test harness, the shared handler tests, the shared HTTP helpers, the duplicated match scripts and the dead `weightBreakdown` and `kgToLb` helpers.
+- How validated: the full suite (4501 tests), typecheck, lint and formatting pass; the hook pattern was proven equivalent on 8 sample paths.
+- Lesson: the audit's value is in the checking: a quarter of the findings did not hold up, or were not worth the churn, when read against the code.

@@ -37,7 +37,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
 }
 
 /** A request that never answers must not hold up every later one. */
-export const REQUEST_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 15_000;
 
 function withTimeout<T>(request: Promise<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {

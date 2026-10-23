@@ -4,7 +4,7 @@ import { createFakeAuthService } from '../../test/fakeAuth';
 import { createFakeProfileService } from '../../test/fakeProfile';
 import { AuthProvider } from '../auth';
 import { ProfileServiceProvider } from './ProfileServiceContext';
-import { REQUEST_TIMEOUT_MS, UnitProvider, useUnit } from './UnitProvider';
+import { UnitProvider, useUnit } from './UnitProvider';
 
 afterEach(() => localStorage.clear());
 
@@ -197,7 +197,7 @@ describe('the weight unit', () => {
       fireEvent.click(screen.getByRole('button', { name: 'choose lb' }));
       await waitFor(() => expect(profile.service.setUnit).toHaveBeenCalledTimes(1));
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS + 1000);
+        await vi.advanceTimersByTimeAsync(16_000);
       });
       // The held call is still open, but the next pass goes ahead: the network returns.
       act(() => void window.dispatchEvent(new Event('online')));

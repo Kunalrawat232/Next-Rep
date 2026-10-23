@@ -5,12 +5,11 @@ import {
   breakdownFor as breakdownForUnit,
   initialEntry as initialEntryUnit,
   nextValue as nextValueUnit,
-  parseWeight,
   setSummary as setSummaryUnit,
   stepFor as stepForUnit,
   weightHint,
 } from '.';
-import { kgFromField } from '../units';
+import { kgFromField, parseNumber } from '../units';
 
 // These tests were written for kg, which is still the default unit: the helpers below pass it.
 const breakdownFor = (w: Parameters<typeof breakdownForUnit>[0]) => breakdownForUnit(w, 'kg');
@@ -27,7 +26,7 @@ const initialEntry = (
   return { mode: r.mode, weight: kgFromField(r.weight, 'kg') ?? 0, reps: r.reps };
 };
 
-describe('parseWeight, typed by people on a phone', () => {
+describe('parseNumber, typed by people on a phone', () => {
   it.each([
     [',5', 0.5],
     ['62,50', 62.5],
@@ -36,7 +35,7 @@ describe('parseWeight, typed by people on a phone', () => {
     ['0,5', 0.5],
     ['\t60\n', 60],
     ['500', 500],
-  ])('reads %j as %d', (text, kg) => expect(parseWeight(text)).toBe(kg));
+  ])('reads %j as %d', (text, kg) => expect(parseNumber(text)).toBe(kg));
 
   it.each([
     '62,555', // three decimals after a comma looks like a thousands separator
@@ -53,11 +52,11 @@ describe('parseWeight, typed by people on a phone', () => {
     '٦٠', // Arabic-Indic digits
     '1'.padEnd(400, '0'), // overflows to Infinity
     '１,５',
-  ])('refuses %j instead of guessing', (text) => expect(parseWeight(text)).toBeNull());
+  ])('refuses %j instead of guessing', (text) => expect(parseNumber(text)).toBeNull());
 
   it('never returns NaN, a negative number or Infinity for any odd input', () => {
     for (const text of ['-0', '0e0', '1e309', 'null', '٣.٥', '5 ', '5 5', '5,.5']) {
-      const kg = parseWeight(text);
+      const kg = parseNumber(text);
       if (kg !== null) {
         expect(Number.isFinite(kg)).toBe(true);
         expect(kg).toBeGreaterThanOrEqual(0);

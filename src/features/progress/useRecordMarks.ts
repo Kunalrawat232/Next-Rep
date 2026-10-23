@@ -12,11 +12,7 @@ const EMPTY: ReadonlyMap<string, RecordKind> = new Map();
  * only on the sets before it, so while a new read is under way the last result is still right for
  * every set that was already there, and the badges do not blink off.
  */
-export function useRecordMarks(exerciseIds: string[]): ReadonlyMap<string, RecordKind> {
-  return useRecordMarksState(exerciseIds).marks;
-}
-
-/** The same, and whether the first read has finished, so a screen can wait for its badges instead of showing them late. */
+/** Also says whether the first read has finished, so a screen can wait for its badges instead of showing them late. */
 export function useRecordMarksState(exerciseIds: string[]): {
   marks: ReadonlyMap<string, RecordKind>;
   loaded: boolean;

@@ -15,7 +15,6 @@
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "typecheck": "tsc -b --noEmit",
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "seed:generate": "node scripts/generate-seed-sql.mjs",

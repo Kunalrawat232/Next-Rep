@@ -3,7 +3,7 @@ import { SetSchema, WorkoutSchema, type LoggedSet, type Workout } from '../../do
 import type { Failure, Result } from '../../lib/result';
 import type { RemoteLog } from './types';
 
-export const PULL_PAGE_SIZE = 500;
+const PULL_PAGE_SIZE = 500;
 /** A safety stop: more pages than any real history means the server is not answering as it should. */
 const MAX_PAGES = 1_000;
 
@@ -73,13 +73,15 @@ export async function pullHistory({
   isActive = () => true,
   pageSize = PULL_PAGE_SIZE,
 }: PullDeps): Promise<PullOutcome> {
-  const size = Math.max(1, Math.floor(pageSize) || PULL_PAGE_SIZE);
   const workouts = await readAll(
-    (after) => remote.fetchWorkouts(userId, { after, size }),
+    (after) => remote.fetchWorkouts(userId, { after, size: pageSize }),
     isActive,
   );
   if ('failure' in workouts) return fail(workouts.failure);
-  const sets = await readAll((after) => remote.fetchSets(userId, { after, size }), isActive);
+  const sets = await readAll(
+    (after) => remote.fetchSets(userId, { after, size: pageSize }),
+    isActive,
+  );
   if ('failure' in sets) return fail(sets.failure);
   if (!isActive()) return { status: 'stopped' };
 

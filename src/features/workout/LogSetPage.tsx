@@ -14,16 +14,20 @@ import { ignoreClosed, type StoredSet, type StoredWorkout } from '../../data/loc
 import { EQUIPMENT_LABEL, type Exercise } from '../../domain/exercises';
 import { barFor } from '../../domain/gyms';
 import { usesBar, type Unit } from '../../domain/schemas';
-import { fieldFromText, kgFromField, withUnit, type WeightField } from '../../domain/units';
+import {
+  fieldFromText,
+  kgFromField,
+  parseNumber,
+  withUnit,
+  type WeightField,
+} from '../../domain/units';
 import { validateSet, type Option, type ResolvedWeight } from '../../domain/validation';
 import {
   breakdownFor,
   convertEntry,
   initialEntry,
   nextValue,
-  parseWeight,
   stepFor,
-  usesModeToggle,
   weightForValidation,
   weightHint,
   type EntryMode,
@@ -148,7 +152,7 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
 
   const weightText = field.text;
   /** What is typed, in the unit shown. */
-  const weight = parseWeight(weightText);
+  const weight = parseNumber(weightText);
   /** What it means in kg: the stored value the field started from while the text is unchanged, else the typed text converted. */
   const valueKg = kgFromField(field, unit);
   const reps = /^\d+$/.test(repsText.trim()) ? Number(repsText.trim()) : null;
@@ -279,7 +283,7 @@ function LogSetForm({ unit, workout, exercise, last, back }: FormProps) {
     <div className="flex flex-col gap-6">
       <PageHeader back={back} title={exercise.name} />
 
-      {hasBar && usesModeToggle(equipment) && (
+      {hasBar && usesBar(equipment) && (
         <div role="group" aria-label="Weight entry" className="flex gap-2">
           <Chip selected={mode === 'total'} onClick={() => switchMode('total')}>
             Total weight

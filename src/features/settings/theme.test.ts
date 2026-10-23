@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { applyTheme, readTheme, THEME_COLOR, THEME_KEY, writeTheme } from './theme';
+import { applyTheme, readTheme, writeTheme } from './theme';
+import { THEME_COLOR, THEME_KEY } from './themeColors';
 
 const memory = (initial: Record<string, string> = {}) => {
   const data = new Map(Object.entries(initial));

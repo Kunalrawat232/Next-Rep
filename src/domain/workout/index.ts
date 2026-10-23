@@ -13,7 +13,6 @@ import {
   formatWeight,
   fromDisplay,
   maxDisplay,
-  parseNumber,
   toDisplay,
   unitLabel,
   type WeightField,
@@ -21,9 +20,6 @@ import {
 import { roundKg } from '../weight';
 
 export type EntryMode = 'total' | 'per_side';
-
-/** Only equipment with a bar has the choice between a total and a weight per side. */
-export const usesModeToggle = (equipment: EquipmentType): boolean => usesBar(equipment);
 
 /** How far one tap on + or - moves the weight, in the user's unit: the smallest plate pair, or the larger step for everything else. */
 export function stepFor(equipment: EquipmentType, mode: EntryMode, unit: Unit): number {
@@ -44,9 +40,6 @@ export function nextValue(
   const target = direction === 1 ? Math.floor(steps + 1e-9) + 1 : Math.ceil(steps - 1e-9) - 1;
   return Math.min(max, Math.max(0, roundKg(target * step)));
 }
-
-/** A typed weight in the unit shown, rounded to 2 decimals, or null if it is not a plain number. "62,5" is 62.5; "1,000" is refused. */
-export const parseWeight = parseNumber;
 
 export function weightHint(equipment: EquipmentType): string {
   switch (equipment) {

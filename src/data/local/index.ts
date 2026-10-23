@@ -1,6 +1,6 @@
 export { ignoreClosed } from './closed';
 export { openLocalDb, type DexieDeps, type LocalDb } from './db';
-export { BACKOFF_MAX_MS, backoffMs, createLogStore, MAX_ATTEMPTS } from './logStore';
+export { backoffMs, createLogStore, MAX_ATTEMPTS } from './logStore';
 export type {
   LogStore,
   MergeOutcome,

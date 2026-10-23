@@ -14,19 +14,19 @@ export type FallbackConfig = {
 };
 
 const isSet = (value: string | undefined): value is string =>
-  typeof value === 'string' && value.trim() !== '' && !/^your-/.test(value.trim());
+  value !== undefined && value !== '' && !/^your-/.test(value);
 
 /**
  * The second provider from the settings, or null when it is not fully set up (then the coach uses only the
  * first provider). The address must be https, so the key is never sent in the clear.
  */
 export function fallbackConfigFrom(env: Record<string, string | undefined>): FallbackConfig | null {
-  const apiKey = env.FALLBACK_API_KEY;
-  const baseUrl = env.FALLBACK_BASE_URL;
-  const model = env.FALLBACK_MODEL;
+  const apiKey = env.FALLBACK_API_KEY?.trim();
+  const baseUrl = env.FALLBACK_BASE_URL?.trim();
+  const model = env.FALLBACK_MODEL?.trim();
   if (!isSet(apiKey) || !isSet(baseUrl) || !isSet(model)) return null;
-  if (!/^https:\/\//.test(baseUrl.trim())) return null;
-  return { apiKey: apiKey.trim(), baseUrl: baseUrl.trim(), model: model.trim() };
+  if (!/^https:\/\//.test(baseUrl)) return null;
+  return { apiKey, baseUrl, model };
 }
 
 const ReplySchema = z.object({

@@ -3,13 +3,12 @@ import {
   breakdownFor as breakdownForUnit,
   initialEntry as initialEntryUnit,
   nextValue as nextValueUnit,
-  parseWeight,
   setSummary as setSummaryUnit,
   stepFor as stepForUnit,
-  usesModeToggle,
   weightHint,
 } from '.';
-import { kgFromField } from '../units';
+import { usesBar } from '../schemas';
+import { kgFromField, parseNumber } from '../units';
 
 // These tests were written for kg, which is still the default unit: the helpers below pass it.
 const breakdownFor = (w: Parameters<typeof breakdownForUnit>[0]) => breakdownForUnit(w, 'kg');
@@ -26,7 +25,7 @@ const initialEntry = (
   return { mode: r.mode, weight: kgFromField(r.weight, 'kg') ?? 0, reps: r.reps };
 };
 
-describe('usesModeToggle', () => {
+describe('usesBar', () => {
   it.each([
     ['barbell', true],
     ['ez_bar', true],
@@ -35,7 +34,7 @@ describe('usesModeToggle', () => {
     ['machine', false],
     ['cable', false],
     ['bodyweight', false],
-  ] as const)('%s: %s', (equipment, expected) => expect(usesModeToggle(equipment)).toBe(expected));
+  ] as const)('%s: %s', (equipment, expected) => expect(usesBar(equipment)).toBe(expected));
 });
 
 describe('stepFor', () => {
@@ -82,7 +81,7 @@ describe('nextValue', () => {
   });
 });
 
-describe('parseWeight', () => {
+describe('parseNumber', () => {
   it.each([
     ['60', 60],
     ['62.5', 62.5],
@@ -92,11 +91,11 @@ describe('parseWeight', () => {
     ['.5', 0.5],
     ['7.', 7],
     ['20.256', 20.26],
-  ])('reads %j as %d', (text, kg) => expect(parseWeight(text)).toBe(kg));
+  ])('reads %j as %d', (text, kg) => expect(parseNumber(text)).toBe(kg));
 
   it.each(['', ' ', 'abc', '-5', '1e2', '12 Kg', '1,000', '--', '0x10', 'NaN', 'Infinity'])(
     'refuses %j',
-    (text) => expect(parseWeight(text)).toBeNull(),
+    (text) => expect(parseNumber(text)).toBeNull(),
   );
 });
 
