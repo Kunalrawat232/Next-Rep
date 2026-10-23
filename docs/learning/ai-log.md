@@ -540,3 +540,12 @@ What has not been verified, as of 2026-10-19. Earlier entries may say "not yet r
 - Problems found while moving the text: several statements in `AGENT_CONTEXT.md` were stale (the rate counter was said to be shared, the Vercel function answers were wrong for 400, 401 and 413, `/api` was called "planned", test counts were from 10 Oct); each was checked against the code and corrected. Counts I had written in this log for new tests were also wrong in four places and were re-measured from git (for example the empty-workout rule added 18 tests, not 21).
 - How validated: every link and every file path in the new docs was checked by a script, every `npm run` name and every function or hook name was found in the code, constants (retries, timeouts, limits, page sizes) were read from the source, and the full suite (4499 tests), typecheck and lint pass. Not checked: whether a person finds the docs easier to use than the old file.
 - Lesson: when text is moved, check each claim against the code instead of copying it; the stale lines were all in the part nobody had re-read.
+
+## 2026-10-23: The workout screen waited for the server while offline
+
+- Tool: Claude Code.
+- Asked: find out why the e2e test "logs a set online, another offline" failed (the "You are offline" banner never appeared within 5 seconds).
+- Found: the workout screen shows one loader until the exercise list is ready (the 17 Oct "one loader per screen" change), and the list waits up to 8 seconds for the user's custom exercises from the server. Offline, that meant a loader for up to 8 seconds after every set. It is a real fault in offline logging, not a flaky test.
+- AI produced: `useExercises` does not wait for the server when `navigator.onLine` is false (the built-in exercises ship with the app); 2 new tests (offline is ready at once; online still waits). The first fails without the fix.
+- How validated: the full suite (4501 tests), typecheck and lint pass. Not yet checked: the e2e test itself, which needs the developer to run it against the hosted project.
+- Lesson: a loader that waits for the network is an offline bug; the unit tests used fakes that answer at once, so only a browser set offline showed it.

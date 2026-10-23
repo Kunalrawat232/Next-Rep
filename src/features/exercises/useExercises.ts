@@ -42,7 +42,8 @@ export function useExercises(service: ExerciseService): {
     Promise.all([
       loadImported(),
       // The server's answer, or after a few seconds "offline": the built-in exercises show without it.
-      within(service.listCustom())
+      // A browser that already knows it is offline has nothing to wait for.
+      (navigator.onLine === false ? Promise.resolve(null) : within(service.listCustom()))
         .then((answer) => answer ?? ({ status: 'error', reason: 'offline' } as const))
         .catch((): { status: 'error'; reason: Failure } => ({
           status: 'error',
