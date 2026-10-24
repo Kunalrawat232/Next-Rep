@@ -8,6 +8,8 @@ const messages: Record<AuthFailure, string> = {
   email_taken: 'An account with this email already exists. Try signing in.',
   rate_limited: 'Too many attempts. Wait a minute and try again.',
   signup_disabled: 'Sign-ups are turned off right now.',
+  link_invalid:
+    'This link has expired or was already used. Sign in, or create the account again to get a new email.',
   network: "Can't reach the server. Check your connection and try again.",
   unknown: 'Something went wrong. Please try again.',
 };

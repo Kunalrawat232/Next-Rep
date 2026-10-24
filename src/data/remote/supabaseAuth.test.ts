@@ -196,3 +196,48 @@ describe('signOut', () => {
     await expect(createSupabaseAuthService(auth).signOut()).rejects.toThrow();
   });
 });
+
+describe('verifyEmail', () => {
+  const code = 'fake-one-time-code';
+  it('exchanges the code for a session', async () => {
+    const auth = api({
+      verifyOtp: vi.fn().mockResolvedValue({ data: { user, session: { user } }, error: null }),
+    });
+    expect(await createSupabaseAuthService(auth).verifyEmail(code)).toEqual({
+      status: 'signed_in',
+    });
+    expect(auth.verifyOtp).toHaveBeenCalledWith({ token_hash: code, type: 'email' });
+  });
+
+  it.each<{ error: unknown; reason: AuthFailure }>([
+    { error: new AuthApiError('x', 403, 'otp_expired'), reason: 'link_invalid' },
+    { error: new AuthApiError('x', 400, undefined), reason: 'link_invalid' },
+    { error: new AuthApiError('x', 429, 'over_request_rate_limit'), reason: 'rate_limited' },
+    { error: new AuthApiError('x', 500, undefined), reason: 'unknown' },
+    { error: new AuthRetryableFetchError('Failed to fetch', 0), reason: 'network' },
+  ])('maps $reason', async ({ error, reason }) => {
+    const auth = api({ verifyOtp: vi.fn().mockResolvedValue(failed(error)) });
+    expect(await createSupabaseAuthService(auth).verifyEmail(code)).toEqual({
+      status: 'error',
+      reason,
+    });
+  });
+
+  it('treats a missing session as unknown', async () => {
+    const auth = api({
+      verifyOtp: vi.fn().mockResolvedValue({ data: { user, session: null }, error: null }),
+    });
+    expect(await createSupabaseAuthService(auth).verifyEmail(code)).toEqual({
+      status: 'error',
+      reason: 'unknown',
+    });
+  });
+
+  it('turns a throw into unknown', async () => {
+    const auth = api({ verifyOtp: vi.fn().mockRejectedValue(new Error('boom')) });
+    expect(await createSupabaseAuthService(auth).verifyEmail(code)).toEqual({
+      status: 'error',
+      reason: 'unknown',
+    });
+  });
+});

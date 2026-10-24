@@ -31,6 +31,10 @@ export function createFakeAuthService(initialUser: AuthUser | null = null) {
       emit({ id: 'user-1', email });
       return { status: 'signed_in' };
     }),
+    verifyEmail: vi.fn<AuthService['verifyEmail']>(async (): Promise<AuthResult> => {
+      emit({ id: 'user-1', email: 'new@example.com' });
+      return { status: 'signed_in' };
+    }),
     signOut: vi.fn<AuthService['signOut']>(async () => {
       emit(null);
     }),

@@ -62,6 +62,7 @@ describe('AuthProvider: failing or odd services', () => {
       }),
       signIn: vi.fn(),
       signUp: vi.fn(),
+      verifyEmail: vi.fn(),
       signOut: vi.fn(),
     };
     render(

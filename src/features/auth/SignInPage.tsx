@@ -1,8 +1,9 @@
-import { useRef, useState, type FormEvent } from 'react';
-import { Navigate, useLocation } from 'react-router';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Button, cardClasses, ErrorMessage, Logo, TextField } from '../../components';
 import { useAuth } from './AuthProvider';
 import { messageFor } from './authErrors';
+import { readConfirmLink } from './confirmLink';
 import {
   PASSWORD_MIN,
   validateCredentials,
@@ -29,17 +30,62 @@ function destination(state: unknown): string {
 export function SignInPage() {
   const { state, service } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  // A confirmation-email link, read once on arrival: the URL is cleaned right after.
+  const [link] = useState(() => readConfirmLink(location.search, location.hash));
+  // 'ready': waiting for a tap. The code is never spent on page load, so a link someone else sent
+  // cannot switch the visitor into their account without the visitor choosing to.
+  const [verify, setVerify] = useState<'ready' | 'checking' | 'verified' | null>(
+    link.tokenHash ? 'ready' : null,
+  );
+  // A link that failed keeps the page here, even for a signed-in user, so the message is seen.
+  const [linkFailed, setLinkFailed] = useState(link.failed);
   const [mode, setMode] = useState<AuthMode>('signIn');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<CredentialErrors>({});
-  const [failure, setFailure] = useState<AuthFailure | null>(null);
+  const [failure, setFailure] = useState<AuthFailure | null>(link.failed ? 'link_invalid' : null);
   const [checkEmail, setCheckEmail] = useState(false);
   const { pending, begin, end } = usePending();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  if (state.status === 'signedIn') return <Navigate to={destination(location.state)} replace />;
+  // Take the link's code and Supabase's keys out of the address bar and the history entry.
+  useEffect(() => {
+    const { clean } = readConfirmLink(location.search, location.hash);
+    if (clean)
+      void navigate(
+        { pathname: location.pathname, ...clean },
+        { replace: true, state: location.state as unknown },
+      );
+  }, [location, navigate]);
+
+  // While a link waits, is checked or has just signed the user in, or has failed, stay to say so.
+  if (state.status === 'signedIn' && verify === null && !linkFailed)
+    return <Navigate to={destination(location.state)} replace />;
+
+  const signedInAs = state.status === 'signedIn' ? state.user.email : null;
+
+  async function confirmEmail() {
+    const code = link.tokenHash;
+    if (!code || !begin()) return;
+    setVerify('checking');
+    let outcome: AuthResult;
+    try {
+      outcome = await service.verifyEmail(code);
+    } catch {
+      outcome = { status: 'error', reason: 'unknown' };
+    }
+    end();
+    if (outcome.status === 'signed_in') {
+      setVerify('verified');
+      return;
+    }
+    // The code is one-time: whatever went wrong, it is not offered again.
+    setVerify(null);
+    setLinkFailed(true);
+    setFailure(outcome.status === 'error' ? outcome.reason : 'unknown');
+  }
 
   const signingUp = mode === 'signUp';
 
@@ -48,6 +94,7 @@ export function SignInPage() {
     setFieldErrors({});
     setFailure(null);
     setCheckEmail(false);
+    setLinkFailed(false);
   }
 
   async function submit(event: FormEvent) {
@@ -55,6 +102,7 @@ export function SignInPage() {
     if (pending) return;
     setFailure(null);
     setCheckEmail(false);
+    setLinkFailed(false);
 
     const checked = validateCredentials(mode, email, password);
     if (!checked.ok) {
@@ -91,54 +139,81 @@ export function SignInPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-col justify-center gap-6 px-4 py-8 lg:max-w-sm lg:py-16">
-        <h2 className="text-title font-semibold">{signingUp ? 'Create account' : 'Sign in'}</h2>
+        {verify === 'verified' ? (
+          <>
+            <h2 className="text-title font-semibold">Email verified</h2>
+            <p role="status" className={cardClasses('', 'success')}>
+              {signedInAs
+                ? `Your email is verified. You're signed in as ${signedInAs}.`
+                : "Your email is verified. You're signed in."}
+            </p>
+            <Button onClick={() => void navigate('/', { replace: true })}>Start logging</Button>
+          </>
+        ) : verify === 'ready' || verify === 'checking' ? (
+          <>
+            <h2 className="text-title font-semibold">Confirm your email</h2>
+            <p className="text-body text-ink-muted">
+              {signedInAs
+                ? `You're signed in as ${signedInAs}. Confirming signs you in to the account this link was sent to instead.`
+                : 'Tap the button to finish creating your account.'}
+            </p>
+            <p role="status">{verify === 'checking' ? 'Checking your link…' : ''}</p>
+            <Button onClick={() => void confirmEmail()} disabled={pending}>
+              {verify === 'checking' ? 'Confirming…' : 'Confirm email'}
+            </Button>
+          </>
+        ) : (
+          <>
+            <h2 className="text-title font-semibold">{signingUp ? 'Create account' : 'Sign in'}</h2>
 
-        <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-          <TextField
-            label="Email"
-            ref={emailRef}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={pending}
-            error={fieldErrors.email}
-          />
-          <TextField
-            label="Password"
-            ref={passwordRef}
-            type="password"
-            autoComplete={signingUp ? 'new-password' : 'current-password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={pending}
-            hint={signingUp ? `Use at least ${PASSWORD_MIN} characters.` : undefined}
-            error={fieldErrors.password}
-          />
+            <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+              <TextField
+                label="Email"
+                ref={emailRef}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={pending}
+                error={fieldErrors.email}
+              />
+              <TextField
+                label="Password"
+                ref={passwordRef}
+                type="password"
+                autoComplete={signingUp ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={pending}
+                hint={signingUp ? `Use at least ${PASSWORD_MIN} characters.` : undefined}
+                error={fieldErrors.password}
+              />
 
-          {failure && <ErrorMessage>{messageFor(failure)}</ErrorMessage>}
-          {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
-          <p role="status" className={checkEmail ? cardClasses('') : undefined}>
-            {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
-          </p>
+              {failure && <ErrorMessage>{messageFor(failure)}</ErrorMessage>}
+              {/* Always rendered: screen readers announce text added to a live region more reliably than a new one. */}
+              <p role="status" className={checkEmail ? cardClasses('') : undefined}>
+                {checkEmail ? 'Check your email to confirm your account, then sign in.' : ''}
+              </p>
 
-          <Button type="submit" disabled={pending}>
-            {pending
-              ? signingUp
-                ? 'Creating account…'
-                : 'Signing in…'
-              : signingUp
-                ? 'Create account'
-                : 'Sign in'}
-          </Button>
-        </form>
+              <Button type="submit" disabled={pending}>
+                {pending
+                  ? signingUp
+                    ? 'Creating account…'
+                    : 'Signing in…'
+                  : signingUp
+                    ? 'Create account'
+                    : 'Sign in'}
+              </Button>
+            </form>
 
-        <Button variant="secondary" onClick={switchMode} disabled={pending}>
-          {signingUp ? 'I already have an account' : 'Create an account'}
-        </Button>
+            <Button variant="secondary" onClick={switchMode} disabled={pending}>
+              {signingUp ? 'I already have an account' : 'Create an account'}
+            </Button>
+          </>
+        )}
       </main>
     </div>
   );

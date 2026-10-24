@@ -8,7 +8,7 @@ import type { AuthFailure, AuthResult, AuthService, AuthUser } from '../../featu
 
 export type AuthApi = Pick<
   SupabaseClient['auth'],
-  'onAuthStateChange' | 'signInWithPassword' | 'signUp' | 'signOut'
+  'onAuthStateChange' | 'signInWithPassword' | 'signUp' | 'signOut' | 'verifyOtp'
 >;
 
 // A Map, so a hostile error code such as "constructor" cannot match an inherited property.
@@ -21,6 +21,7 @@ const failureByCode = new Map<string, AuthFailure>([
   ['signup_disabled', 'signup_disabled'],
   ['over_request_rate_limit', 'rate_limited'],
   ['over_email_send_rate_limit', 'rate_limited'],
+  ['otp_expired', 'link_invalid'],
 ]);
 
 function failureOf(error: AuthError): AuthFailure {
@@ -84,6 +85,22 @@ export function createSupabaseAuthService(
         // answers this way for an address that is already registered, so the form reveals nothing.
         // With it off, the server returns user_already_exists, which is shown (see ADR-007).
         return data.session ? { status: 'signed_in' } : { status: 'confirm_email' };
+      } catch (error) {
+        return unexpected(error);
+      }
+    },
+
+    async verifyEmail(tokenHash) {
+      try {
+        const { data, error } = await auth.verifyOtp({ token_hash: tokenHash, type: 'email' });
+        if (error) {
+          const reason = failureOf(error);
+          // A code that is wrong, used or old comes back as a 4xx without a specific code.
+          return failure(
+            reason === 'unknown' && (error.status ?? 0) < 500 ? 'link_invalid' : reason,
+          );
+        }
+        return data.session ? { status: 'signed_in' } : failure('unknown');
       } catch (error) {
         return unexpected(error);
       }

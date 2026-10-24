@@ -9,6 +9,7 @@ export type AuthFailure =
   | 'email_taken'
   | 'rate_limited'
   | 'signup_disabled'
+  | 'link_invalid'
   | 'network'
   | 'unknown';
 
@@ -22,6 +23,8 @@ export type AuthService = {
   onChange(listener: (user: AuthUser | null) => void): () => void;
   signIn(email: string, password: string): Promise<AuthResult>;
   signUp(email: string, password: string): Promise<AuthResult>;
+  /** Confirms an email with the one-time code from the confirmation email; it signs the user in. */
+  verifyEmail(tokenHash: string): Promise<AuthResult>;
   /** Clears the local session, so it also works offline. */
   signOut(): Promise<void>;
 };
