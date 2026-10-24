@@ -45,11 +45,14 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 ### 1.4 Auth settings
 
 - **Email provider** is enabled by default. The app uses email + password.
-- **Confirm email:** hosted projects have it on by default and the default mail service allows only about 2 emails per hour, which makes sign-ups flaky. During development turn it **off**. **Switch it on in Phase 5, before the 25 Oct freeze** (see the [roadmap](../plans/roadmap.md)), then check that mail arrives: the server then answers every sign-up the same way, so the app no longer reveals which addresses are registered. Create the test users from the dashboard (Auth > Users > Add user, auto-confirm) so they work either way.
+- **Confirm email:** **on** (Sign In / Providers > User Signups). The server then answers every sign-up the same way, so the app does not reveal which addresses are registered (ADR-007). The built-in mail service sends only to members of the Supabase organisation, about 2 an hour, so it is not enough for real sign-ups.
+- **Custom SMTP** (Emails > SMTP Settings): Brevo free plan (300 emails a day). Host `smtp-relay.brevo.com`, port 587, the username is the SMTP login shown in Brevo (SMTP & API > SMTP), the password is a Brevo **SMTP key** (not the API key), and the sender is an address verified in Brevo (Senders). The key lives only in the Supabase dashboard, never in the repo or `.env*`. Without a domain of our own the sender is a personal Gmail address, which Brevo flags as not recommended: emails can land in spam. Leave Brevo's "block unauthorized IPs" off (Supabase sends from its own addresses).
+- **Rate Limits:** emails sent per hour raised to 100 (custom SMTP starts at 30).
+- Create test and demo users from the dashboard (Auth > Users > Add user, Auto Confirm User) so they sign in without an email.
 - **CAPTCHA:** to switch on in the Auth settings (Attack Protection) in Phase 5, with the other two settings here. Not done yet.
 - **Leaked-password protection:** to switch on in the Auth settings in Phase 5. Not done yet.
 - Set a sensible minimum password length in the Auth settings.
-- **Site URL / redirect URLs:** set the Site URL to your Vercel production URL once you have it (production is not deployed yet); add `http://localhost:5173` for local dev.
+- **Site URL / redirect URLs:** the confirmation link lands on the Site URL. It is set to the latest Vercel preview for now (preview links need a Vercel sign-in, Deployment Protection); set it to the Vercel production URL once production is deployed. `http://localhost:5173` is in the redirect URLs for local dev.
 
 ### 1.5 Test users (for E2E and the RLS isolation suite)
 
@@ -147,8 +150,9 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
 - [x] Advisors reviewed (healthy, no issues)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in)
-- [ ] Confirm email, CAPTCHA and leaked-password protection switched on (Phase 5, before the 25 Oct freeze)
-- [ ] Site URL set (needs the Vercel production URL)
+- [x] Confirm email switched on, with custom SMTP (Brevo), the email limit at 100 an hour and two confirmed demo accounts; a confirmation email received and signed in with on a preview
+- [ ] CAPTCHA and leaked-password protection switched on (Phase 5, before the 25 Oct freeze)
+- [ ] Site URL set to the Vercel production URL (it points at a preview until production is deployed)
 - [x] Gemini key created with **no billing**; `GEMINI_MODEL` chosen (Gemini verified live on a preview deploy)
 - [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`)
 - [x] Vercel project `next-rep` imported; env vars set; preview deployed
@@ -161,7 +165,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 
 | Symptom                                                                 | Likely cause / fix                                                                                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sign-up emails never arrive                                             | Default mail limit (about 2 per hour); turn off Confirm email or create users in the dashboard                                                                                                                                                                                                                                                                                        |
+| Sign-up emails never arrive                                             | Check the spam folder (the sender is a Gmail address without a domain of our own); check custom SMTP is still on and the Brevo SMTP key is valid (Brevo > SMTP & API); check the Brevo daily limit (300) and the Supabase email limit (100 an hour); or create the user in the dashboard with Auto Confirm User                                                                       |
 | App shows empty data / 401 from Supabase                                | Wrong URL or key in env; `VITE_*` change not redeployed                                                                                                                                                                                                                                                                                                                               |
 | `permission denied` on a table                                          | Migration not fully applied (the grants are at the end of `0001_init.sql`)                                                                                                                                                                                                                                                                                                            |
 | Everything times out                                                    | Free Supabase project is paused; wake it in the dashboard                                                                                                                                                                                                                                                                                                                             |

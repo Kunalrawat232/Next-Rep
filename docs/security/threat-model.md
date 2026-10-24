@@ -42,7 +42,7 @@ User workout data (their own, low sensitivity but personal), Supabase session to
 
 ## Residual risks
 
-Audio goes to the browser vendor's recogniser; Supabase free projects may pause; Gemini and Groq free-tier terms may change; many accounts can still be opened until email confirmation and CAPTCHA are switched on (the daily ceiling bounds the damage). All are listed in the README limitations.
+Audio goes to the browser vendor's recogniser; Supabase free projects may pause; Gemini and Groq free-tier terms may change; email confirmation is on, but many accounts can still be opened until CAPTCHA is switched on (the daily ceiling bounds the damage); confirmation emails can land in spam (Brevo free plan, Gmail sender). All are listed in the README limitations.
 
 ## Validation
 

@@ -22,7 +22,7 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - **Real devices:** the app on a real phone (touch, the glass lenses with the real library, the photo crossfade, rest-timer vibration, battery), and the microphone (permission prompt, accuracy in en-IN with Hinglish). Everything visual was checked in desktop Chrome and in phone-sized frames only.
 - **Hosted checks after the latest changes:** `npm run check:supabase`, `npm run test:integration` and `npm run test:e2e` (the developer runs these; they load `.env.local`). `npm run check:coach` passed for Gemini and Groq.
 - **Deployment:** a Vercel preview with the coach was deployed and checked in a browser. Production is not deployed yet.
-- **Sign-up protection:** email confirmation, CAPTCHA and leaked-password protection are not switched on yet (Supabase dashboard).
+- **Sign-up protection:** email confirmation is on (custom SMTP through Brevo); CAPTCHA and leaked-password protection are not switched on yet (Supabase dashboard). Not checked: that a second sign-up with an existing address shows the same "check your email" screen, and whether confirmation emails reach inboxes other than the one tested (or land in spam).
 - **The coach's real answers:** a read-through of real answers for quality and safety, and the data policy of the second provider (Groq).
 - **Licences:** the exercise demonstrations are (c) Gym visual, hotlinked for non-commercial use only; a licence would be needed for any commercial use.
 
@@ -589,3 +589,12 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - AI produced: the test now keeps the failure on until the error shows (retrying the reload inside `waitFor`), then removes it and waits for the recovery. The hook is unchanged: the behaviour was right, the test assumed an order.
 - How validated: the file passed 12 out of 12 runs, and 8 out of 8 under heavy CPU load; the full suite passes. The failing run itself was not reproduced locally.
 - Lesson: a "fail once" mock in a test of a hook that also reads on its own is a race; make the failure last until the thing under test has been seen to react, then take it away.
+
+## Email confirmation at sign-up, with custom SMTP
+
+- Tool: Claude Code, with Claude in Chrome for the Supabase and Brevo dashboards.
+- Asked: switch on Supabase "Confirm email" before the feature freeze, so sign-up stops revealing which addresses are registered (ADR-007).
+- Found: Supabase's built-in mail sends only to members of the Supabase organisation, about 2 an hour, so judges could not have confirmed an account. The app needed no code change: a sign-up without a session already shows "Check your email to confirm your account, then sign in.", and the link confirms the account on Supabase's side.
+- AI produced: custom SMTP on Brevo's free plan (300 a day; sender is a verified personal Gmail address, as there is no domain of our own), the Supabase email limit raised to 100 an hour, the Site URL set from `http://localhost:3000` to the latest Vercel preview, and "Confirm email" switched on. The developer generated the Brevo SMTP key and pasted it into Supabase, and created the two demo accounts (auto-confirmed), so no secret or password passed through the AI. Docs updated: README, roadmap, security checklist, deployment guide, ADR-007, ADR-017, threat model, AGENT_CONTEXT.md, the rate-limit agent doc.
+- How validated: a read-only query showed the demo accounts and test users A and B as confirmed; the developer signed up on the preview, received the confirmation email and signed in. Not checked: the second sign-up with the same address, delivery to other inboxes and the spam folder.
+- Lesson: check what the free built-in mail service will actually deliver before turning on a setting that depends on it.

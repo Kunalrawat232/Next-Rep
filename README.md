@@ -89,7 +89,7 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 - Gemini free tier has low rate limits and its free-tier terms can change. It reads unclear voice phrases (a fallback) and powers the text-only AI coach; free-tier prompts may be used by Google to improve its products, so the app sends only a question and a small summary, and says so on the Coach screen. When Gemini cannot answer, the coach asks Groq (also free tier) with the same question. The coach gives training and diet tips, not medical advice.
 - Supabase free projects can pause after a period of inactivity.
 - Sign-in works offline for a user who is already signed in: the app reads the stored session instead of waiting for the network.
-- "Confirm email" is off during development and is switched on at code freeze, so judges should use the demo accounts in the submission.
+- "Confirm email" is on: a new account must click the link in a confirmation email before signing in. The emails go through Brevo's free plan (300 a day) from a personal Gmail sender, without a domain of our own, so they can land in spam; the demo accounts in the submission are already confirmed.
 - Weight suggestions are conservative rules, not coaching or medical advice.
 
 ## AI use
