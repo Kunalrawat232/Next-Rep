@@ -25,10 +25,10 @@ Status: `[x]` = in place, `[ ]` = to do (with the phase that delivers it). The A
 ## Added with cloud speech-to-text (ADR-019)
 
 - [x] `/api/transcribe` verifies the Supabase JWT, refuses a body over 1,000,000 bytes before reading it (declared length) and under 1000 bytes, accepts only the audio types audio/webm, audio/mp4, audio/ogg and audio/wav, applies the per-person limits (`transcribe`, 10 a minute and 60 an hour) and the daily ceiling, and times out after 10 s. _(Done: covered by `api/_lib/transcribe.test.ts` and `transcribeProvider.test.ts`.)_
-- [x] Audio is never stored or logged; the logs keep only the failing step and the error kind, and the service's own error text is not logged (it could repeat what was said). The reply is cleaned (no control characters, at most 300 characters) and the words are shown in the confirm card before anything is saved. _(Done in code and tests; not yet checked on a real iPhone.)_
+- [x] Audio is never stored or logged; the logs keep only the failing step and the error kind, and the service's own error text is not logged (it could repeat what was said). The reply is cleaned (no control characters, at most 300 characters) and the words are shown in the confirm card before anything is saved. _(Done in code and tests, and checked on an iPhone 15 in Safari and Chrome.)_
 - [x] The workout screen says the voice is sent to a speech service whenever cloud mode is on. _(Covered by `src/features/workout/voiceCloud.test.tsx`.)_
 - [x] The speech service's key is server only (`FALLBACK_API_KEY`, never `VITE_`-prefixed), and the address must be https. _(Done: `api/_lib/transcribeProvider.ts`.)_
-- [ ] Real iPhone run of the deployed function (Safari and Chrome) with the Groq settings in Vercel, checking the notice, the words and that nothing is saved before Log set. _(To do by the developer; see the [deployment guide](../delivery/deployment.md).)_
+- [x] Real iPhone run of the deployed function (Safari and Chrome on an iPhone 15) with the Groq settings in Vercel, checking the notice, the words and that nothing is saved before Log set. _(Done on an iPhone 15 in Safari and Chrome; see the [deployment guide](../delivery/deployment.md).)_
 
 ## Supabase-specific traps to check in every schema or policy change
 

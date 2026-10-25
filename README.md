@@ -8,7 +8,7 @@ Voice-first gym workout logger, delivered as an installable web app (PWA).
 
 Built solo for the **Build With AI Hackathon 2026** (internal company hackathon). Demo link and demo video are added at submission.
 
-**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Cloud speech-to-text for iPhone voice (`/api/transcribe`, [ADR-019](docs/architecture/decisions/019-cloud-speech-to-text.md)) is built and tested with fakes; it is not yet verified on a real iPhone. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
+**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Cloud speech-to-text for iPhone voice (`/api/transcribe`, [ADR-019](docs/architecture/decisions/019-cloud-speech-to-text.md)) is built, tested with fakes and checked on an iPhone 15 in Safari and Chrome. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
 
 ## Problem
 
@@ -83,7 +83,7 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 
 ## Limitations
 
-- Voice works on Chrome (Android, desktop) and Safari (iOS) where the browser's own recogniser works. On iPhone, Safari and Chrome both use WebKit's recogniser, which can end with no words; the app then switches that phone to cloud speech-to-text. That path is built and tested with fakes but not yet verified on a real iPhone. Firefox lacks the Web Speech API, so voice is hidden and tap logging used.
+- Voice works on Chrome (Android, desktop) and Safari (iOS) where the browser's own recogniser works. On iPhone, Safari and Chrome both use WebKit's recogniser, which can end with no words; the app then switches that phone to cloud speech-to-text. That path is built, tested with fakes, and checked on an iPhone 15 in Safari and Chrome. Firefox lacks the Web Speech API, so voice is hidden and tap logging used.
 - Speech recognition needs internet, so offline only tap logging works. The audio leaves the device to the browser vendor's recogniser, which the app does not control. On a phone in cloud mode the recording is also sent through the app's server to Groq, and the workout screen says so.
 - Offline, only creating sets is supported. Editing or deleting needs a connection.
 - Exercise demonstrations load from a third-party CDN and need internet; offline, or if the CDN is down, a placeholder shows. They are for non-commercial use (see Credits).

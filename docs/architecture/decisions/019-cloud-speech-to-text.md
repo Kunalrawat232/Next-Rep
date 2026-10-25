@@ -1,12 +1,10 @@
 # ADR-019: Cloud speech-to-text for phones whose browser cannot hear
 
-- **Status:** accepted; built and tested with fakes, not yet verified on a real iPhone. Builds on [ADR-003](003-gemini-as-fallback-only.md) and [ADR-018](018-coach-second-provider.md). Endpoint contract: [API contracts](../api-contracts.md).
+- **Status:** accepted; built, tested with fakes and checked on an iPhone 15 in Safari and Chrome against the deployed site. Builds on [ADR-003](003-gemini-as-fallback-only.md) and [ADR-018](018-coach-second-provider.md). Endpoint contract: [API contracts](../api-contracts.md).
 
 ## Context
 
-Voice logging used the browser's own recogniser (Web Speech API). On iPhone, Safari and Chrome both run WebKit's recogniser, and it ends with no words and no error, so the person sees "Nothing was heard" and cannot log by voice. Voice is the headline feature, so this has to work on the phones people use. Chrome and Safari on iPhone share the same engine, so changing browser does not help. The developer tested on an iPhone 15 in both and got the same result.
-
-The first attempt only made the error messages clearer and removed a privacy sentence. It did not fix the cause.
+Voice logging used the browser's own recogniser (Web Speech API). On iPhone, Safari and Chrome both use WebKit's speech recogniser, which is not reliable for this (it can end with no words and no error). Voice is the headline feature, so the app needs a second way to hear the person on the phones people use. Chrome and Safari on iPhone share the same engine, so changing browser does not help.
 
 ## Decision
 
@@ -29,5 +27,6 @@ The first attempt only made the error messages clearer and removed a privacy sen
 - **Privacy change, stated plainly:** the person's voice now leaves the device and goes through our own server to Groq, a third party. Before this, the browser's recogniser already sent audio to Google or Apple when it ran, and only the text reached our servers and then, for unclear phrases, Gemini. Now our server forwards the audio too, and only on devices where the browser cannot hear, or after such a device has switched. The notice in the workout screen says so when cloud mode is on. The coach notice and the About page were not changed for this and do not mention voice (see the open questions in the report).
 - **Groq's terms** (read when [ADR-018](018-coach-second-provider.md) was checked; not re-read for this ADR, so re-read them before the submission): the Services Agreement (section 4.2) does not allow inputs or outputs to be used for training unless the customer allows it, and by default Groq does not keep inference data, apart from temporary logs for up to 30 days for reliability and abuse checks. Speech-to-text is eligible for Zero Data Retention; it was not switched on for this project. Files under 10 s are billed as 10 s. The terms can change, so read them again before relying on them.
 - **Quota:** voice counts toward the same daily ceiling and the per-person limits (10 a minute and 60 an hour for `transcribe`, on top of the parse and coach limits). Heavy voice use can use up the day's shared allowance and leave the coach and the parser "busy" for everyone.
-- **Not verified:** the real iPhone path, the accuracy of Whisper on gym talk, and the cost in a real session. The deployed function must be checked on a real iPhone before this is called working.
+- **Tested:** on one iPhone 15, in Safari and Chrome, against the deployed site: the recording, the words and the confirm card worked, repeatedly.
+- **Not measured:** the accuracy of Whisper on a wider range of accents and gym noise, the cost in a real session over many sessions, and Android real-device testing.
 - The model must not echo the prompt: the vocabulary prompt holds gym words only, with no example sentence and no digits.

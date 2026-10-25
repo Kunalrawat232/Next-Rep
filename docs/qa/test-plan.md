@@ -19,7 +19,7 @@ Strategy and conventions: [testing strategy](../standards/testing-strategy.md). 
 
 ## Failure scenarios (each becomes a test)
 
-Built and tested: offline mid-workout; sync interrupted mid-batch; duplicate upload on retry; ambiguous total vs per side; browser evicts local storage; Gemini unavailable (parse and coach); Gemini down and Groq answers; microphone permission denied; Web Speech unsupported (Firefox); misheard number; browser recogniser silent on iPhone, switched to cloud speech-to-text (fakes, ADR-019; not yet on a real iPhone). Not testable: Supabase project paused.
+Built and tested: offline mid-workout; sync interrupted mid-batch; duplicate upload on retry; ambiguous total vs per side; browser evicts local storage; Gemini unavailable (parse and coach); Gemini down and Groq answers; microphone permission denied; Web Speech unsupported (Firefox); misheard number; browser recogniser silent on iPhone, switched to cloud speech-to-text (fakes, ADR-019; checked on an iPhone 15 in Safari and Chrome). Not testable: Supabase project paused.
 
 ## Exit criteria for submission
 

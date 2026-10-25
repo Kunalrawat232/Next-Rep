@@ -37,3 +37,7 @@ Thumbs.db
 
 # Claude Code local-only settings
 .claude/settings.local.json
+
+# Video work that is not part of the app
+brag-output/
+demo-output/
