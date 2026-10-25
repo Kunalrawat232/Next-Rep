@@ -1,6 +1,6 @@
 # ADR-003: Gemini as a fallback only
 
-- **Status:** accepted. Amended by [ADR-017](017-ai-coach.md) (the coach is a second Gemini caller) and [ADR-018](018-coach-second-provider.md) (a second provider for the coach). `/api/parse` is still the only caller for voice.
+- **Status:** accepted. Amended by [ADR-017](017-ai-coach.md) (the coach is a second Gemini caller) and [ADR-018](018-coach-second-provider.md) (a second provider for the coach). `/api/parse` is still the only Gemini caller for voice. [ADR-019](019-cloud-speech-to-text.md) adds a speech-to-text service (Groq, not Gemini) for phones whose browser cannot hear; its words go through the same validators.
 
 ## Context
 

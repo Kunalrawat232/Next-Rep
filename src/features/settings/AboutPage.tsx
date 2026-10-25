@@ -43,7 +43,9 @@ export function AboutPage() {
         <p className="text-callout text-ink-muted">
           The AI coach and the check of phrases the app is not sure about use Google&apos;s Gemini,
           and the coach asks Groq when Gemini is busy. Their answers are advice, never a record of
-          what you lifted.
+          what you lifted. On a phone whose browser cannot hear you, the app records a few seconds
+          and sends them to Groq&apos;s speech service to turn into text; Next Rep does not keep the
+          recording.
         </p>
       </Section>
     </div>

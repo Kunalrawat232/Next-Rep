@@ -23,7 +23,7 @@ import {
   repeatDraft,
   UNCLEAR_MESSAGE,
   useParseService,
-  useSpeech,
+  useVoiceInput,
   type SpeechError,
   type VoiceDraft,
 } from '../voice';
@@ -54,7 +54,14 @@ type Pending = {
 
 const SPEECH_MESSAGE: Record<SpeechError, string> = {
   denied: 'The microphone is blocked. Allow it in the browser settings, or tap to log.',
+  'service-off':
+    'Voice typing is off on this phone. On iPhone, turn on Dictation in Settings, General, Keyboard. Or tap to log.',
   'no-speech': UNCLEAR_MESSAGE.nothing_heard,
+  silent: UNCLEAR_MESSAGE.nothing_heard,
+  'mic-busy': 'The microphone is busy. Close anything else using it, then tap the mic again.',
+  limited: 'Voice is busy. Wait a minute and try again, or tap to log.',
+  'cloud-on':
+    'Voice now uses the internet to hear you, because this phone cannot do it on its own. Tap the mic and say it again.',
   unavailable: 'Voice is not available right now. Tap logging works.',
   failed: 'Voice stopped working. Try again, or tap to log.',
 };
@@ -106,7 +113,7 @@ export function VoiceLogger({
   const [checking, setChecking] = useState(false);
   const store = useLogStore();
   const { notify, ensurePersistence } = useSyncControls();
-  const speech = useSpeech();
+  const speech = useVoiceInput();
   const [pending, setPending] = useState<Pending | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -276,33 +283,36 @@ export function VoiceLogger({
       </p>
     );
 
+  const busy = checking || speech.transcribing;
   const statusText = speech.listening
     ? 'Listening…'
-    : checking
-      ? 'Checking what you said…'
-      : (notice ?? null);
+    : speech.transcribing
+      ? 'Turning your voice into text…'
+      : checking
+        ? 'Checking what you said…'
+        : (notice ?? null);
 
   return (
     <div className="flex flex-col gap-3">
       <Button
         className="w-full"
-        disabled={!online || checking}
+        disabled={!online || busy}
         aria-pressed={speech.listening}
         aria-describedby="voice-note"
         onClick={speech.listening ? speech.stop : listen}
       >
-        {checking
-          ? 'Checking…'
-          : speech.listening
-            ? 'Listening… tap to stop'
-            : 'Tap to speak a set'}
+        {busy ? 'Checking…' : speech.listening ? 'Listening… tap to stop' : 'Tap to speak a set'}
       </Button>
       <p id="voice-note" role="status" className="text-caption text-ink-muted">
         {!online
           ? 'Voice needs internet. Tap logging works.'
-          : (statusText ??
-            'Say a set, like “bench 60 kilo 8 reps”. A phrase that is not clear may be sent to Google’s AI to read.')}
+          : (statusText ?? 'Say a set, like “bench press 60 kilo 8 reps”.')}
       </p>
+      {speech.cloud && (
+        <p className="text-caption text-ink-muted">
+          Your voice is sent to a speech service to turn it into text. Next Rep does not keep it.
+        </p>
+      )}
       {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
       {removing && (
         <Card role="group" aria-label="Confirm undo" className="flex flex-col gap-4">

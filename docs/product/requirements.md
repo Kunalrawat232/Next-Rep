@@ -11,7 +11,7 @@ Status: **done** (built and merged to `main`), **in progress**, or **not built**
 - Exercise library (seeded) with aliases, plus user-created custom exercises. Each exercise page has a History section. Done.
 - Workout session: start, log sets, finish. An empty workout (no sets) is never sent to the server or kept. Done.
 - **Tap logging** (always available, works offline). Done.
-- **Voice logging** using the browser Web Speech API, with our own deterministic parser (English, plus Hindi number words) and validators, a confirm card, and voice commands (repeat, undo, rest, edit a set). Done.
+- **Voice logging** using the browser Web Speech API, with our own deterministic parser (English, plus Hindi number words) and validators, a confirm card, and voice commands (repeat, undo, rest, edit a set). Done. On iPhone, where the browser's recogniser ends with no words, a short clip goes to cloud speech-to-text instead ([ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)): built and tested with fakes, not yet verified on a real iPhone.
 - Weight convention handling: total vs per side, bar weights, plausibility checks, confirmation with breakdown. Done, for tap and voice logging.
 - History list, per-exercise progress charts, personal records. Done.
 - Deployed on Vercel, installable as a PWA. The PWA manifest and icons are built, and production is deployed on Vercel at https://nextrep-gym.vercel.app (public, no login). Preview deployments are behind Vercel Authentication.
@@ -49,9 +49,9 @@ Status: **done** (built and merged to `main`), **in progress**, or **not built**
   - Vercel: free (Hobby) tier for hosting and serverless functions.
   - Supabase: free tier for Auth and Postgres. Free projects can pause after inactivity.
   - Google Gemini API: **free tier only. Never link a billing account.** Low per-minute limits; treat it as a scarce fallback.
-  - Groq API: free tier only, the coach's second provider.
-- **Claude is not used inside the app** (that would need paid API billing). In-app AI is Gemini free tier, with Groq free tier as the coach's second provider.
-- **Browser support:** Chrome (Android, desktop) and Safari (iOS) are primary. Firefox lacks the Web Speech API, so voice is hidden and tap logging is used.
+  - Groq API: free tier only, the coach's second provider and the speech-to-text on iPhone (ADR-019).
+- **Claude is not used inside the app** (that would need paid API billing). In-app AI is Gemini free tier, with Groq free tier as the coach's second provider and for speech-to-text.
+- **Browser support:** Chrome (Android, desktop) and Safari (iOS) are primary. iPhone voice falls back to cloud speech-to-text where the browser's recogniser fails (ADR-019). Firefox lacks the Web Speech API, so voice is hidden and tap logging is used.
 - **Timeline:** see [roadmap](../plans/roadmap.md). If behind, cut from "Could" first, then "Should"; never compromise tests or security.
 
 ## Decisions recorded

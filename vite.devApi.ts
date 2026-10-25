@@ -3,10 +3,10 @@ import { loadEnv, type Plugin } from 'vite';
 
 /**
  * The functions in /api only run on Vercel, so `npm run dev` would answer them with the app's own page.
- * This serves them from the dev server too, so the coach and the voice fallback can be tried locally. It is
+ * This serves them from the dev server too, so the coach, the voice fallback and speech-to-text can be tried locally. It is
  * for `npm run dev` only (never a build, never the tests), and the handlers are the same code Vercel runs.
  */
-const FUNCTIONS = new Set(['parse', 'coach']);
+const FUNCTIONS = new Set(['parse', 'coach', 'transcribe']);
 /** The server-only settings the functions read. Nothing else from the env files is copied. */
 const SERVER_KEYS = [
   'GEMINI_API_KEY',
@@ -15,12 +15,13 @@ const SERVER_KEYS = [
   'FALLBACK_API_KEY',
   'FALLBACK_BASE_URL',
   'FALLBACK_MODEL',
+  'TRANSCRIBE_MODEL',
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
 ];
 const BODY_LIMIT = 1_000_000;
 
-async function readBody(req: IncomingMessage): Promise<string | null> {
+async function readBody(req: IncomingMessage): Promise<Buffer | null> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of req) {
@@ -29,7 +30,7 @@ async function readBody(req: IncomingMessage): Promise<string | null> {
     if (size > BODY_LIMIT) return null;
     chunks.push(buffer);
   }
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks);
 }
 
 function send(res: ServerResponse, status: number, body: unknown) {
@@ -90,7 +91,11 @@ export function devApi(): Plugin {
             POST: (request: Request) => Promise<Response>;
           };
           const response = await module.POST(
-            new Request(`http://localhost${req.url}`, { method: 'POST', headers, body }),
+            new Request(`http://localhost${req.url}`, {
+              method: 'POST',
+              headers,
+              body: new Uint8Array(body),
+            }),
           );
           res.statusCode = response.status;
           response.headers.forEach((value, key) => res.setHeader(key, value));

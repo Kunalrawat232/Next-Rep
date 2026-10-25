@@ -20,7 +20,20 @@ export type Recognition = {
 export type RecognitionFactory = () => Recognition;
 
 /** What went wrong, in words a screen can turn into a friendly message. */
-export type SpeechError = 'denied' | 'no-speech' | 'unavailable' | 'failed';
+export type SpeechError =
+  | 'denied'
+  | 'service-off'
+  | 'no-speech'
+  /** Listening ended with no words and no error: what Safari and Chrome on iPhone do when recognition is broken. */
+  | 'silent'
+  /** Voice just switched to the cloud recogniser (see useVoiceInput): the person has to say it again. */
+  | 'cloud-on'
+  | 'unavailable'
+  /** The microphone is in use by something else (cloud recogniser). */
+  | 'mic-busy'
+  /** The speech service said slow down (cloud recogniser). */
+  | 'limited'
+  | 'failed';
 
 /** Recognition language: English as spoken in India, which also hears Hinglish gym talk best. */
 export const SPEECH_LANGUAGE = 'en-IN';
@@ -40,8 +53,9 @@ export function browserRecognition(): RecognitionFactory | undefined {
 export function errorFor(code: string): SpeechError {
   switch (code) {
     case 'not-allowed':
-    case 'service-not-allowed':
       return 'denied';
+    case 'service-not-allowed':
+      return 'service-off';
     case 'no-speech':
       return 'no-speech';
     case 'audio-capture':

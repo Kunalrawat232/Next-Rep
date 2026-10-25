@@ -30,10 +30,10 @@ export type VoiceDraft =
 /** Friendly words for each reason a phrase could not be used. */
 export const UNCLEAR_MESSAGE: Record<UnclearReason, string> = {
   nothing_heard: 'Nothing was heard. Tap the mic and try again.',
-  not_understood: 'That was not understood. Try "bench 60 kilo 8 reps".',
+  not_understood: 'That was not understood. Try "bench press 60 kilo 8 reps".',
   no_exercise: 'Which exercise? Say its name, or open the exercise first.',
-  no_weight: 'How much weight? Try "bench 60 kilo 8 reps".',
-  no_reps: 'How many reps? Try "bench 60 kilo 8 reps".',
+  no_weight: 'How much weight? Try "bench press 60 kilo 8 reps".',
+  no_reps: 'How many reps? Try "bench press 60 kilo 8 reps".',
   unsure: 'Not sure what was said. Check it below, or say it again.',
 };
 

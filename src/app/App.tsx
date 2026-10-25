@@ -7,7 +7,12 @@ import type { RemoteLog } from '../data/sync';
 import { ProfileServiceProvider, UnitProvider, type ProfileService } from '../features/settings';
 import { SyncProvider } from '../features/sync';
 import { CoachServiceProvider, type CoachService } from '../features/coach';
-import { ParseServiceProvider, type ParseService } from '../features/voice';
+import {
+  ParseServiceProvider,
+  TranscribeServiceProvider,
+  type ParseService,
+  type TranscribeService,
+} from '../features/voice';
 
 type Props = {
   service: AuthService;
@@ -17,6 +22,8 @@ type Props = {
   logRemote: RemoteLog;
   /** The Gemini fallback; without it, phrases the parser is unsure of are not sent anywhere. */
   parseService?: ParseService;
+  /** Speech-to-text for browsers whose own recogniser does not work; without it only the browser's own is used. */
+  transcribeService?: TranscribeService;
   /** The AI coach; without it the Coach screen says it is unavailable. */
   coachService?: CoachService;
   router: ComponentProps<typeof RouterProvider>['router'];
@@ -30,6 +37,7 @@ export function App({
   profileService,
   logRemote,
   parseService,
+  transcribeService,
   coachService,
   router,
   ensureProfile,
@@ -42,9 +50,11 @@ export function App({
             <ExerciseServiceProvider service={exerciseService}>
               <SyncProvider remote={logRemote}>
                 <Fallback service={parseService}>
-                  <CoachFallback service={coachService}>
-                    <RouterProvider router={router} />
-                  </CoachFallback>
+                  <SpeechToText service={transcribeService}>
+                    <CoachFallback service={coachService}>
+                      <RouterProvider router={router} />
+                    </CoachFallback>
+                  </SpeechToText>
                 </Fallback>
               </SyncProvider>
             </ExerciseServiceProvider>
@@ -58,6 +68,14 @@ export function App({
 function Fallback({ service, children }: { service?: ParseService; children: ReactNode }) {
   return service ? (
     <ParseServiceProvider service={service}>{children}</ParseServiceProvider>
+  ) : (
+    children
+  );
+}
+
+function SpeechToText({ service, children }: { service?: TranscribeService; children: ReactNode }) {
+  return service ? (
+    <TranscribeServiceProvider service={service}>{children}</TranscribeServiceProvider>
   ) : (
     children
   );

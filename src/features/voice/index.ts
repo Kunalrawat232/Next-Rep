@@ -1,4 +1,11 @@
 export { useSpeech, type Speech } from './useSpeech';
+export { useVoiceInput, type VoiceInput } from './useVoiceInput';
+export {
+  TranscribeServiceProvider,
+  useTranscribeService,
+  type TranscribeResult,
+  type TranscribeService,
+} from './transcribeService';
 export type { SpeechError } from './speech';
 export { ParseServiceProvider, useParseService, type ParseService } from './parseService';
 export {

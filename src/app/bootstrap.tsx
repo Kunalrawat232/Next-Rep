@@ -5,6 +5,7 @@ import {
   createSupabase,
   createFetchCoachService,
   createFetchParseService,
+  createFetchTranscribeService,
   createSupabaseAuthService,
   createSupabaseExerciseService,
   createSupabaseLogRemote,
@@ -20,7 +21,7 @@ import type { ExerciseService } from '../features/exercises';
 import type { GymService } from '../features/gyms';
 import type { ProfileService } from '../features/settings';
 import type { CoachService } from '../features/coach';
-import type { ParseService } from '../features/voice';
+import type { ParseService, TranscribeService } from '../features/voice';
 import { App } from './App';
 import { ConfigError } from './ConfigError';
 import { appRoutes } from './routes';
@@ -35,6 +36,7 @@ export type BootstrapDeps = {
   createLogRemote: (client: SupabaseClient) => RemoteLog;
   createProfileService: (client: SupabaseClient) => ProfileService;
   createParseService: (client: SupabaseClient) => ParseService;
+  createTranscribeService: (client: SupabaseClient) => TranscribeService;
   createCoachService: (client: SupabaseClient) => CoachService;
   createRouter: () => ComponentProps<typeof RouterProvider>['router'];
   ensureProfile: (client: SupabaseClient, userId: string) => Promise<void>;
@@ -55,6 +57,7 @@ const defaultDeps: BootstrapDeps = {
   createLogRemote: createSupabaseLogRemote,
   createProfileService: createSupabaseProfileService,
   createParseService: (client) => createFetchParseService(client),
+  createTranscribeService: (client) => createFetchTranscribeService(client),
   createCoachService: (client) => createFetchCoachService(client),
   createRouter: () => createBrowserRouter(appRoutes),
   ensureProfile,
@@ -78,6 +81,7 @@ export function bootstrap(
       exerciseService={deps.createExerciseService(client)}
       logRemote={deps.createLogRemote(client)}
       parseService={deps.createParseService(client)}
+      transcribeService={deps.createTranscribeService(client)}
       coachService={deps.createCoachService(client)}
       profileService={deps.createProfileService(client)}
       router={deps.createRouter()}

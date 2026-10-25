@@ -1,6 +1,6 @@
 # ADR-018: A second provider for the coach, used only when Gemini cannot answer
 
-- **Status:** accepted; merged to main. Builds on [ADR-017](017-ai-coach.md). Timeouts and token caps: [API contracts](../api-contracts.md).
+- **Status:** accepted; merged to main. Builds on [ADR-017](017-ai-coach.md). Amended by [ADR-019](019-cloud-speech-to-text.md): the same key and address also serve speech-to-text (which needs no `FALLBACK_MODEL`). Timeouts and token caps: [API contracts](../api-contracts.md).
 
 ## Context
 

@@ -22,6 +22,14 @@ Status: `[x]` = in place, `[ ]` = to do (with the phase that delivers it). The A
 - [x] "Confirm email" switched on in the Supabase dashboard (so sign-up no longer reveals registered addresses, ADR-007), with custom SMTP through Brevo; see the [roadmap](../plans/roadmap.md).
 - [x] The Supabase security advisor was read and each notice answered. Fixed: `rls_auto_enable()` was callable by `anon` and `authenticated` (migration 0006). Left on purpose: the three rate-limit and ceiling functions are callable by signed-in users because they count the caller's own requests; the two counter tables have RLS and no policy because only those functions write them; leaked-password protection needs a paid plan and the project stays on free tiers.
 
+## Added with cloud speech-to-text (ADR-019)
+
+- [x] `/api/transcribe` verifies the Supabase JWT, refuses a body over 1,000,000 bytes before reading it (declared length) and under 1000 bytes, accepts only the audio types audio/webm, audio/mp4, audio/ogg and audio/wav, applies the per-person limits (`transcribe`, 10 a minute and 60 an hour) and the daily ceiling, and times out after 10 s. _(Done: covered by `api/_lib/transcribe.test.ts` and `transcribeProvider.test.ts`.)_
+- [x] Audio is never stored or logged; the logs keep only the failing step and the error kind, and the service's own error text is not logged (it could repeat what was said). The reply is cleaned (no control characters, at most 300 characters) and the words are shown in the confirm card before anything is saved. _(Done in code and tests; not yet checked on a real iPhone.)_
+- [x] The workout screen says the voice is sent to a speech service whenever cloud mode is on. _(Covered by `src/features/workout/voiceCloud.test.tsx`.)_
+- [x] The speech service's key is server only (`FALLBACK_API_KEY`, never `VITE_`-prefixed), and the address must be https. _(Done: `api/_lib/transcribeProvider.ts`.)_
+- [ ] Real iPhone run of the deployed function (Safari and Chrome) with the Groq settings in Vercel, checking the notice, the words and that nothing is saved before Log set. _(To do by the developer; see the [deployment guide](../delivery/deployment.md).)_
+
 ## Supabase-specific traps to check in every schema or policy change
 
 - RLS enabled on every table in an exposed schema; policies use `to authenticated` **and** an ownership predicate (authentication alone is not authorisation).
