@@ -12,6 +12,14 @@ export type VoiceContext = {
   unit: Unit;
 };
 
+/** A weight as the person said it, with the unit and per side or total as spoken (or not said). */
+export type SpokenWeight = NonNullable<ParseResult['weight']>;
+
+/** A set whose exercise and one number are sure and the other number was not said: the screen asks for it. */
+export type PartialDraft =
+  | { kind: 'partial'; missing: 'reps'; exercise: Exercise; weight: SpokenWeight }
+  | { kind: 'partial'; missing: 'weight'; exercise: Exercise; reps: number };
+
 export type UnclearReason =
   'nothing_heard' | 'not_understood' | 'no_exercise' | 'no_weight' | 'no_reps' | 'unsure';
 
@@ -25,6 +33,7 @@ export type VoiceDraft =
   | { kind: 'undo' }
   | { kind: 'edit'; reps?: number; weight?: NonNullable<ParseResult['weight']> }
   | { kind: 'rest'; seconds: number }
+  | PartialDraft
   | { kind: 'unclear'; reason: UnclearReason };
 
 /** Friendly words for each reason a phrase could not be used. */
@@ -69,7 +78,51 @@ export function draftFromParse(result: ParseResult, context: VoiceContext): Voic
   }
 }
 
+// What the parser may have flagged when only a number is missing: nothing else is in doubt.
+const ONLY_REPS_MISSING: readonly string[] = [ISSUE.NO_REPS, ISSUE.AMBIGUOUS_WEIGHT_MODE];
+const ONLY_WEIGHT_MISSING: readonly string[] = [ISSUE.NO_WEIGHT];
+
+/** The exercise and one number are sure and the other was not said: ask for it instead of starting over. */
+function partialDraft(result: ParseResult, exercises: readonly Exercise[]): PartialDraft | null {
+  const exercise = exercises.find((e) => e.id === result.exerciseId);
+  if (!exercise) return null;
+  const onlyIssues = (allowed: readonly string[]) =>
+    result.issues.every((issue) => allowed.includes(issue));
+  if (result.reps === undefined && result.weight !== undefined && onlyIssues(ONLY_REPS_MISSING))
+    return { kind: 'partial', missing: 'reps', exercise, weight: result.weight };
+  if (
+    result.weight === undefined &&
+    result.reps !== undefined &&
+    exercise.equipmentType !== 'bodyweight' &&
+    onlyIssues(ONLY_WEIGHT_MISSING)
+  )
+    return { kind: 'partial', missing: 'weight', exercise, reps: result.reps };
+  return null;
+}
+
+function setFrom(
+  exercise: Exercise,
+  weight: SpokenWeight,
+  reps: number,
+  gym: VoiceContext['gym'],
+): Extract<VoiceDraft, { kind: 'set' }> {
+  return {
+    kind: 'set',
+    exercise,
+    reps,
+    candidate: {
+      equipment: exercise.equipmentType,
+      weight,
+      reps,
+      barKg: gym ? (barFor(gym, exercise.equipmentType) ?? null) : null,
+      source: 'voice',
+    },
+  };
+}
+
 function setDraft(result: ParseResult, { exercises, gym, unit }: VoiceContext): VoiceDraft {
+  const partial = partialDraft(result, exercises);
+  if (partial) return partial;
   if (needsFallback(result)) return { kind: 'unclear', reason: reasonFor(result) };
   const exercise = exercises.find((e) => e.id === result.exerciseId);
   if (!exercise) return { kind: 'unclear', reason: 'no_exercise' };
@@ -78,18 +131,25 @@ function setDraft(result: ParseResult, { exercises, gym, unit }: VoiceContext): 
   // A bodyweight set with no number logs added weight 0.
   if (result.weight === undefined && !bodyweight) return { kind: 'unclear', reason: 'no_weight' };
   const weight = result.weight ?? { value: 0, unit, mode: 'total' as const };
-  return {
-    kind: 'set',
-    exercise,
-    reps: result.reps,
-    candidate: {
-      equipment: exercise.equipmentType,
-      weight,
-      reps: result.reps,
-      barKg: gym ? (barFor(gym, exercise.equipmentType) ?? null) : null,
-      source: 'voice',
-    },
-  };
+  return setFrom(exercise, weight, result.reps, gym);
+}
+
+/** The reps the person gave after being asked: the set as it would have been had they said them at first. */
+export function withReps(
+  partial: Extract<PartialDraft, { missing: 'reps' }>,
+  reps: number,
+  { gym }: Pick<VoiceContext, 'gym'>,
+): Extract<VoiceDraft, { kind: 'set' }> {
+  return setFrom(partial.exercise, partial.weight, reps, gym);
+}
+
+/** The weight the person gave after being asked, in the unit they use; no per side or total word, so they choose on the next card. */
+export function withWeight(
+  partial: Extract<PartialDraft, { missing: 'weight' }>,
+  weight: SpokenWeight,
+  { gym }: Pick<VoiceContext, 'gym'>,
+): Extract<VoiceDraft, { kind: 'set' }> {
+  return setFrom(partial.exercise, weight, partial.reps, gym);
 }
 
 /** The part of a stored set that "same again" copies. */
@@ -112,16 +172,5 @@ export function repeatDraft(
     unit: 'kg' as const,
     mode: 'total' as const,
   };
-  return {
-    kind: 'set',
-    exercise,
-    reps,
-    candidate: {
-      equipment: exercise.equipmentType,
-      weight,
-      reps,
-      barKg: gym ? (barFor(gym, exercise.equipmentType) ?? null) : null,
-      source: 'voice',
-    },
-  };
+  return setFrom(exercise, weight, reps, gym);
 }

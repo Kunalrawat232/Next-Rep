@@ -24,10 +24,14 @@ import {
   UNCLEAR_MESSAGE,
   useParseService,
   useVoiceInput,
+  withReps,
+  withWeight,
+  type PartialDraft,
   type SpeechError,
   type VoiceDraft,
 } from '../voice';
 import type { RestTimer } from './useRestTimer';
+import { MissingNumberCard } from './MissingNumberCard';
 import { VoiceConfirmCard } from './VoiceConfirmCard';
 
 type Props = {
@@ -97,6 +101,24 @@ async function fallbackRequest(
   return request.success ? request.data : null;
 }
 
+type Asking = {
+  transcript: string;
+  draft: PartialDraft;
+  source: SetSource;
+  lastTotalKg: number | undefined;
+};
+
+/** The total of the last set of an exercise, which lets the validator spot a number that is far off. */
+function lastTotalOf(store: LogStore, exerciseId: string): Promise<number | undefined> {
+  return store
+    .lastSetFor(exerciseId)
+    .then((last) => last?.totalKg)
+    .catch((error: unknown) => {
+      ignoreClosed(error);
+      return undefined;
+    });
+}
+
 /** The mic: tap, speak a set, check it, tap Log set. What was said is only ever a proposal. */
 export function VoiceLogger({
   workout,
@@ -115,6 +137,7 @@ export function VoiceLogger({
   const { notify, ensurePersistence } = useSyncControls();
   const speech = useVoiceInput();
   const [pending, setPending] = useState<Pending | null>(null);
+  const [asking, setAsking] = useState<Asking | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [removing, setRemoving] = useState<StoredSet | null>(null);
@@ -147,18 +170,10 @@ export function VoiceLogger({
     };
 
     const propose = (proposal: Extract<VoiceDraft, { kind: 'set' }>, source: SetSource) => {
-      // The last total of this exercise lets the validator spot a number that is far off.
-      store
-        .lastSetFor(proposal.exercise.id)
-        .then((last) => last?.totalKg)
-        .catch((error: unknown) => {
-          ignoreClosed(error);
-          return undefined;
-        })
-        .then((lastTotalKg) => {
-          if (mounted.current)
-            setPending({ transcript: heard, draft: proposal, lastTotalKg, source });
-        });
+      void lastTotalOf(store, proposal.exercise.id).then((lastTotalKg) => {
+        if (mounted.current)
+          setPending({ transcript: heard, draft: proposal, lastTotalKg, source });
+      });
     };
 
     const act = (draft: VoiceDraft, source: SetSource) => {
@@ -176,6 +191,12 @@ export function VoiceLogger({
           break;
         case 'set':
           propose(draft, source);
+          break;
+        case 'partial':
+          // Only a number is missing: ask for it, so the person does not have to say the whole set again.
+          void lastTotalOf(store, draft.exercise.id).then((lastTotalKg) => {
+            if (mounted.current) setAsking({ transcript: heard, draft, source, lastTotalKg });
+          });
           break;
         case 'repeat': {
           const done = latest.current.sets;
@@ -204,7 +225,7 @@ export function VoiceLogger({
       currentExerciseId: currentExerciseId ?? undefined,
     });
     const localDraft = draftFromParse(local, context);
-    if (!needsFallback(local) || !current.online) {
+    if (localDraft.kind === 'partial' || !needsFallback(local) || !current.online) {
       act(localDraft, 'voice');
       return;
     }
@@ -212,7 +233,7 @@ export function VoiceLogger({
     // The parser is not sure: ask Gemini once. Whatever it says is checked and shown like any other phrase.
     setChecking(true);
     void (async () => {
-      let draft = localDraft;
+      let draft: VoiceDraft = localDraft;
       let source: SetSource = 'voice';
       try {
         const request = await fallbackRequest(heard, current, store);
@@ -238,10 +259,25 @@ export function VoiceLogger({
   function listen() {
     if (checking) return;
     setPending(null);
+    setAsking(null);
     setRemoving(null);
     setNotice(null);
     setProblem(null);
     speech.start();
+  }
+
+  /** The missing number was given: the set it makes goes to the same confirm card as a spoken one. */
+  function proposeAnswer(asked: Asking, proposal: Extract<VoiceDraft, { kind: 'set' }>) {
+    setAsking(null);
+    void lastTotalOf(store, proposal.exercise.id).then((lastTotalKg) => {
+      if (mounted.current)
+        setPending({
+          transcript: asked.transcript,
+          draft: proposal,
+          lastTotalKg,
+          source: asked.source,
+        });
+    });
   }
 
   async function save(resolved: ResolvedWeight) {
@@ -335,6 +371,29 @@ export function VoiceLogger({
             </Button>
           </div>
         </Card>
+      )}
+      {asking && (
+        <MissingNumberCard
+          transcript={asking.transcript}
+          draft={asking.draft}
+          unit={unit}
+          lastTotalKg={asking.lastTotalKg}
+          onReps={(reps) => {
+            if (asking.draft.missing === 'reps')
+              proposeAnswer(
+                asking,
+                withReps(asking.draft, reps, { gym: workout.gymSnapshot ?? undefined }),
+              );
+          }}
+          onWeight={(weight) => {
+            if (asking.draft.missing === 'weight')
+              proposeAnswer(
+                asking,
+                withWeight(asking.draft, weight, { gym: workout.gymSnapshot ?? undefined }),
+              );
+          }}
+          onCancel={() => setAsking(null)}
+        />
       )}
       {pending && (
         <VoiceConfirmCard

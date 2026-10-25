@@ -12,7 +12,11 @@ export {
   draftFromParse,
   repeatDraft,
   UNCLEAR_MESSAGE,
+  withReps,
+  withWeight,
+  type PartialDraft,
   type RepeatSource,
+  type SpokenWeight,
   type VoiceContext,
   type VoiceDraft,
 } from './voiceDraft';

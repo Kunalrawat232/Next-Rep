@@ -664,3 +664,13 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - How validated: unit tests with fakes for the handler (token, content type, size, limits, ceiling, failures), the provider (silence filter, error handling), the client service, the recorder, the silence detector and the hook; a whole-app test (switch after a deaf recogniser, record, transcribe, confirm card, Log set). Unit tests went from 4530 in 184 files to 4587 in 191 files (database and hosted tests unchanged). The developer then tested it on an iPhone 15 in Safari and Chrome against the deployed site, and it worked.
 - Not checked: the accuracy of Whisper beyond that phone; the cost of voice on the shared daily allowance in real use. The AI could not test on iOS, so the developer ran the iPhone checks.
 - Lesson: when one phone's browsers share an engine, a fix for that engine's limit belongs in one shared place, and it must be tested on the failing device before it is written up as fixed.
+
+## Ask for the missing number
+
+- Tool: Claude Code.
+- Asked: when the person says "bench press 45 kilo" with no reps, the app only said it did not understand. The developer asked for a better way than saying the whole set again.
+- Found: the parser already knows exactly what is missing (`NO_REPS` or `NO_WEIGHT`) and keeps the exercise and the other number; the screen threw that away. Such a phrase also scored under the Gemini threshold, so it cost a free-tier call to be refused again.
+- AI produced: a `partial` draft in `src/features/voice/voiceDraft.ts` (only when the exercise is matched and nothing else is in doubt; `withReps` and `withWeight` build the full set), `MissingNumberCard` (quick rep buttons, typed number, "same as last time"), and the wiring in `VoiceLogger`, which skips Gemini for a partial draft. The answer goes through the same validators and confirm card, and nothing is stored until Log set. The developer chose the tap version first and left answering by voice for later.
+- How validated: unit tests for the draft (reps missing, weight missing, both missing, unknown exercise, other doubt, bodyweight, unit conversion), the card, and whole-app tests (tap, typed, invalid numbers, same as last time, cancel, new phrase replaces the question, no Gemini call). Unit tests went from 4587 in 191 files to 4606 in 193 files.
+- Not checked: the card on a real phone; answering by voice (not built).
+- Lesson: when a refusal says "try again", check whether the parser already knows what to ask for.
