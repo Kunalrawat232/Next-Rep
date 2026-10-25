@@ -176,7 +176,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] A sign-up test on the live address: with a throwaway address the confirmation email arrived, the link worked and sign-in worked (an address that does not exist, such as a Gmail `name+tag` whose base mailbox is not yours, is accepted by the form but hard-bounces at Brevo, so no email arrives and the screen still says "Check your email")
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, before migrations 0002 and 0003)
 - [ ] A phone opens https://nextrep-gym.vercel.app over HTTPS: microphone, offline and install (not done yet; check it yourself)
-- [ ] After the deploy that adds `/api/transcribe` (with the Groq settings in Vercel): test voice on a real iPhone (Safari and Chrome). Say "bench press 60 kilo 8 reps" and check that the cloud notice appears, the words and the confirm card are right, and nothing is saved until Log set. Not done yet; the AI cannot test on iOS.
+- [x] After the deploy that adds `/api/transcribe` (with the Groq settings in Vercel): test voice on a real iPhone. Say "bench press 60 kilo 8 reps" and check that the cloud notice appears, the words and the confirm card are right, and nothing is saved until Log set. Done on an iPhone 15 in Safari and Chrome.
 
 ## Troubleshooting
 

@@ -1,6 +1,6 @@
 # Threat model: voice → Gemini → database
 
-Status: voice, the parser, the Gemini fallback (`/api/parse`) and the AI coach (`/api/coach`, with Groq as a second provider) are built, with fake-provider tests (`api/_lib/parse.test.ts`, `coach.test.ts`, `coachScope.test.ts`, `fallbackProvider.test.ts`; `/api/parse` was checked once against the live API and `npm run check:coach` passed for both providers). Cloud speech-to-text (`/api/transcribe`, Groq, [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)) is built and tested with fakes (`api/_lib/transcribe.test.ts`, `transcribeProvider.test.ts`); it is not yet verified on a real iPhone. All of T1 to T20 apply (T7 and T16 are controls in process and key handling rather than tested code).
+Status: voice, the parser, the Gemini fallback (`/api/parse`) and the AI coach (`/api/coach`, with Groq as a second provider) are built, with fake-provider tests (`api/_lib/parse.test.ts`, `coach.test.ts`, `coachScope.test.ts`, `fallbackProvider.test.ts`; `/api/parse` was checked once against the live API and `npm run check:coach` passed for both providers). Cloud speech-to-text (`/api/transcribe`, Groq, [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)) is built and tested with fakes (`api/_lib/transcribe.test.ts`, `transcribeProvider.test.ts`); it was checked on an iPhone 15 in Safari and Chrome against the deployed site. All of T1 to T20 apply (T7 and T16 are controls in process and key handling rather than tested code).
 
 Scope: the data path from the microphone to Postgres, plus auth and dependencies. Drafted with AI assistance and reviewed by the developer; update as the system is built.
 
@@ -43,7 +43,7 @@ User workout data (their own, low sensitivity but personal), Supabase session to
 
 ## Residual risks
 
-Audio goes to the browser vendor's recogniser, and on phones where that cannot hear, to Groq through `/api/transcribe` (T20; not yet checked on a real iPhone); Supabase free projects may pause; Gemini and Groq free-tier terms may change; email confirmation is on, but many accounts can still be opened (the per-user limits and the daily ceiling bound the damage); confirmation emails can land in spam (Brevo free plan, Gmail sender). All are listed in the README limitations.
+Audio goes to the browser vendor's recogniser, and on phones where that cannot hear, to Groq through `/api/transcribe` (T20; checked on an iPhone 15 in Safari and Chrome); Supabase free projects may pause; Gemini and Groq free-tier terms may change; email confirmation is on, but many accounts can still be opened (the per-user limits and the daily ceiling bound the damage); confirmation emails can land in spam (Brevo free plan, Gmail sender). All are listed in the README limitations.
 
 ## Validation
 

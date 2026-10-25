@@ -1,6 +1,6 @@
 # Next Rep
 
-Voice-first gym workout logger, an installable PWA. Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even offline, with bar weight and per-side maths handled for you. Built solo for the Build With AI Hackathon 2026 (feature freeze 25 Oct, submit 30 Oct 2026). Status: the voice parser and the mic on the workout screen work (tap to speak, confirm, log); `/api/parse` (Gemini fallback) is built, tested with fakes and verified once against live Gemini on a preview deploy; tap logging works; an AI coach (`/coach`, `/api/coach`) is built and merged to `main` (text only, gym and diet only). Production is deployed at https://nextrep-gym.vercel.app.
+Voice-first gym workout logger, an installable PWA. Say "bench press 60 kilo 8 reps" between sets and it is logged correctly, even offline, with bar weight and per-side maths handled for you. Built solo for the Build With AI Hackathon 2026 (feature freeze 25 Oct, submit 30 Oct 2026). Status: the voice parser and the mic on the workout screen work (tap to speak, confirm, log); `/api/parse` (Gemini fallback) is built, tested with fakes and verified once against live Gemini on a preview deploy; tap logging works; an AI coach (`/coach`, `/api/coach`) is built and merged to `main` (text only, gym and diet only); cloud speech-to-text for iPhone voice (`/api/transcribe`, ADR-019) is built, tested with fakes and checked on an iPhone 15 in Safari and Chrome. Production is deployed at https://nextrep-gym.vercel.app.
 
 **Principle: "AI listens, code verifies."** Speech recognition and Gemini are untrusted input. Every number that reaches storage passes deterministic validation and is shown to the user first.
 
@@ -37,7 +37,7 @@ src/components/ shared UI (AppShell, Card, Section, PageHeader, messages, Button
 src/app/        routes, bootstrap (wires Supabase), App
 src/lib/        Result/Failure types, usePending, useOnline
 src/test/       test harness: appHarness.tsx, fakes, doubleTap.ts
-api/            Vercel functions (parse.ts wires `_lib/parse.ts`, the Gemini fallback handler; coach.ts wires `_lib/coach.ts`, the coach handler)
+api/            Vercel functions (parse.ts wires `_lib/parse.ts`, the Gemini fallback handler; coach.ts wires `_lib/coach.ts`, the coach handler; transcribe.ts wires `_lib/transcribe.ts`, the speech-to-text handler)
 supabase/       migrations, seed.sql (generated)
 tests/          db/ (PGlite), integration/ (hosted, you run), e2e/ (Playwright), design/
 agent_docs/    per-area docs for agents, start at agent_docs/index.md (local-data, workout, api, database, testing)
@@ -63,7 +63,7 @@ Full map with every folder and file: AGENT_CONTEXT.md section 2.
 - **One-shot actions** (save, delete, sign in, undo) are guarded with `usePending()` (`src/lib/usePending.ts`), not a bare `useState` flag: two taps in the same instant both see the old state. Test them with `tapTogether()` (`src/test/doubleTap.ts`), not `user.dblClick`.
 - **Hooks that read the local store** re-read on `pending, failed, syncing, pulledVersion` from `useSyncStatus()` and ignore `DatabaseClosedError` via `ignoreClosed`.
 - **Never touch secrets.** Do not read, print or commit `.env*` files. Gitleaks guards commits and CI. Free tiers only; never link a billing account to Gemini. Invented sample data only.
-- Gemini is only a fallback behind `/api/parse`; its output goes through the same validators (ADR-003). The coach (`/api/coach`, ADR-017) is the one other Gemini use: text advice only, read only, gym and diet only, never writes anything, its replies shown as plain text. When Gemini cannot answer, the coach asks one second free provider (Groq, ADR-018) with the same prompt and the same checks. Claude is never used inside the app.
+- Gemini is only a fallback behind `/api/parse`; its output goes through the same validators (ADR-003). The coach (`/api/coach`, ADR-017) is the one other Gemini use: text advice only, read only, gym and diet only, never writes anything, its replies shown as plain text. When Gemini cannot answer, the coach asks one second free provider (Groq, ADR-018) with the same prompt and the same checks. Groq also does speech-to-text on `/api/transcribe` (ADR-019), only where the browser's own recogniser fails; the audio is never stored or logged. Claude is never used inside the app.
 - Reviewers (`code-reviewer`, `security-auditor`) change nothing; the `qa-tester` agent may only add new test files. Definition of done: code + tests passing + lint and types clean + docs updated if behaviour changed + `docs/learning/ai-log.md` entry.
 
 ## 4. Domain rules
@@ -80,7 +80,7 @@ Full map with every folder and file: AGENT_CONTEXT.md section 2.
 - **Never run commands that load `.env.local`** (`dev`, `build`, `test:e2e`, `test:integration`, `check:supabase`, `check:coach`): ask the developer to run them. Use `npm run typecheck` to check that code compiles. `test:integration` wipes the data of test users A and B, so never run it after seeding demo data into them.
 - There is **no Stop hook**: run `npm test` yourself before finishing a task (an unhandled error fails the run). Whole-app tests that seed rows as "synced" must use an unreachable fake server (`offlineServer()` in `src/test/appHarness.tsx`) or the first pull deletes them.
 - **Prettier rewraps code**, so scripted find/replace edits must tolerate whitespace; check each edit applied.
-- **`npm run dev` serves `/api/parse` and `/api/coach` itself** (`vite.devApi.ts`, dev server only, never a build or the tests), using the server-only settings in `.env.local`; without it the dev server answers `/api/*` with the app's own page and the coach says it is unavailable.
+- **`npm run dev` serves `/api/parse`, `/api/coach` and `/api/transcribe` itself** (`vite.devApi.ts`, dev server only, never a build or the tests), using the server-only settings in `.env.local`; without it the dev server answers `/api/*` with the app's own page and the coach says it is unavailable.
 - **`api/` runs as native ES modules on Vercel:** every relative import in the function and in the `src/` files it reaches needs a `.js` extension (a test, `api/_lib/imports.test.ts`, checks this); the editor and Vite do not complain, the deployed function crashes.
 - `tests/` and `pwa.config.ts` are compiled with the node tsconfig (no DOM types).
 - A QA agent once overwrote an existing test file: check `git diff --stat` for unexpected deletions after agent runs.

@@ -1,6 +1,6 @@
 # API contracts
 
-Status: `/api/parse` is built and was verified once against the live Gemini API on a preview deploy. `/api/parse` wires the real clients into the handler in `api/_lib/parse.ts` (tests in `api/_lib/parse.test.ts` use fakes). The shapes live in `src/domain/parser/gemini.ts`; the app maps Gemini's answer to a `ParseResult` with `fromGemini`. `/api/coach` and `/api/transcribe` are built and tested with fakes; `/api/transcribe` is not yet verified on a real iPhone.
+Status: `/api/parse` is built and was verified once against the live Gemini API on a preview deploy. `/api/parse` wires the real clients into the handler in `api/_lib/parse.ts` (tests in `api/_lib/parse.test.ts` use fakes). The shapes live in `src/domain/parser/gemini.ts`; the app maps Gemini's answer to a `ParseResult` with `fromGemini`. `/api/coach` and `/api/transcribe` are built and tested with fakes; `/api/transcribe` was checked on an iPhone 15 in Safari and Chrome against the deployed site.
 
 ## `POST /api/parse` (Gemini fallback)
 

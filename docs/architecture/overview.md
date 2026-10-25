@@ -1,6 +1,6 @@
 # Architecture overview
 
-Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API), and the AI coach (`/api/coach`, Gemini with an optional Groq second provider; [ADR-017](decisions/017-ai-coach.md), [ADR-018](decisions/018-coach-second-provider.md)), and cloud speech-to-text for phones whose browser cannot hear (`/api/transcribe`, Groq; built and tested with fakes, not yet verified on a real iPhone; [ADR-019](decisions/019-cloud-speech-to-text.md)). Also built: auth, one gym per user, exercises, tap logging, offline log and sync, history, progress, Home, Settings and About. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
+Status: built: voice input, the parser and `/api/parse` (the Gemini fallback, checked once against the live API), and the AI coach (`/api/coach`, Gemini with an optional Groq second provider; [ADR-017](decisions/017-ai-coach.md), [ADR-018](decisions/018-coach-second-provider.md)), and cloud speech-to-text for phones whose browser cannot hear (`/api/transcribe`, Groq; built, tested with fakes and checked on an iPhone 15 in Safari and Chrome; [ADR-019](decisions/019-cloud-speech-to-text.md)). Also built: auth, one gym per user, exercises, tap logging, offline log and sync, history, progress, Home, Settings and About. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) for the current state.
 
 ## Components
 

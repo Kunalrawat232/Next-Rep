@@ -11,7 +11,7 @@ Status: **done** (built and merged to `main`), **in progress**, or **not built**
 - Exercise library (seeded) with aliases, plus user-created custom exercises. Each exercise page has a History section. Done.
 - Workout session: start, log sets, finish. An empty workout (no sets) is never sent to the server or kept. Done.
 - **Tap logging** (always available, works offline). Done.
-- **Voice logging** using the browser Web Speech API, with our own deterministic parser (English, plus Hindi number words) and validators, a confirm card, and voice commands (repeat, undo, rest, edit a set). Done. On iPhone, where the browser's recogniser ends with no words, a short clip goes to cloud speech-to-text instead ([ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)): built and tested with fakes, not yet verified on a real iPhone.
+- **Voice logging** using the browser Web Speech API, with our own deterministic parser (English, plus Hindi number words) and validators, a confirm card, and voice commands (repeat, undo, rest, edit a set). Done. On iPhone, where the browser's recogniser ends with no words, a short clip goes to cloud speech-to-text instead ([ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)): built, tested with fakes and checked on an iPhone 15 in Safari and Chrome.
 - Weight convention handling: total vs per side, bar weights, plausibility checks, confirmation with breakdown. Done, for tap and voice logging.
 - History list, per-exercise progress charts, personal records. Done.
 - Deployed on Vercel, installable as a PWA. The PWA manifest and icons are built, and production is deployed on Vercel at https://nextrep-gym.vercel.app (public, no login). Preview deployments are behind Vercel Authentication.
