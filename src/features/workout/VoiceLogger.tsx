@@ -303,7 +303,7 @@ export function VoiceLogger({
         {!online
           ? 'Voice needs internet. Tap logging works.'
           : (statusText ??
-            'Say a set, like “bench 60 kilo 8 reps”.')}
+            'Say a set, like “bench press 60 kilo 8 reps”.')}
       </p>
       {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
       {removing && (

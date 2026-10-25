@@ -2,7 +2,7 @@
 
 Voice-first gym workout logger, delivered as an installable web app (PWA).
 
-> Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even with bad signal, with the bar weight and per-side maths handled for you.
+> Say "bench press 60 kilo 8 reps" between sets and it is logged correctly, even with bad signal, with the bar weight and per-side maths handled for you.
 
 **Live app: https://nextrep-gym.vercel.app**
 

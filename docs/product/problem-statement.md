@@ -14,7 +14,7 @@ Regular gym-goers who lift with barbells, dumbbells and machines and want a fast
 
 ## Core value
 
-**Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even with bad signal, with the bar weight and per-side maths handled for you.**
+**Say "bench press 60 kilo 8 reps" between sets and it is logged correctly, even with bad signal, with the bar weight and per-side maths handled for you.**
 
 ## Product
 
