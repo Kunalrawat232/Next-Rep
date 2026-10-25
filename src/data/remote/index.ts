@@ -7,4 +7,5 @@ export { createSupabaseGymService } from './gyms';
 export { createSupabaseExerciseService } from './exercises';
 export { createSupabaseLogRemote } from './log';
 export { createFetchParseService } from './parse';
+export { createFetchTranscribeService } from './transcribe';
 export { createFetchCoachService } from './coach';

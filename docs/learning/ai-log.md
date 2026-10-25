@@ -654,3 +654,13 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - Asked: after the Site URL was set and the sign-up test passed, remove the random address Vercel had first given the project.
 - AI produced: before and after checks without a login. The old address now answers 404 (`DEPLOYMENT_NOT_FOUND`); the live address still serves the pages, the manifest and the icons, and both functions answer 401 without a sign-in. The docs name only the live address and the protected team address.
 - Lesson: remove the fallback only after the replacement has passed its own test, then check both sides.
+
+## Cloud speech-to-text for iPhone voice
+
+- Tool: Claude Code, with the developer's own tests on an iPhone 15.
+- Asked: voice did not work on iPhone. The developer tried Chrome and Safari on an iPhone 15; both showed "Nothing was heard".
+- Found: Chrome and Safari on iPhone share WebKit's speech recognition, which ends with no words and no error. The first attempt only made the error messages clearer and removed a privacy sentence from the coach notice; it did not fix the cause. The developer chose Groq Whisper, and the cloud path only where the browser's recogniser fails.
+- AI produced: `POST /api/transcribe` (`api/transcribe.ts`, `api/_lib/transcribe.ts`, `transcribeProvider.ts` for Groq Whisper, with the shared contract in `src/domain/parser/transcribe.ts`); the client `useVoiceInput.ts` with a recorder (`recorder.ts`) and silence detection (`silence.ts`), switched on by the browser's failure and remembered on the device; `createFetchTranscribeService` in `src/data/remote/transcribe.ts`; the cloud notice on the workout screen; the function's dev-server support in `vite.devApi.ts`; ADR-019; and the docs updated to match. The daily ceiling is shared with Gemini, so no database migration was needed.
+- How validated: unit tests with fakes for the handler (token, content type, size, limits, ceiling, failures), the provider (silence filter, error handling), the client service, the recorder, the silence detector and the hook; a whole-app test (switch after a deaf recogniser, record, transcribe, confirm card, Log set). Unit tests went from 4530 in 184 files to 4587 in 191 files (database and hosted tests unchanged).
+- Not checked: a real iPhone run of the deployed function (Safari and Chrome); the accuracy of Whisper on gym talk; the cost of voice on the shared daily allowance in real use. The AI cannot test on iOS. The developer must test on a real iPhone after the Groq settings are set in Vercel.
+- Lesson: when two browsers on one phone fail the same way, the cause is the engine, not the app's copy. Test the fix on the failing device before writing it up as fixed.

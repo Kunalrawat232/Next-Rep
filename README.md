@@ -8,7 +8,7 @@ Voice-first gym workout logger, delivered as an installable web app (PWA).
 
 Built solo for the **Build With AI Hackathon 2026** (internal company hackathon). Demo link and demo video are added at submission.
 
-**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
+**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Cloud speech-to-text for iPhone voice (`/api/transcribe`, [ADR-019](docs/architecture/decisions/019-cloud-speech-to-text.md)) is built and tested with fakes; it is not yet verified on a real iPhone. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
 
 ## Problem
 
@@ -18,7 +18,7 @@ Lifters need to record exercise, weight and reps to progress. Notes apps and pap
 
 - Tap logging that always works, including offline (local-first with a sync queue)
 - Weight validators (deterministic, unit-tested) that check every set before it is saved
-- Voice logging via the browser Web Speech API with a deterministic parser (English, plus Hindi number words) and a Gemini fallback; voice commands for repeat, undo, rest and editing a set
+- Voice logging via the browser Web Speech API with a deterministic parser (English, plus Hindi number words) and a Gemini fallback; voice commands for repeat, undo, rest and editing a set. Where the browser's recogniser cannot hear (iPhone), a short clip goes to a speech-to-text service (Groq) instead; the words then go through the same parser and confirm card
 - A text-only AI coach (gym and diet questions only) on Gemini, with Groq as a second free provider
 - Weight convention handling: bar weight, per-side maths, plausibility checks, confirmation with breakdown
 - History, per-exercise progress charts, personal records and a simple "what to lift today" suggestion
@@ -34,10 +34,10 @@ TypeScript (strict), React, Vite, Tailwind CSS, React Router, vite-plugin-pwa, D
 
 ```
 Phone (PWA): UI, validators (pure TS), IndexedDB + sync queue, Web Speech + parser
-Vercel:      static hosting + /api/parse and /api/coach (hold the AI keys, verify the Supabase JWT)
+Vercel:      static hosting + /api/parse, /api/coach and /api/transcribe (hold the AI keys, verify the Supabase JWT)
 Supabase:    Auth + Postgres with RLS
 Gemini:      called only by /api/parse (fallback) and /api/coach
-Groq:        second free provider, asked by /api/coach only when Gemini cannot answer
+Groq:        second free provider, asked by /api/coach only when Gemini cannot answer; speech-to-text for /api/transcribe (only where the browser cannot hear)
 ```
 
 Principle: **AI listens, code verifies.** See [architecture overview](docs/architecture/overview.md).
@@ -83,12 +83,12 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 
 ## Limitations
 
-- Voice works on Chrome (Android, desktop) and Safari (iOS); Firefox lacks the Web Speech API, so voice is hidden and tap logging used.
-- Speech recognition needs internet, so offline only tap logging works. The audio leaves the device to the browser vendor's recogniser, which the app does not control.
+- Voice works on Chrome (Android, desktop) and Safari (iOS) where the browser's own recogniser works. On iPhone, Safari and Chrome both use WebKit's recogniser, which can end with no words; the app then switches that phone to cloud speech-to-text. That path is built and tested with fakes but not yet verified on a real iPhone. Firefox lacks the Web Speech API, so voice is hidden and tap logging used.
+- Speech recognition needs internet, so offline only tap logging works. The audio leaves the device to the browser vendor's recogniser, which the app does not control. On a phone in cloud mode the recording is also sent through the app's server to Groq, and the workout screen says so.
 - Offline, only creating sets is supported. Editing or deleting needs a connection.
 - Exercise demonstrations load from a third-party CDN and need internet; offline, or if the CDN is down, a placeholder shows. They are for non-commercial use (see Credits).
 - Browsers (especially iOS Safari) can evict local data, so sets sync as soon as possible.
-- Gemini free tier has low rate limits and its free-tier terms can change. It reads unclear voice phrases (a fallback) and powers the text-only AI coach; free-tier prompts may be used by Google to improve its products, so the app sends only a question and a small summary, and says so on the Coach screen. When Gemini cannot answer, the coach asks Groq (also free tier) with the same question. The coach gives training and diet tips, not medical advice.
+- Gemini free tier has low rate limits and its free-tier terms can change. It reads unclear voice phrases (a fallback) and powers the text-only AI coach; free-tier prompts may be used by Google to improve its products, so the app sends only a question and a small summary, and says so on the Coach screen. When Gemini cannot answer, the coach asks Groq (also free tier) with the same question. On a phone in cloud mode, the spoken phrase is recorded and sent to Groq's speech-to-text (free tier; Groq's terms say it does not train on inputs or outputs and does not keep them by default, see [ADR-019](docs/architecture/decisions/019-cloud-speech-to-text.md)); Next Rep does not keep the recording. The coach gives training and diet tips, not medical advice.
 - Supabase free projects can pause after a period of inactivity.
 - Sign-in works offline for a user who is already signed in: the app reads the stored session instead of waiting for the network.
 - "Confirm email" is on: a new account must click the link in a confirmation email before signing in. The emails go through Brevo's free plan (300 a day) from a personal Gmail sender, without a domain of our own, so they can land in spam; the demo accounts in the submission are already confirmed.
@@ -96,4 +96,4 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 
 ## AI use
 
-AI is used across the whole lifecycle and documented in [`docs/ai/`](docs/ai/) and [`docs/learning/`](docs/learning/). Claude is a development tool only; the only AI inside the app is Gemini and, as the coach's second provider, Groq (both free tier).
+AI is used across the whole lifecycle and documented in [`docs/ai/`](docs/ai/) and [`docs/learning/`](docs/learning/). Claude is a development tool only; the only AI inside the app is Gemini and, as the coach's second provider and for speech-to-text, Groq (both free tier).

@@ -64,7 +64,7 @@ export function useSpeech(create: RecognitionFactory | undefined = browserRecogn
       setListening(false);
       const words = heard.trim();
       if (words) setTranscript(words);
-      else setError((current) => current ?? 'no-speech');
+      else setError((current) => current ?? 'silent');
     };
     setTranscript(null);
     setError(null);

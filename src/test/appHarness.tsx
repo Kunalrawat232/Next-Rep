@@ -13,7 +13,12 @@ import { GymServiceProvider } from '../features/gyms';
 import { ProfileServiceProvider, UnitProvider } from '../features/settings';
 import { SyncProvider } from '../features/sync';
 import { CoachServiceProvider, type CoachService } from '../features/coach';
-import { ParseServiceProvider, type ParseService } from '../features/voice';
+import {
+  ParseServiceProvider,
+  TranscribeServiceProvider,
+  type ParseService,
+  type TranscribeService,
+} from '../features/voice';
 import { createFakeAuthService } from './fakeAuth';
 import { createFakeExerciseService } from './fakeExercises';
 import { createFakeGymService, sampleGym } from './fakeGyms';
@@ -54,6 +59,8 @@ type Options = {
   server?: ReturnType<typeof createFakeRemoteLog>;
   /** The Gemini fallback. Without one, nothing is sent anywhere. */
   parse?: ParseService;
+  /** Cloud speech-to-text. Without one only the browser's own recogniser can be used. */
+  transcribe?: TranscribeService;
   /** The AI coach. Without one the coach is unavailable. */
   coach?: CoachService;
 };
@@ -81,7 +88,13 @@ export function renderApp(path: string, options: Options = {}) {
                   <CoachServiceProvider
                     service={options.coach ?? { ask: async () => ({ status: 'unavailable' }) }}
                   >
-                    <RouterProvider router={router} />
+                    {options.transcribe ? (
+                      <TranscribeServiceProvider service={options.transcribe}>
+                        <RouterProvider router={router} />
+                      </TranscribeServiceProvider>
+                    ) : (
+                      <RouterProvider router={router} />
+                    )}
                   </CoachServiceProvider>
                 </ParseServiceProvider>
               </SyncProvider>

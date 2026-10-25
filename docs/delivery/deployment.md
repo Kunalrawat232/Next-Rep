@@ -82,31 +82,34 @@ The same credentials let you run `npm run test:integration` (profile access rule
 4. Set only `GEMINI_API_KEY`. Do **not** also set `GOOGLE_API_KEY`: the SDK gives it precedence if both exist.
 5. The key is used only by the serverless function. It must never be prefixed `VITE_`.
 
-Free-tier prompts may be used by Google to improve its products, which is why only the transcript is sent ([threat model](../security/threat-model.md)).
+Free-tier prompts may be used by Google to improve its products, which is why only the transcript is sent ([threat model](../security/threat-model.md)). Speech-to-text does not use Gemini; it uses Groq (section 2.1, [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)).
 
 ### 2.1 AI coach and the Groq second provider (optional)
 
 The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)) uses the same `GEMINI_API_KEY`. It may use another free-tier model through `COACH_MODEL`; empty means `GEMINI_MODEL`. When Gemini cannot answer, the coach asks one second free provider with the same prompt and checks ([ADR-018](../architecture/decisions/018-coach-second-provider.md)): create a key at console.groq.com on its free tier, with no billing, and set `FALLBACK_API_KEY`, `FALLBACK_BASE_URL` and `FALLBACK_MODEL` (all three or none; the model id comes from your account's model list). Without them the coach has no second provider. Check with `npm run check:coach`, which you run yourself.
 
-## 3. Vercel (hosting + `/api/parse` and `/api/coach`)
+**Voice on iPhone** (`/api/transcribe`, [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md)) uses the same Groq account. It needs only `FALLBACK_API_KEY` and `FALLBACK_BASE_URL` (`FALLBACK_MODEL` is not used). `TRANSCRIBE_MODEL` is optional and defaults to `whisper-large-v3-turbo`. Set them in Vercel for Production and Preview, then redeploy: the function reads them from Vercel, not from `.env.local`. Without them the endpoint answers "unavailable" and iPhone voice keeps failing as before.
+
+## 3. Vercel (hosting + `/api/parse`, `/api/coach` and `/api/transcribe`)
 
 1. Sign in at vercel.com with the **Hobby** plan.
 2. **The repo is on GitHub** (`main` and 12 other branches pushed; CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
 3. Settings: Framework preset **Vite** (auto-detected), build command `npm run build`, output directory `dist`, Node.js version **22.x**.
 4. **Environment variables** (add before the first deploy). The names are single-sourced in `.env.example`; this table says where each one is set:
 
-| Name                     | Value                            | Environments                     | Notes                                                 |
-| ------------------------ | -------------------------------- | -------------------------------- | ----------------------------------------------------- |
-| `VITE_SUPABASE_URL`      | Project URL                      | Production, Preview, Development | Public (baked into the client at build time)          |
-| `VITE_SUPABASE_ANON_KEY` | publishable key                  | Production, Preview, Development | Public by design; RLS protects data                   |
-| `SUPABASE_URL`           | Project URL                      | Production, Preview              | Server only (token verification in `/api/*`)          |
-| `SUPABASE_ANON_KEY`      | publishable key                  | Production, Preview              | Server only                                           |
-| `GEMINI_API_KEY`         | key from section 2               | Production, Preview              | Server only; mark as sensitive                        |
-| `GEMINI_MODEL`           | free-tier Flash-class model id   | Production, Preview              | Server only                                           |
-| `COACH_MODEL`            | another free-tier model id       | Production, Preview              | Optional, server only; empty means `GEMINI_MODEL`     |
-| `FALLBACK_API_KEY`       | key from section 2.1             | Production, Preview              | Optional, server only; mark as sensitive              |
-| `FALLBACK_BASE_URL`      | `https://api.groq.com/openai/v1` | Production, Preview              | Optional, server only; all three `FALLBACK_*` or none |
-| `FALLBACK_MODEL`         | model id from the Groq console   | Production, Preview              | Optional, server only                                 |
+| Name                     | Value                            | Environments                     | Notes                                             |
+| ------------------------ | -------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `VITE_SUPABASE_URL`      | Project URL                      | Production, Preview, Development | Public (baked into the client at build time)      |
+| `VITE_SUPABASE_ANON_KEY` | publishable key                  | Production, Preview, Development | Public by design; RLS protects data               |
+| `SUPABASE_URL`           | Project URL                      | Production, Preview              | Server only (token verification in `/api/*`)      |
+| `SUPABASE_ANON_KEY`      | publishable key                  | Production, Preview              | Server only                                       |
+| `GEMINI_API_KEY`         | key from section 2               | Production, Preview              | Server only; mark as sensitive                    |
+| `GEMINI_MODEL`           | free-tier Flash-class model id   | Production, Preview              | Server only                                       |
+| `COACH_MODEL`            | another free-tier model id       | Production, Preview              | Optional, server only; empty means `GEMINI_MODEL` |
+| `FALLBACK_API_KEY`       | key from section 2.1             | Production, Preview              | Optional, server only; mark as sensitive          |
+| `FALLBACK_BASE_URL`      | `https://api.groq.com/openai/v1` | Production, Preview              | Optional, server only; https only                 |
+| `FALLBACK_MODEL`         | model id from the Groq console   | Production, Preview              | Optional, server only; the coach only             |
+| `TRANSCRIBE_MODEL`       | default `whisper-large-v3-turbo` | Production, Preview              | Optional, server only; empty means the default    |
 
 `VITE_*` values are baked in at build time, so redeploy after changing them. Do not add any service-role or secret key. 5. Deploy. `vercel.json` already contains the single-page-app fallback rewrite so React Router deep links work. 6. **Preview deployments** give you HTTPS URLs, which phones need for voice. They are behind Vercel Authentication (see "Deployment Protection" below). 7. Optional: put the functions in the region closest to your Supabase project (Settings > Functions).
 
@@ -173,6 +176,7 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] A sign-up test on the live address: with a throwaway address the confirmation email arrived, the link worked and sign-in worked (an address that does not exist, such as a Gmail `name+tag` whose base mailbox is not yours, is accepted by the form but hard-bounces at Brevo, so no email arrives and the screen still says "Check your email")
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, before migrations 0002 and 0003)
 - [ ] A phone opens https://nextrep-gym.vercel.app over HTTPS: microphone, offline and install (not done yet; check it yourself)
+- [ ] After the deploy that adds `/api/transcribe` (with the Groq settings in Vercel): test voice on a real iPhone (Safari and Chrome). Say "bench press 60 kilo 8 reps" and check that the cloud notice appears, the words and the confirm card are right, and nothing is saved until Log set. Not done yet; the AI cannot test on iOS.
 
 ## Troubleshooting
 

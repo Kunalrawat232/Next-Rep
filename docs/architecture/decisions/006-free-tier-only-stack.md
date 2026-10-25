@@ -1,6 +1,6 @@
 # ADR-006: Free-tier-only stack
 
-- **Status:** accepted. Amended by [ADR-018](018-coach-second-provider.md): Groq (free tier, no billing account) is a fourth free service, used only as the coach's second provider.
+- **Status:** accepted. Amended by [ADR-018](018-coach-second-provider.md): Groq (free tier, no billing account) is a fourth free service, used only as the coach's second provider. Amended by [ADR-019](019-cloud-speech-to-text.md): the same Groq key also serves speech-to-text on `/api/transcribe`, only where the browser's recogniser fails.
 
 ## Context
 

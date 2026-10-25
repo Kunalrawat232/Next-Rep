@@ -27,13 +27,14 @@ What AI may and may not do, for both Claude Code (development) and Gemini (in th
 
 ## Gemini (in the app)
 
-Status: built (the `/api/parse` fallback and the coach). Rationale and conditions: [ADR-003](../architecture/decisions/003-gemini-as-fallback-only.md), [ADR-017](../architecture/decisions/017-ai-coach.md), [ADR-018](../architecture/decisions/018-coach-second-provider.md), [API contracts](../architecture/api-contracts.md).
+Status: built (the `/api/parse` fallback and the coach). Rationale and conditions: [ADR-003](../architecture/decisions/003-gemini-as-fallback-only.md), [ADR-017](../architecture/decisions/017-ai-coach.md), [ADR-018](../architecture/decisions/018-coach-second-provider.md), [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md), [API contracts](../architecture/api-contracts.md).
 
-- Called from two places only: `/api/parse`, as a fallback for the local parser (ADR-003), and `/api/coach`, text advice on gym and diet (ADR-017). When Gemini cannot answer, the coach asks one second free provider, Groq, with the same prompt and the same checks (ADR-018). Claude is never used inside the app.
+- Gemini is called from two places only: `/api/parse`, as a fallback for the local parser (ADR-003), and `/api/coach`, text advice on gym and diet (ADR-017). When Gemini cannot answer, the coach asks one second free provider, Groq, with the same prompt and the same checks (ADR-018). Claude is never used inside the app.
+- Speech-to-text is not Gemini. `/api/transcribe` (ADR-019) sends a short recording to Groq's Whisper, and only where the browser's own recogniser fails. It is built and tested with fakes; it is not yet verified on a real iPhone. Rules: the audio is never stored or logged (only the failing step and the error kind are logged); the request must have a sign-in token, an accepted audio type and a size between 1000 and 1,000,000 bytes; it counts against the per-person limits (10 a minute, 60 an hour) and the daily ceiling; the reply is cleaned and capped at 300 characters; the words are untrusted and reach storage only after the parser, the validators and the person's tap on Log set; the screen says the voice is sent to a speech service whenever cloud mode is on.
 - `/api/parse` receives only the transcript and minimal context (current exercise, last set, unit). `/api/coach` receives the question, the earlier chat and an optional small summary of recent training (no ids or account details; off by default). No email, name or user id reaches a model.
 - JSON-only output validated with Zod; invalid output is `unknown` (parse) or "can't answer right now" (coach). A coach reply with a link, a code block or an HTML tag is not passed on.
 - Parse output goes through the same validators and is shown to the user before saving. Neither endpoint **writes data directly**; the coach is read only and its replies are shown as plain text.
-- Free tier only; never link billing. Both endpoints share a project-wide daily ceiling. On 429, timeout or any error `/api/parse` returns `unavailable`; logging is never blocked.
+- Free tier only; never link billing. The three endpoints that call a model (`/api/parse`, `/api/coach`, `/api/transcribe`) share a project-wide daily ceiling. On 429, timeout or any error `/api/parse` returns `unavailable`; logging is never blocked.
 - Suggestions are labelled as suggestions. The coach gives training tips, not medical advice.
 
 ## Handling AI failures

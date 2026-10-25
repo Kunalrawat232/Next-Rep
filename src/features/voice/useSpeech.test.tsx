@@ -95,7 +95,7 @@ describe('useSpeech', () => {
     const { made } = setup();
     await user.click(screen.getByText('start'));
     act(() => made[0]?.onend?.());
-    expect(screen.getByText('error: no-speech')).toBeInTheDocument();
+    expect(screen.getByText('error: silent')).toBeInTheDocument();
     expect(screen.getByText('heard: nothing')).toBeInTheDocument();
   });
 
