@@ -20,7 +20,7 @@ export type Recognition = {
 export type RecognitionFactory = () => Recognition;
 
 /** What went wrong, in words a screen can turn into a friendly message. */
-export type SpeechError = 'denied' | 'no-speech' | 'unavailable' | 'failed';
+export type SpeechError = 'denied' | 'service-off' | 'no-speech' | 'unavailable' | 'failed';
 
 /** Recognition language: English as spoken in India, which also hears Hinglish gym talk best. */
 export const SPEECH_LANGUAGE = 'en-IN';
@@ -40,8 +40,9 @@ export function browserRecognition(): RecognitionFactory | undefined {
 export function errorFor(code: string): SpeechError {
   switch (code) {
     case 'not-allowed':
-    case 'service-not-allowed':
       return 'denied';
+    case 'service-not-allowed':
+      return 'service-off';
     case 'no-speech':
       return 'no-speech';
     case 'audio-capture':

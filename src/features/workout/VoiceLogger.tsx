@@ -54,6 +54,8 @@ type Pending = {
 
 const SPEECH_MESSAGE: Record<SpeechError, string> = {
   denied: 'The microphone is blocked. Allow it in the browser settings, or tap to log.',
+  'service-off':
+    'Voice typing is off on this phone. On iPhone, turn on Dictation in Settings, General, Keyboard. Or tap to log.',
   'no-speech': UNCLEAR_MESSAGE.nothing_heard,
   unavailable: 'Voice is not available right now. Tap logging works.',
   failed: 'Voice stopped working. Try again, or tap to log.',
@@ -301,7 +303,7 @@ export function VoiceLogger({
         {!online
           ? 'Voice needs internet. Tap logging works.'
           : (statusText ??
-            'Say a set, like “bench 60 kilo 8 reps”. A phrase that is not clear may be sent to Google’s AI to read.')}
+            'Say a set, like “bench 60 kilo 8 reps”.')}
       </p>
       {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
       {removing && (
