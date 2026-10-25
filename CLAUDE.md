@@ -20,6 +20,7 @@ Stack: React, Vite, TypeScript (strict), Tailwind, react-router, Zod, Dexie (Ind
 | Dev server                                | `npm run dev` (http://localhost:5173)                                                           |
 | Unit tests (jsdom, fake IndexedDB)        | `npm test`                                                                                      |
 | DB schema + RLS tests (PGlite)            | `npm run test:db`                                                                               |
+| One test file or one test                 | `npx vitest run path/to/file.test.ts` (add `-t "test name"` for one test)                       |
 | Lint / typecheck / format                 | `npm run lint` / `npm run typecheck` / `npm run format`                                         |
 | Build                                     | `npm run build`                                                                                 |
 | E2E smoke, hosted-project tests, DB check | `npm run test:e2e`, `npm run test:integration`, `npm run check:supabase`, `npm run check:coach` |
@@ -47,7 +48,7 @@ Full map with every folder and file: AGENT_CONTEXT.md section 2.
 
 ## 3. Code rules (always / never)
 
-- **Plan before coding.** Show a short plan (files, approach, tests) and wait for "go" on any non-trivial task.
+- **Plan before coding.** Show a short plan (files, approach, tests) and wait for "go" on any non-trivial task. Start a new session (or `/clear`) for each task, and `/compact` a long one before moving to another area.
 - **Ask first** before adding a dependency, changing the data model, changing an architectural decision, or deviating from the docs.
 - **One finished task = one commit:** a single short Conventional Commit subject line, no body, plus the Co-Authored-By attribution trailer when the harness asks for one (the trailer is the only allowed body). Ask before any other commit. Never push without approval. If the user says they handle git themselves, do not commit.
 - **Tests ship with the code.** Domain logic (parser, weight maths, validators, sync) gets unit tests in the same task.

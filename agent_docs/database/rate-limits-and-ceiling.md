@@ -12,4 +12,4 @@ Added in migration `0005_rate_limit_scopes.sql` (applied to the hosted project);
 
 How the app uses them: each function counts the per-user limits first (parse 10 a minute and 60 an hour, coach 5 and 20), then the ceiling just before a model is called. When the ceiling says no, `/api/coach` uses the second provider if there is one, otherwise answers `limited`; `/api/parse` answers 429.
 
-Open risk: signing up is open and "Confirm email" is off, so many accounts could still use up the daily ceiling for everyone. The dashboard settings that reduce this are listed in [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) section 12.
+Open risk: signing up is open; "Confirm email" is on, so each account needs a working inbox, but without CAPTCHA many accounts could still use up the daily ceiling for everyone. The dashboard settings that reduce this are listed in [AGENT_CONTEXT.md](../../AGENT_CONTEXT.md) section 12.
