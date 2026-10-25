@@ -2,8 +2,12 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Recorder, RecorderFactory } from './recorder';
-import type { Recognition } from './speech';
-import { TranscribeServiceProvider, type TranscribeService } from './transcribeService';
+import type { Recognition, SpeechError } from './speech';
+import {
+  TranscribeServiceProvider,
+  type TranscribeResult,
+  type TranscribeService,
+} from './transcribeService';
 import { useVoiceInput } from './useVoiceInput';
 
 class FakeRecognition implements Recognition {
@@ -24,7 +28,7 @@ class FakeRecorder implements Recorder {
   onerror: Recorder['onerror'] = null;
   onend: Recorder['onend'] = null;
   started = 0;
-  startFails: string | null = null;
+  startFails: { kind: SpeechError; detail: string } | null = null;
   start = vi.fn(async () => {
     this.started++;
     if (this.startFails) throw this.startFails;
@@ -67,7 +71,12 @@ function setup(
   if (options.recognition === false) vi.stubGlobal('webkitSpeechRecognition', undefined);
   const service =
     options.service === undefined
-      ? { transcribe: vi.fn(async () => 'bench press 60 kilo 8 reps') }
+      ? {
+          transcribe: vi.fn(async () => ({
+            ok: true as const,
+            text: 'bench press 60 kilo 8 reps',
+          })),
+        }
       : options.service;
   function Probe() {
     const voice = useVoiceInput(createRecorder, createRecognition);
@@ -213,7 +222,14 @@ describe('useVoiceInput', () => {
       ['', 'error: no-speech'],
     ] as const) {
       localStorage.setItem('next-rep-voice-mode', 'cloud');
-      const { recorders, user, view } = setup({ service: { transcribe: async () => words } });
+      const { recorders, user, view } = setup({
+        service: {
+          transcribe: async () =>
+            words === null
+              ? { ok: false as const, kind: 'unavailable' as const, reason: 'http-503' }
+              : { ok: true as const, text: words },
+        },
+      });
       await user.click(screen.getByText('start'));
       await waitFor(() => expect(screen.getByText('listening')).toBeInTheDocument());
       act(() => recorders[0]!.finish());
@@ -227,7 +243,12 @@ describe('useVoiceInput', () => {
     localStorage.setItem('next-rep-voice-mode', 'cloud');
     let release: (words: string) => void = () => undefined;
     const { recorders, user } = setup({
-      service: { transcribe: () => new Promise<string>((resolve) => (release = resolve)) },
+      service: {
+        transcribe: () =>
+          new Promise<TranscribeResult>(
+            (resolve) => (release = (text) => resolve({ ok: true, text })),
+          ),
+      },
     });
     await user.click(screen.getByText('start'));
     await waitFor(() => expect(screen.getByText('listening')).toBeInTheDocument());
@@ -244,7 +265,8 @@ describe('useVoiceInput', () => {
     function Probe() {
       const voice = useVoiceInput(() => {
         const recorder = new FakeRecorder();
-        recorder.startFails = made.length === 0 ? 'denied' : null;
+        recorder.startFails =
+          made.length === 0 ? { kind: 'denied', detail: 'NotAllowedError' } : null;
         made.push(recorder);
         return recorder;
       });
@@ -258,7 +280,7 @@ describe('useVoiceInput', () => {
     }
     const user = userEvent.setup();
     render(
-      <TranscribeServiceProvider service={{ transcribe: async () => 'x' }}>
+      <TranscribeServiceProvider service={{ transcribe: async () => ({ ok: true, text: 'x' }) }}>
         <Probe />
       </TranscribeServiceProvider>,
     );
@@ -268,6 +290,23 @@ describe('useVoiceInput', () => {
     expect(made).toHaveLength(2);
     await waitFor(() => expect(screen.getByText('listening')).toBeInTheDocument());
     expect(screen.getByText('error: none')).toBeInTheDocument();
+  });
+
+  it('records again and again, also when the same words come back and the last ones were cleared', async () => {
+    localStorage.setItem('next-rep-voice-mode', 'cloud');
+    const { recorders, user } = setup();
+    for (let round = 1; round <= 3; round++) {
+      await user.click(screen.getByText('start'));
+      await waitFor(() => expect(screen.getByText('listening')).toBeInTheDocument());
+      expect(recorders).toHaveLength(round);
+      act(() => recorders[round - 1]!.finish());
+      await waitFor(() =>
+        expect(screen.getByText('heard: bench press 60 kilo 8 reps')).toBeInTheDocument(),
+      );
+      await waitFor(() => expect(screen.getByText('idle')).toBeInTheDocument());
+      await user.click(screen.getByText('clear'));
+      expect(screen.getByText('heard: nothing')).toBeInTheDocument();
+    }
   });
 
   it('stops the recorder on stop, and starts only one at a time', async () => {

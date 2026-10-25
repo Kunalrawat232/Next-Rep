@@ -29,6 +29,10 @@ export type SpeechError =
   /** Voice just switched to the cloud recogniser (see useVoiceInput): the person has to say it again. */
   | 'cloud-on'
   | 'unavailable'
+  /** The microphone is in use by something else (cloud recogniser). */
+  | 'mic-busy'
+  /** The speech service said slow down (cloud recogniser). */
+  | 'limited'
   | 'failed';
 
 /** Recognition language: English as spoken in India, which also hears Hinglish gym talk best. */

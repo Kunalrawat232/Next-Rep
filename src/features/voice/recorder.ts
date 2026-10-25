@@ -6,7 +6,7 @@ import { createSilenceDetector } from './silence';
 import type { SpeechError } from './speech';
 
 export type Recorder = {
-  /** Asks for the microphone and starts recording. Rejects with a `SpeechError` kind. */
+  /** Asks for the microphone and starts recording. Rejects with a `RecorderFailure`. */
   start(): Promise<void>;
   /** Ends the recording; the clip is delivered to `onclip`. */
   stop(): void;
@@ -14,10 +14,13 @@ export type Recorder = {
   abort(): void;
   /** Called once with the recording, after `stop`, the silence rule or the time limit. */
   onclip: ((clip: Blob) => void) | null;
-  onerror: ((error: SpeechError) => void) | null;
+  onerror: ((failure: RecorderFailure) => void) | null;
   /** Called last, once, after the clip or an error. */
   onend: (() => void) | null;
 };
+
+/** What went wrong, as a kind a screen can word and a short name of the browser's own error. */
+export type RecorderFailure = { kind: SpeechError; detail: string };
 
 export type RecorderFactory = () => Recorder;
 
@@ -60,13 +63,15 @@ export type RecorderScope = {
   webkitAudioContext?: new () => AudioContextLike;
 };
 
-function errorOf(error: unknown): SpeechError {
+function errorOf(error: unknown): RecorderFailure {
   const name =
-    typeof error === 'object' && error !== null && 'name' in error ? String(error.name) : '';
-  if (name === 'NotAllowedError' || name === 'SecurityError') return 'denied';
-  if (name === 'NotFoundError' || name === 'NotReadableError' || name === 'OverconstrainedError')
-    return 'unavailable';
-  return 'failed';
+    typeof error === 'object' && error !== null && 'name' in error ? String(error.name) : 'unknown';
+  if (name === 'NotAllowedError' || name === 'SecurityError')
+    return { kind: 'denied', detail: name };
+  if (name === 'NotReadableError') return { kind: 'mic-busy', detail: name };
+  if (name === 'NotFoundError' || name === 'OverconstrainedError')
+    return { kind: 'unavailable', detail: name };
+  return { kind: 'failed', detail: name };
 }
 
 /** The browser's recorder, or undefined where there is no microphone or no MediaRecorder. */
@@ -99,7 +104,7 @@ export function browserRecorder(
       audio = null;
     }
 
-    function finish(failure: SpeechError | null) {
+    function finish(failure: RecorderFailure | null) {
       if (finished) return;
       finished = true;
       release();
@@ -152,8 +157,9 @@ export function browserRecorder(
           media.ondataavailable = (event) => {
             if (event.data.size > 0) chunks.push(event.data);
           };
-          media.onstop = () => finish(chunks.length === 0 ? 'failed' : null);
-          media.onerror = () => finish('failed');
+          media.onstop = () =>
+            finish(chunks.length === 0 ? { kind: 'failed', detail: 'no-audio' } : null);
+          media.onerror = () => finish({ kind: 'failed', detail: 'recorder-error' });
           media.start();
         } catch (error) {
           release();

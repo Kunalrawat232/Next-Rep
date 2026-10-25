@@ -58,6 +58,8 @@ const SPEECH_MESSAGE: Record<SpeechError, string> = {
     'Voice typing is off on this phone. On iPhone, turn on Dictation in Settings, General, Keyboard. Or tap to log.',
   'no-speech': UNCLEAR_MESSAGE.nothing_heard,
   silent: UNCLEAR_MESSAGE.nothing_heard,
+  'mic-busy': 'The microphone is busy. Close anything else using it, then tap the mic again.',
+  limited: 'Voice is busy. Wait a minute and try again, or tap to log.',
   'cloud-on':
     'Voice now uses the internet to hear you, because this phone cannot do it on its own. Tap the mic and say it again.',
   unavailable: 'Voice is not available right now. Tap logging works.',
@@ -311,7 +313,12 @@ export function VoiceLogger({
           Your voice is sent to a speech service to turn it into text. Next Rep does not keep it.
         </p>
       )}
-      {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
+      {speech.error && (
+        <ErrorMessage>
+          {SPEECH_MESSAGE[speech.error]}
+          {speech.detail ? ` (${speech.detail})` : ''}
+        </ErrorMessage>
+      )}
       {removing && (
         <Card role="group" aria-label="Confirm undo" className="flex flex-col gap-4">
           <p>

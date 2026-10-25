@@ -155,6 +155,7 @@ describe('browserRecorder', () => {
     for (const [name, kind] of [
       ['NotAllowedError', 'denied'],
       ['NotFoundError', 'unavailable'],
+      ['NotReadableError', 'mic-busy'],
       ['AbortError', 'failed'],
     ] as const) {
       const { scope } = setup({
@@ -166,7 +167,10 @@ describe('browserRecorder', () => {
           },
         },
       });
-      await expect(browserRecorder(scope)!().start(), name).rejects.toBe(kind);
+      await expect(browserRecorder(scope)!().start(), name).rejects.toMatchObject({
+        kind,
+        detail: name,
+      });
     }
   });
 
@@ -180,7 +184,7 @@ describe('browserRecorder', () => {
     await recorder.start();
     recorder.stop();
     expect(clip).not.toHaveBeenCalled();
-    expect(failure).toHaveBeenCalledWith('failed');
+    expect(failure).toHaveBeenCalledWith({ kind: 'failed', detail: 'no-audio' });
     expect(media().state).toBe('inactive');
   });
 

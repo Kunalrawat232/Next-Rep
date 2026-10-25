@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { browserRecorder, type Recorder, type RecorderFactory } from './recorder';
+import {
+  browserRecorder,
+  type Recorder,
+  type RecorderFactory,
+  type RecorderFailure,
+} from './recorder';
 import type { RecognitionFactory, SpeechError } from './speech';
 import { useSpeech, type Speech } from './useSpeech';
 import { useTranscribeService } from './transcribeService';
@@ -7,6 +12,8 @@ import { useTranscribeService } from './transcribeService';
 export type VoiceInput = Speech & {
   /** True while the recording is being turned into words by the cloud service. */
   transcribing: boolean;
+  /** A short, safe name of what went wrong with the cloud recogniser, to show next to the error. */
+  detail: string | null;
   /** True when the cloud recogniser is in use, so the screen can say the voice leaves the device. */
   cloud: boolean;
 };
@@ -19,16 +26,6 @@ const SWITCHES: ReadonlySet<SpeechError> = new Set([
   'unavailable',
   'failed',
 ]);
-const KINDS: ReadonlySet<string> = new Set([
-  'denied',
-  'service-off',
-  'no-speech',
-  'silent',
-  'cloud-on',
-  'unavailable',
-  'failed',
-]);
-
 function remembersCloud(): boolean {
   try {
     return window.localStorage.getItem(MODE_KEY) === 'cloud';
@@ -45,8 +42,10 @@ function rememberCloud() {
   }
 }
 
-const asSpeechError = (error: unknown): SpeechError =>
-  typeof error === 'string' && KINDS.has(error) ? (error as SpeechError) : 'failed';
+const asFailure = (failure: unknown): RecorderFailure =>
+  typeof failure === 'object' && failure !== null && 'kind' in failure && 'detail' in failure
+    ? (failure as RecorderFailure)
+    : { kind: 'failed', detail: 'unknown' };
 
 /**
  * One utterance at a time, like `useSpeech`, with a second way to hear it. The browser's own recogniser is used
@@ -69,6 +68,7 @@ export function useVoiceInput(
   const [transcribing, setTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [error, setError] = useState<SpeechError | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
   const active = useRef<Recorder | null>(null);
   const mounted = useRef(true);
   const latest = useRef({ createRecorder, service });
@@ -85,6 +85,7 @@ export function useVoiceInput(
     if (active.current || !create || !speechService) return;
     setTranscript(null);
     setError(null);
+    setDetail(null);
     const recorder = create();
     active.current = recorder;
     recorder.onclip = (clip) => {
@@ -92,16 +93,26 @@ export function useVoiceInput(
       setTranscribing(true);
       speechService
         .transcribe(clip)
-        .then((words) => {
+        .then((result) => {
           if (!mounted.current) return;
-          if (words === null) setError('unavailable');
-          else if (words === '') setError('no-speech');
-          else setTranscript(words);
+          if (!result.ok) {
+            setError(result.kind);
+            setDetail(result.reason);
+          } else if (result.text === '') setError('no-speech');
+          else setTranscript(result.text);
         })
-        .catch(() => mounted.current && setError('unavailable'))
+        .catch(() => {
+          if (!mounted.current) return;
+          setError('unavailable');
+          setDetail('crashed');
+        })
         .finally(() => mounted.current && setTranscribing(false));
     };
-    recorder.onerror = (failure) => mounted.current && setError(failure);
+    recorder.onerror = (failure) => {
+      if (!mounted.current) return;
+      setError(failure.kind);
+      setDetail(failure.detail);
+    };
     recorder.onend = () => {
       if (active.current !== recorder) return;
       active.current = null;
@@ -113,7 +124,10 @@ export function useVoiceInput(
       },
       (failure: unknown) => {
         if (active.current === recorder) active.current = null;
-        if (mounted.current) setError(asSpeechError(failure));
+        if (!mounted.current) return;
+        const { kind, detail: name } = asFailure(failure);
+        setError(kind);
+        setDetail(name);
       },
     );
   }, []);
@@ -135,6 +149,7 @@ export function useVoiceInput(
   const clear = useCallback(() => {
     setTranscript(null);
     setError(null);
+    setDetail(null);
     clearBrowser();
   }, [clearBrowser]);
 
@@ -160,6 +175,7 @@ export function useVoiceInput(
     transcript: cloud ? transcript : browser.transcript,
     error: switching ? 'cloud-on' : cloud ? error : (error ?? browser.error),
     transcribing,
+    detail: cloud ? detail : null,
     cloud,
     start,
     stop,

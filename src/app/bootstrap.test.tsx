@@ -25,7 +25,9 @@ function deps() {
     createLogRemote: vi.fn(() => createFakeRemoteLog().remote),
     createProfileService: vi.fn(() => createFakeProfileService().service),
     createParseService: vi.fn(() => ({ parse: async () => null })),
-    createTranscribeService: vi.fn(() => ({ transcribe: async () => null })),
+    createTranscribeService: vi.fn(() => ({
+      transcribe: async () => ({ ok: false as const, kind: 'unavailable' as const, reason: 'x' }),
+    })),
     createCoachService: vi.fn(() => ({ ask: async () => ({ status: 'unavailable' as const }) })),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
     ensureProfile: vi.fn(async () => undefined),

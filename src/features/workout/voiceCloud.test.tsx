@@ -82,7 +82,9 @@ async function openWorkout(transcribe: TranscribeService) {
 
 describe('voice logging through the cloud recogniser', () => {
   it('switches over after the phone cannot hear, then logs what the service heard, after a tap on Log set', async () => {
-    const transcribe = { transcribe: vi.fn(async () => 'bench press 60 kilo 8 reps') };
+    const transcribe = {
+      transcribe: vi.fn(async () => ({ ok: true as const, text: 'bench press 60 kilo 8 reps' })),
+    };
     const app = await openWorkout(transcribe);
 
     await app.user.click(await screen.findByRole('button', { name: /tap to speak a set/i }));
@@ -107,10 +109,14 @@ describe('voice logging through the cloud recogniser', () => {
 
   it('says so, and keeps tap logging, when the service has no answer', async () => {
     localStorage.setItem('next-rep-voice-mode', 'cloud');
-    const app = await openWorkout({ transcribe: async () => null });
+    const app = await openWorkout({
+      transcribe: async () => ({ ok: false, kind: 'unavailable', reason: 'http-503' }),
+    });
     await app.user.click(await screen.findByRole('button', { name: /tap to speak a set/i }));
     await app.user.click(await screen.findByRole('button', { name: /listening… tap to stop/i }));
-    expect(await screen.findByText(/voice is not available right now/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/voice is not available right now.*\(http-503\)/i),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /tap to speak a set/i })).toBeEnabled();
   });
 });

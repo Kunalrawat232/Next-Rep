@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { TranscribeResponseSchema } from '../../domain/parser/transcribe';
-import type { TranscribeService } from '../../features/voice';
+import type { TranscribeResult, TranscribeService } from '../../features/voice';
 
 type Client = { auth: Pick<SupabaseClient['auth'], 'getSession'> };
 
@@ -17,6 +17,10 @@ export function createFetchTranscribeService(
   const send = options.fetch ?? ((...args) => fetch(...args));
   const url = options.url ?? '/api/transcribe';
   const timeoutMs = options.timeoutMs ?? TRANSCRIBE_TIMEOUT_MS;
+  const failed = (
+    reason: string,
+    kind: 'unavailable' | 'limited' = 'unavailable',
+  ): TranscribeResult => ({ ok: false, kind, reason });
   return {
     async transcribe(audio: Blob) {
       const signal = AbortSignal.timeout(timeoutMs);
@@ -27,18 +31,26 @@ export function createFetchTranscribeService(
           new Promise<null>((resolve) => signal.addEventListener('abort', () => resolve(null))),
         ]);
         const token = session?.data.session?.access_token;
-        if (!token) return null;
+        if (!token) return failed('no-session');
         const response = await send(url, {
           method: 'POST',
           headers: { 'Content-Type': audio.type, Authorization: `Bearer ${token}` },
           body: audio,
           signal,
         });
-        if (!response.ok) return null;
+        if (!response.ok)
+          return failed(
+            `http-${response.status}`,
+            response.status === 429 ? 'limited' : 'unavailable',
+          );
         const body = TranscribeResponseSchema.safeParse(await response.json());
-        return body.success && body.data.status === 'ok' ? body.data.text : null;
-      } catch {
-        return null;
+        return body.success && body.data.status === 'ok'
+          ? { ok: true, text: body.data.text }
+          : failed('bad-reply');
+      } catch (error) {
+        return failed(
+          error instanceof Error && error.name === 'TimeoutError' ? 'timeout' : 'network',
+        );
       }
     },
   };

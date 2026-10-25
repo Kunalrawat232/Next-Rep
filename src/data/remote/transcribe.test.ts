@@ -13,7 +13,10 @@ describe('the transcribe service', () => {
     const service = createFetchTranscribeService({ auth: session('tok') } as never, {
       fetch: send as unknown as typeof fetch,
     });
-    expect(await service.transcribe(clip)).toBe('bench press 60 kilo 8 reps');
+    expect(await service.transcribe(clip)).toEqual({
+      ok: true,
+      text: 'bench press 60 kilo 8 reps',
+    });
     const [url, init] = send.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('/api/transcribe');
     expect(init.method).toBe('POST');
@@ -27,54 +30,68 @@ describe('the transcribe service', () => {
     const service = createFetchTranscribeService({ auth: session('tok') } as never, {
       fetch: (async () => answer({ status: 'ok', text: '' })) as unknown as typeof fetch,
     });
-    expect(await service.transcribe(clip)).toBe('');
+    expect(await service.transcribe(clip)).toEqual({ ok: true, text: '' });
   });
 
-  it('gives no words without a session, and never calls the network', async () => {
+  const failure = (reason: string, kind: 'unavailable' | 'limited' = 'unavailable') => ({
+    ok: false,
+    kind,
+    reason,
+  });
+
+  it('says why there are no words without a session, and never calls the network', async () => {
     const send = vi.fn();
     const service = createFetchTranscribeService({ auth: session(null) } as never, {
       fetch: send as unknown as typeof fetch,
     });
-    expect(await service.transcribe(clip)).toBeNull();
+    expect(await service.transcribe(clip)).toEqual(failure('no-session'));
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('gives no words for a failed call, a bad answer, a network error or a slow reply', async () => {
+  it('says why for a failed call, a limit, a bad answer, a network error or a slow reply', async () => {
     const make = (fetcher: unknown, timeoutMs?: number) =>
       createFetchTranscribeService({ auth: session('tok') } as never, {
         fetch: fetcher as typeof fetch,
         timeoutMs,
       });
+    expect(await make(async () => answer({ status: 'unavailable' }, 503)).transcribe(clip)).toEqual(
+      failure('http-503'),
+    );
     expect(
-      await make(async () => answer({ status: 'unavailable' }, 503)).transcribe(clip),
-    ).toBeNull();
-    expect(await make(async () => answer({ status: 'ok' })).transcribe(clip)).toBeNull();
+      await make(async () => answer({ status: 'unauthorized' }, 401)).transcribe(clip),
+    ).toEqual(failure('http-401'));
+    expect(await make(async () => answer({ status: 'unavailable' }, 429)).transcribe(clip)).toEqual(
+      failure('http-429', 'limited'),
+    );
+    expect(await make(async () => answer({ status: 'ok' })).transcribe(clip)).toEqual(
+      failure('bad-reply'),
+    );
     expect(
       await make(async () => answer({ status: 'ok', text: 'x'.repeat(400) })).transcribe(clip),
-    ).toBeNull();
+    ).toEqual(failure('bad-reply'));
     expect(
       await make(async () => {
         throw new TypeError('offline');
       }).transcribe(clip),
-    ).toBeNull();
+    ).toEqual(failure('network'));
     const slow = make(
       (_url: string, init: RequestInit) =>
         new Promise((_resolve, reject) => {
-          init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
         }),
       20,
     );
-    expect(await slow.transcribe(clip)).toBeNull();
+    expect(await slow.transcribe(clip)).toEqual(failure('timeout'));
   });
 
-  it('gives no words when the session never comes back (offline)', async () => {
+  it('says so when the session never comes back (offline)', async () => {
     const hanging = { getSession: () => new Promise<never>(() => undefined) };
     const send = vi.fn();
     const service = createFetchTranscribeService({ auth: hanging } as never, {
       fetch: send as unknown as typeof fetch,
       timeoutMs: 20,
     });
-    expect(await service.transcribe(clip)).toBeNull();
+    expect(await service.transcribe(clip)).toEqual(failure('no-session'));
     expect(send).not.toHaveBeenCalled();
   });
 });
