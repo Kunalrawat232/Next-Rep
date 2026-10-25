@@ -110,13 +110,11 @@ describe('voice logging through the cloud recogniser', () => {
   it('says so, and keeps tap logging, when the service has no answer', async () => {
     localStorage.setItem('next-rep-voice-mode', 'cloud');
     const app = await openWorkout({
-      transcribe: async () => ({ ok: false, kind: 'unavailable', reason: 'http-503' }),
+      transcribe: async () => ({ ok: false, kind: 'unavailable' }),
     });
     await app.user.click(await screen.findByRole('button', { name: /tap to speak a set/i }));
     await app.user.click(await screen.findByRole('button', { name: /listening… tap to stop/i }));
-    expect(
-      await screen.findByText(/voice is not available right now.*\(http-503\)/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/voice is not available right now/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /tap to speak a set/i })).toBeEnabled();
   });
 });

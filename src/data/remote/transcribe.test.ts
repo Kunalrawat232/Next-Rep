@@ -33,18 +33,14 @@ describe('the transcribe service', () => {
     expect(await service.transcribe(clip)).toEqual({ ok: true, text: '' });
   });
 
-  const failure = (reason: string, kind: 'unavailable' | 'limited' = 'unavailable') => ({
-    ok: false,
-    kind,
-    reason,
-  });
+  const failure = (kind: 'unavailable' | 'limited' = 'unavailable') => ({ ok: false, kind });
 
   it('says why there are no words without a session, and never calls the network', async () => {
     const send = vi.fn();
     const service = createFetchTranscribeService({ auth: session(null) } as never, {
       fetch: send as unknown as typeof fetch,
     });
-    expect(await service.transcribe(clip)).toEqual(failure('no-session'));
+    expect(await service.transcribe(clip)).toEqual(failure());
     expect(send).not.toHaveBeenCalled();
   });
 
@@ -55,25 +51,23 @@ describe('the transcribe service', () => {
         timeoutMs,
       });
     expect(await make(async () => answer({ status: 'unavailable' }, 503)).transcribe(clip)).toEqual(
-      failure('http-503'),
+      failure(),
     );
     expect(
       await make(async () => answer({ status: 'unauthorized' }, 401)).transcribe(clip),
-    ).toEqual(failure('http-401'));
+    ).toEqual(failure());
     expect(await make(async () => answer({ status: 'unavailable' }, 429)).transcribe(clip)).toEqual(
-      failure('http-429', 'limited'),
+      failure('limited'),
     );
-    expect(await make(async () => answer({ status: 'ok' })).transcribe(clip)).toEqual(
-      failure('bad-reply'),
-    );
+    expect(await make(async () => answer({ status: 'ok' })).transcribe(clip)).toEqual(failure());
     expect(
       await make(async () => answer({ status: 'ok', text: 'x'.repeat(400) })).transcribe(clip),
-    ).toEqual(failure('bad-reply'));
+    ).toEqual(failure());
     expect(
       await make(async () => {
         throw new TypeError('offline');
       }).transcribe(clip),
-    ).toEqual(failure('network'));
+    ).toEqual(failure());
     const slow = make(
       (_url: string, init: RequestInit) =>
         new Promise((_resolve, reject) => {
@@ -81,7 +75,7 @@ describe('the transcribe service', () => {
         }),
       20,
     );
-    expect(await slow.transcribe(clip)).toEqual(failure('timeout'));
+    expect(await slow.transcribe(clip)).toEqual(failure());
   });
 
   it('says so when the session never comes back (offline)', async () => {
@@ -91,7 +85,7 @@ describe('the transcribe service', () => {
       fetch: send as unknown as typeof fetch,
       timeoutMs: 20,
     });
-    expect(await service.transcribe(clip)).toEqual(failure('no-session'));
+    expect(await service.transcribe(clip)).toEqual(failure());
     expect(send).not.toHaveBeenCalled();
   });
 });

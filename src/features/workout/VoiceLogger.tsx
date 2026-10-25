@@ -313,12 +313,7 @@ export function VoiceLogger({
           Your voice is sent to a speech service to turn it into text. Next Rep does not keep it.
         </p>
       )}
-      {speech.error && (
-        <ErrorMessage>
-          {SPEECH_MESSAGE[speech.error]}
-          {speech.detail ? ` (${speech.detail})` : ''}
-        </ErrorMessage>
-      )}
+      {speech.error && <ErrorMessage>{SPEECH_MESSAGE[speech.error]}</ErrorMessage>}
       {removing && (
         <Card role="group" aria-label="Confirm undo" className="flex flex-col gap-4">
           <p>

@@ -167,10 +167,7 @@ describe('browserRecorder', () => {
           },
         },
       });
-      await expect(browserRecorder(scope)!().start(), name).rejects.toMatchObject({
-        kind,
-        detail: name,
-      });
+      await expect(browserRecorder(scope)!().start(), name).rejects.toBe(kind);
     }
   });
 
@@ -184,7 +181,7 @@ describe('browserRecorder', () => {
     await recorder.start();
     recorder.stop();
     expect(clip).not.toHaveBeenCalled();
-    expect(failure).toHaveBeenCalledWith({ kind: 'failed', detail: 'no-audio' });
+    expect(failure).toHaveBeenCalledWith('failed');
     expect(media().state).toBe('inactive');
   });
 

@@ -28,7 +28,7 @@ class FakeRecorder implements Recorder {
   onerror: Recorder['onerror'] = null;
   onend: Recorder['onend'] = null;
   started = 0;
-  startFails: { kind: SpeechError; detail: string } | null = null;
+  startFails: SpeechError | null = null;
   start = vi.fn(async () => {
     this.started++;
     if (this.startFails) throw this.startFails;
@@ -226,7 +226,7 @@ describe('useVoiceInput', () => {
         service: {
           transcribe: async () =>
             words === null
-              ? { ok: false as const, kind: 'unavailable' as const, reason: 'http-503' }
+              ? { ok: false as const, kind: 'unavailable' as const }
               : { ok: true as const, text: words },
         },
       });
@@ -265,8 +265,7 @@ describe('useVoiceInput', () => {
     function Probe() {
       const voice = useVoiceInput(() => {
         const recorder = new FakeRecorder();
-        recorder.startFails =
-          made.length === 0 ? { kind: 'denied', detail: 'NotAllowedError' } : null;
+        recorder.startFails = made.length === 0 ? 'denied' : null;
         made.push(recorder);
         return recorder;
       });

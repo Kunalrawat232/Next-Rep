@@ -26,7 +26,7 @@ function deps() {
     createProfileService: vi.fn(() => createFakeProfileService().service),
     createParseService: vi.fn(() => ({ parse: async () => null })),
     createTranscribeService: vi.fn(() => ({
-      transcribe: async () => ({ ok: false as const, kind: 'unavailable' as const, reason: 'x' }),
+      transcribe: async () => ({ ok: false as const, kind: 'unavailable' as const }),
     })),
     createCoachService: vi.fn(() => ({ ask: async () => ({ status: 'unavailable' as const }) })),
     createRouter: vi.fn(() => createMemoryRouter(appRoutes, { initialEntries: ['/'] })),
