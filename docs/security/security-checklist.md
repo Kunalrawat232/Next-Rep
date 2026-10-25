@@ -18,9 +18,9 @@ Status: `[x]` = in place, `[ ]` = to do (with the phase that delivers it). The A
 
 - [x] The browser key is allowlisted (publishable or anon only); a Vite plugin refuses to run when a secret-looking `VITE_` variable or a bad key is present, and CI fails if a secret-looking key is in `dist/`.
 - [x] Security headers in `vercel.json` (frame-ancestors, nosniff, referrer and permissions policy).
-- [ ] Full Content Security Policy: test it on the Vercel preview (one has been deployed) before production. _(Phase 5.)_
+- [ ] Full Content Security Policy: not added. The live headers carry only `frame-ancestors 'none'` in the policy, so a fuller one has to be tested on the live address first.
 - [x] "Confirm email" switched on in the Supabase dashboard (so sign-up no longer reveals registered addresses, ADR-007), with custom SMTP through Brevo; see the [roadmap](../plans/roadmap.md).
-- [ ] Switch on CAPTCHA and leaked-password protection in the Supabase dashboard. _(Planned before the freeze.)_
+- [x] The Supabase security advisor was read and each notice answered. Fixed: `rls_auto_enable()` was callable by `anon` and `authenticated` (migration 0006). Left on purpose: the three rate-limit and ceiling functions are callable by signed-in users because they count the caller's own requests; the two counter tables have RLS and no policy because only those functions write them; leaked-password protection needs a paid plan and the project stays on free tiers.
 
 ## Supabase-specific traps to check in every schema or policy change
 

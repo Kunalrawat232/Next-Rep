@@ -4,9 +4,11 @@ Voice-first gym workout logger, delivered as an installable web app (PWA).
 
 > Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even with bad signal, with the bar weight and per-side maths handled for you.
 
+**Live app: https://nextrep-gym.vercel.app**
+
 Built solo for the **Build With AI Hackathon 2026** (internal company hackathon). Demo link and demo video are added at submission.
 
-**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. A preview deployment exists; production is not deployed yet and is planned before the 30 Oct submission. See the [roadmap](docs/plans/roadmap.md).
+**Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
 
 ## Problem
 
@@ -65,7 +67,7 @@ npm run dev
 
 Setup of Supabase, Vercel and Gemini: [deployment guide](docs/delivery/deployment.md). Local tooling: [tooling setup](docs/delivery/tooling-setup.md).
 
-Voice needs HTTPS or localhost, so test on phones through a Vercel preview deployment or a tunnel.
+Voice needs HTTPS or localhost, so the easiest way to test on a phone is the live address, https://nextrep-gym.vercel.app (a tunnel also works; Vercel preview deployments need a Vercel login).
 
 ## Credits
 

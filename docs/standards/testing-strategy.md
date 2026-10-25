@@ -1,6 +1,6 @@
 # Testing strategy
 
-Status: everything below exists. Counts: 4530 unit tests in 184 files (`npm test`), 117 database tests in 6 files (`test:db`), 26 hosted integration tests in 4 files, and 5 end-to-end tests in 4 files (auth x2, workout, exerciseDemo, smoke; all passed).
+Status: everything below exists. Counts: 4530 unit tests in 184 files (`npm test`), 121 database tests in 7 files (`test:db`), 26 hosted integration tests in 4 files, and 5 end-to-end tests in 4 files (auth x2, workout, exerciseDemo, smoke; all passed).
 
 | Level                 | Tool                     | What                                                                                                                                                                                                                                                                                        |
 | --------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -22,7 +22,7 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - **Real devices:** the app on a real phone (touch, the glass lenses with the real library, the photo crossfade, rest-timer vibration, battery), and the microphone (permission prompt, accuracy in en-IN with Hinglish). Everything visual was checked in desktop Chrome and in phone-sized frames only.
 - **Hosted checks after the latest changes:** `npm run check:supabase`, `npm run test:integration` and `npm run test:e2e` (the developer runs these; they load `.env.local`). `npm run check:coach` passed for Gemini and Groq.
 - **Deployment:** a Vercel preview with the coach was deployed and checked in a browser. Production is not deployed yet.
-- **Sign-up protection:** email confirmation is on (custom SMTP through Brevo); CAPTCHA and leaked-password protection are not switched on yet (Supabase dashboard). Not checked: that a second sign-up with an existing address shows the same "check your email" screen, and whether confirmation emails reach inboxes other than the one tested (or land in spam).
+- **Sign-up protection:** email confirmation is on (custom SMTP through Brevo). Not checked: that a second sign-up with an existing address shows the same "check your email" screen, and whether confirmation emails reach inboxes other than the one tested (or land in spam).
 - **The coach's real answers:** a read-through of real answers for quality and safety, and the data policy of the second provider (Groq).
 - **Licences:** the exercise demonstrations are (c) Gym visual, hotlinked for non-commercial use only; a licence would be needed for any commercial use.
 
@@ -607,3 +607,50 @@ What has not been verified, today. Earlier entries may say "not yet run" for thi
 - Problems found: the security audit rated the wildcard high: any Vercel user can create a project whose name ends in `-next-rep3`, and an auth email (sign-up, password reset) could then send a victim's session to it. Also low: the tokens stayed in the browser's history even after the address was cleaned. The wildcard was removed from the dashboard straight away (back to only `http://localhost:5173`).
 - AI produced (final): the email links to `{{ .SiteURL }}/sign-in?token_hash={{ .TokenHash }}&type=email`; `readConfirmLink` reads and validates the code and removes it from the address; the page shows "Confirm your email" and `AuthService.verifyEmail` (supabase `verifyOtp`) spends the code only when that button is tapped, which signs the user in; the page then says "Your email is verified. You're signed in as <email>." with a "Start logging" button, or the new `link_invalid` message. A second audit found that spending the code on page load allowed login CSRF (someone sends their own unclicked link and the visitor is silently switched into their account) and that a signed-in visitor never saw a failed link's message; both were fixed (tap to confirm, a warning naming the current account, the page stays for a failed link). No login tokens are ever in a URL and no redirect allowlist entry is needed. Template copy: `supabase/templates/confirm-signup.html`.
 - How validated: unit tests for the parser, the service mapping (`otp_expired` and other 4xx to `link_invalid`), and the page (nothing spent on load, verified screen naming the account, a double tap spends the code once, the switch-account warning for a signed-in visitor, checking state, invalid link also for a signed-in visitor, network, throwing service, old-style tokens removed unused, plain visit untouched); lint and typecheck clean; the full suite passes (4530; one unrelated rest-timer test failed once under load and passed 5 of 5 runs alone and on the rerun). Not checked: the real email flow, which needs the code deployed first and then the new template saved in the dashboard (saving it before the deploy would break confirmation on the old preview).
+
+## Production deploy and the public address
+
+- Tool: Claude Code, with the Vercel command line.
+- Asked: deploy the app to production, and give it an address anyone can open without a Vercel login.
+- Found: the first deploy attempts failed twice on the network, then on a login that needed refreshing, then because the command sandbox could not read its own placeholder files in the project folder. The fix was to deploy a clean export of the committed code (no placeholder files, no `.env.local`) after the developer logged in again. The production build was checked from outside without a login: pages, manifest, icons and security headers load, and both functions answer 401 without a sign-in. The automatic project address was unusable as a link (`project-58jng`), the team address was behind Vercel's login, and the nice names were mostly taken; `nextrep-gym.vercel.app` was free and was added as a domain of the project, so it follows every production deploy.
+- AI produced: the clean-export deploy, the public checks, the domain, and the documentation update (README live link, deployment guide, roadmap, checklists).
+- How validated: the same checks on the new address; the two production builds were compared and differ only in the deployment id embedded in the bundle, and neither contains a secret key.
+- Not checked: sign-up and sign-in on the live address (the Supabase Site URL must point at it first), real phones, and Vercel's own limits on a free plan under load.
+- Lesson: the address you give people has to be tested without your own login; a protected alias and a public one can sit side by side on the same project.
+
+## Testing the sign-up on the live address
+
+- Tool: Claude Code, with Claude in Chrome (read-only) for the Supabase and Brevo dashboards.
+- Asked: find out why a sign-up on the live address sent no confirmation email.
+- Found: Supabase did its part (the sign-up returned 200 and recorded the confirmation request, no error in the auth log). Brevo's sending log showed the email as sent and then as a hard bounce from Gmail ("550-5.1.1 the email account that you tried to reach does not exist"): the address typed was `kunal+tag@gmail.com`, whose real mailbox is `kunal@gmail.com`, not the developer's own. The mail setup itself had delivered and had the link clicked the day before.
+- AI produced: the diagnosis only; nothing was changed in Supabase or Brevo.
+- How validated: the developer repeated the sign-up with a throwaway address: the email arrived and everything worked.
+- Not checked: delivery to a Gmail inbox other than the developer's (spam folder risk with a Gmail sender sent through Brevo), and real phones.
+- Lesson: a form that answers every sign-up the same way also hides a mistyped address; the sending service's log is the place to look, not the app.
+
+## Sample data for the judges' demo accounts
+
+- Tool: Claude Code, with the Supabase connector (SQL).
+- Asked: give the two pre-confirmed demo accounts a training history, so judges do not open an empty app.
+- Found: the demo accounts were confirmed but empty; the sample history (invented data) lived only in test user A, whose data the integration tests wipe.
+- AI produced: one guarded query that copies the gym, the 32 workouts and the 474 sets of test user A into each demo account with new ids. It refuses to run if the source is not test user A, if a target is not a demo account, or if a target already has data, and it checks the copied counts against the source before it finishes.
+- How validated: a read-back query shows 1 gym, 32 workouts and 474 sets in each demo account, from the first to the last training day, the same as the source.
+- Not checked: signing in as a demo account in the browser and reading the progress graphs there.
+- Lesson: keep the data that judges see in accounts that no test touches.
+
+## Housekeeping before the submission: advisor fix, Groq terms, licence, stray users
+
+- Tool: Claude Code, with the Supabase connector (SQL, migration, advisors) and web search and fetch for Groq's documents.
+- Asked: close the open small items: a licence file if the rules ask for one, the security advisor's `rls_auto_enable()` warning, Groq's data policy, and two stray test users.
+- Licence: the organisers' rules only say to respect third-party licences and terms; they do not ask for a licence on our own code, and `package.json` is marked private. No `LICENSE` file was added; choosing an open-source licence for work made for a company hackathon is the developer's and the company's decision, not a formatting task.
+- Advisor fix: migration `0006_revoke_rls_auto_enable.sql` takes the right to call Supabase's own `rls_auto_enable()` helper away from `public`, `anon` and `authenticated`. Before applying it, a read-only query showed the function is owned by `postgres`, runs as its owner and is used by one event trigger; after applying it, the same query showed `anon` and `authenticated` cannot call it, the owner can, and the event trigger is still active, and both of its warnings were gone from the advisor. The migration only acts if the function exists, so the local database tests are unaffected; 4 new tests (121 database tests now) cover both cases. The notices that remain are intended and are written down in the security checklist.
+- Groq terms: from Groq's own data page and Services Agreement, as read through a fetch tool that summarises pages: Groq may not use inputs or outputs for training (section 4.2), keeps nothing by default for inference, may log temporarily for up to 30 days for reliability and abuse checks, and offers Zero Data Retention. Recorded in ADR-018 with the links. The in-app notice and the README still say that free-tier prompts may be used to improve products, which is true of Google and cautious for Groq. Not read: the Data Processing Addendum and the acceptable-use terms. A person should re-read the quoted sections before relying on them.
+- Stray users: two accounts made while testing sign-up (one with a mistyped address that never confirmed, one throwaway confirmed account with only a profile row) were deleted by id and email after a check that they owned no workouts, gyms or sets; the query refused to finish unless exactly two accounts matched.
+- Lesson: read what a function or account owns before revoking or deleting, and check afterwards with the same query.
+
+## The old project address was removed
+
+- Tool: Claude Code, for the checks.
+- Asked: after the Site URL was set and the sign-up test passed, remove the random address Vercel had first given the project.
+- AI produced: before and after checks without a login. The old address now answers 404 (`DEPLOYMENT_NOT_FOUND`); the live address still serves the pages, the manifest and the icons, and both functions answer 401 without a sign-in. The docs name only the live address and the protected team address.
+- Lesson: remove the fallback only after the replacement has passed its own test, then check both sides.

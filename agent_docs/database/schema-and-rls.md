@@ -4,7 +4,7 @@ Authoritative sources: `supabase/migrations/*.sql` (server), `src/domain/schemas
 
 ## Migrations
 
-`0001_init.sql` (tables, constraints, indexes, RLS, the first rate-limit function), `0002_gym_bar_kind.sql` (bar kinds, name rules), `0003_exercise_muscle.sql` (exercise muscle), `0004_one_gym_per_user.sql` (one gym per user, `is_default` dropped), `0005_rate_limit_scopes.sql` (rate limits per endpoint, the daily ceiling). All five are applied to the hosted project. **Never edit an applied migration; add a new one.** Test schema and RLS with `npm run test:db` (PGlite loads the real migrations; `tests/db/`), and add a PGlite test for every change. `supabase/seed.sql` is **generated** from the two exercise JSON files by `npm run seed:generate`; never edit it by hand (`npm run seed:check` runs in CI).
+`0001_init.sql` (tables, constraints, indexes, RLS, the first rate-limit function), `0002_gym_bar_kind.sql` (bar kinds, name rules), `0003_exercise_muscle.sql` (exercise muscle), `0004_one_gym_per_user.sql` (one gym per user, `is_default` dropped), `0005_rate_limit_scopes.sql` (rate limits per endpoint, the daily ceiling), `0006_revoke_rls_auto_enable.sql` (the API roles can no longer call Supabase's `rls_auto_enable()` helper; it only acts if the function exists, so a plain Postgres is unaffected). All six are applied to the hosted project. **Never edit an applied migration; add a new one.** Test schema and RLS with `npm run test:db` (PGlite loads the real migrations; `tests/db/`), and add a PGlite test for every change. `supabase/seed.sql` is **generated** from the two exercise JSON files by `npm run seed:generate`; never edit it by hand (`npm run seed:check` runs in CI).
 
 ## Tables
 

@@ -14,7 +14,7 @@ Status: **done** (built and merged to `main`), **in progress**, or **not built**
 - **Voice logging** using the browser Web Speech API, with our own deterministic parser (English, plus Hindi number words) and validators, a confirm card, and voice commands (repeat, undo, rest, edit a set). Done.
 - Weight convention handling: total vs per side, bar weights, plausibility checks, confirmation with breakdown. Done, for tap and voice logging.
 - History list, per-exercise progress charts, personal records. Done.
-- Deployed on Vercel, installable as a PWA. In progress: the PWA manifest and icons are built and a preview deployment exists (behind Vercel Authentication); production is not deployed yet and is planned before the 30 Oct submission.
+- Deployed on Vercel, installable as a PWA. The PWA manifest and icons are built, and production is deployed on Vercel at https://nextrep-gym.vercel.app (public, no login). Preview deployments are behind Vercel Authentication.
 - Unit tests for all domain logic; a few Playwright smoke tests for the core journey. Unit tests done; the Playwright specs exist and are run by the developer, not in CI (all 5 passed).
 - Documentation and AI log. In progress (the AI log is updated per task, and each entry says how it was validated and who ran the checks).
 

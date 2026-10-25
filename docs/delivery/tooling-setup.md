@@ -61,7 +61,7 @@ Supabase, Vercel, GitHub (repository `Kunalrawat232/Next-Rep`), Google AI Studio
 
 ## Mobile testing gotcha
 
-Microphone and speech recognition only work on **HTTPS or localhost**. Opening the dev server on a phone via `http://192.168.x.x` will not work for voice. Test on phones using Vercel preview deployments (HTTPS) or a free tunnel such as Cloudflare Tunnel.
+Microphone and speech recognition only work on **HTTPS or localhost**. Opening the dev server on a phone via `http://192.168.x.x` will not work for voice. Test on phones using the live address https://nextrep-gym.vercel.app (HTTPS) or a free tunnel such as Cloudflare Tunnel.
 
 ## Claude Design workflow
 

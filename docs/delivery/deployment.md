@@ -19,7 +19,7 @@ Free projects pause after inactivity: check the project is awake before demos an
 
 ### 1.2 Apply the schema and seed
 
-**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`, `0003_exercise_muscle.sql`, `0004_one_gym_per_user.sql` and `0005_rate_limit_scopes.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
+**Option A (simplest): SQL editor.** In the dashboard SQL editor, run `supabase/migrations/0001_init.sql`, then `supabase/seed.sql`, then `supabase/migrations/0002_gym_bar_kind.sql`, `0003_exercise_muscle.sql`, `0004_one_gym_per_user.sql`, `0005_rate_limit_scopes.sql` and `0006_revoke_rls_auto_enable.sql`, and then run `supabase/seed.sql` again (it adds the muscle and the imported exercises). Migrations are run once each, in order; the seed is safe to run any number of times.
 
 **Option B: Supabase CLI** (installed, v2.120.0).
 
@@ -50,10 +50,8 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 - **Email template** (Emails > Templates > Confirm sign up): subject "Confirm your Next Rep account", body copied from `supabase/templates/confirm-signup.html` (the repo copy is the source; paste it back into the dashboard after editing it). Inline styles and tables only, no images, so email apps keep the layout. Its link is `{{ .SiteURL }}/sign-in?token_hash={{ .TokenHash }}&type=email`, which only a build with `verifyEmail` (the sign-in page) understands: deploy that build before saving this template, or new accounts cannot be confirmed.
 - **Rate Limits:** emails sent per hour raised to 100 (custom SMTP starts at 30).
 - Create test and demo users from the dashboard (Auth > Users > Add user, Auto Confirm User) so they sign in without an email.
-- **CAPTCHA:** to switch on in the Auth settings (Attack Protection) in Phase 5, with the other two settings here. Not done yet.
-- **Leaked-password protection:** to switch on in the Auth settings in Phase 5. Not done yet.
 - Set a sensible minimum password length in the Auth settings.
-- **Site URL / redirect URLs:** the confirmation link is built from the Site URL (`{{ .SiteURL }}/sign-in?token_hash=…`, see the email template below), so the Site URL must be the deployed app: it is the latest Vercel preview for now (preview links need a Vercel sign-in, Deployment Protection); set it to the production URL once production is deployed. The redirect URLs hold only `http://localhost:5173`. **Never add a wildcard such as `https://*-next-rep3.vercel.app/**`**: other Vercel users can create projects whose names match it and collect the sessions of anyone who follows an auth email link.
+- **Site URL / redirect URLs:** the confirmation link is built from the Site URL (`{{ .SiteURL }}/sign-in?token_hash=…`, see the email template below), so the Site URL must be the deployed app: it is set to https://nextrep-gym.vercel.app (preview links need a Vercel sign-in, Deployment Protection, so they cannot be used). The redirect URLs hold only `http://localhost:5173`. **Never add a wildcard such as `https://*-next-rep3.vercel.app/**`**: other Vercel users can create projects whose names match it and collect the sessions of anyone who follows an auth email link.
 
 ### 1.5 Test users (for E2E and the RLS isolation suite)
 
@@ -110,11 +108,24 @@ The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)
 | `FALLBACK_BASE_URL`      | `https://api.groq.com/openai/v1` | Production, Preview              | Optional, server only; all three `FALLBACK_*` or none |
 | `FALLBACK_MODEL`         | model id from the Groq console   | Production, Preview              | Optional, server only                                 |
 
-`VITE_*` values are baked in at build time, so redeploy after changing them. Do not add any service-role or secret key. 5. Deploy. `vercel.json` already contains the single-page-app fallback rewrite so React Router deep links work. 6. **Preview deployments** give you HTTPS URLs, which phones need for voice. If previews show a Vercel login wall, adjust **Deployment Protection** in the project settings. 7. Optional: put the functions in the region closest to your Supabase project (Settings > Functions).
+`VITE_*` values are baked in at build time, so redeploy after changing them. Do not add any service-role or secret key. 5. Deploy. `vercel.json` already contains the single-page-app fallback rewrite so React Router deep links work. 6. **Preview deployments** give you HTTPS URLs, which phones need for voice. They are behind Vercel Authentication (see "Deployment Protection" below). 7. Optional: put the functions in the region closest to your Supabase project (Settings > Functions).
+
+### Production addresses
+
+| Address                               | Public                            |
+| ------------------------------------- | --------------------------------- |
+| https://nextrep-gym.vercel.app        | Yes, the live address             |
+| https://next-rep-next-rep3.vercel.app | No, Vercel login; do not give out |
+
+The nicer name `nextrep-gym.vercel.app` is a domain added to the project in Vercel > Settings > Domains. A one-off alias would not follow new deploys. The address Vercel first assigned to the project (a random name) was removed from the project once this one worked; it now answers 404.
+
+### Deployment Protection
+
+Preview deployments (`next-*-next-rep3.vercel.app`) need a Vercel login. The production address listed as public does not.
 
 ### 3.1 Verify the deploy
 
-- The production URL shows the **Next Rep** heading.
+- The production URL (https://nextrep-gym.vercel.app) shows the **Next Rep** heading.
 - Function check with no token, expected status 401 and `{"status":"unauthorized"}` (a 200 HTML page means the SPA rewrite is swallowing `/api`):
 
 ```bash
@@ -148,19 +159,20 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] `0001_init.sql` and `seed.sql` applied: 7 tables with RLS, 56 seed rows found by `check:supabase`
 - [x] `0002_gym_bar_kind.sql` and `0003_exercise_muscle.sql` applied and `seed.sql` re-run (`exercises` has a `muscle` column, 892 global exercises)
 - [x] `0005_rate_limit_scopes.sql` written, tested in PGlite and applied through the Supabase plugin (it cleared 11 old counter rows; `api_rate_limits` has `scope` and `window_seconds`, `api_daily_totals` exists with RLS on, the three functions are executable by `authenticated` only; the one-argument `consume_rate_limit` stays so an older `/api/parse` keeps working). The security advisor shows only the by-design notices for these tables and functions.
+- [x] `0006_revoke_rls_auto_enable.sql` written, tested in PGlite and applied through the Supabase plugin: the security advisor had flagged Supabase's own `rls_auto_enable()` helper as callable by `anon` and `authenticated`; now only its owner can call it, and its event trigger is still active.
 - [x] `0004_one_gym_per_user.sql` applied through the Supabase plugin (it removed no gym: one user, one gym; `is_default` is gone, `gyms_one_per_user` exists, the name defaults to 'My gym'). A build older than this change fails against the new schema, so redeploy after pulling.
 - [x] Advisors reviewed (healthy, no issues)
 - [x] Confirm-email decision made (off until code freeze, ADR-007); two test users created (both sign in)
 - [x] Confirm email switched on, with custom SMTP (Brevo), the email limit at 100 an hour and two confirmed demo accounts; a confirmation email received and signed in with on a preview
-- [ ] CAPTCHA and leaked-password protection switched on (Phase 5, before the 25 Oct freeze)
-- [ ] Site URL set to the Vercel production URL (it points at a preview until production is deployed)
+- [x] Site URL set to https://nextrep-gym.vercel.app (the redirect URLs hold only `http://localhost:5173`, no wildcards)
 - [x] Gemini key created with **no billing**; `GEMINI_MODEL` chosen (Gemini verified live on a preview deploy)
 - [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`)
 - [x] Vercel project `next-rep` imported; env vars set; preview deployed
-- [ ] Production deployed (not yet)
-- [ ] Production page loads; `POST /api/parse` with no token returns 401 JSON
+- [x] Production deployed: https://nextrep-gym.vercel.app (same code as `main`)
+- [x] Production page loads; `POST /api/parse` and `/api/coach` with no token return 401 (checked from outside, no login)
+- [x] A sign-up test on the live address: with a throwaway address the confirmation email arrived, the link worked and sign-in worked (an address that does not exist, such as a Gmail `name+tag` whose base mailbox is not yours, is accepted by the form but hard-bounces at Brevo, so no email arrives and the screen still says "Check your email")
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, before migrations 0002 and 0003)
-- [ ] A phone opens the preview URL over HTTPS (not recorded; check it yourself)
+- [ ] A phone opens https://nextrep-gym.vercel.app over HTTPS: microphone, offline and install (not done yet; check it yourself)
 
 ## Troubleshooting
 

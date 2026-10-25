@@ -12,7 +12,7 @@ Phase → AI tool → what it produced. Updated as work happens; this is judging
 | Testing and QA         | `qa-tester`, `parser-test-cases`, Playwright MCP    | Edge-case tests (built, 34 `*.qa.test.*` files from two QA passes) and 307 phrase fixtures. Exploratory offline testing is planned  |
 | Code review            | `code-review`, `pr-review-toolkit`, `code-reviewer` | Review findings, simplifications                                                                                                    |
 | Documentation          | `doc-writer`, Claude Code                           | Docs, ADRs, README, QA report (a documentation audit was done)                                                                      |
-| Deployment             | Vercel plugin, CI                                   | GitHub Actions CI (built and running). A Vercel preview has been deployed; the production deploy is not done yet                    |
+| Deployment             | Vercel plugin, CI                                   | GitHub Actions CI (built and running). Production is deployed on Vercel (https://nextrep-gym.vercel.app)                            |
 | In-app                 | Gemini and Groq (free tiers)                        | Gemini fallback for transcripts (`/api/parse`) and the text-only AI coach (`/api/coach`, Gemini first, Groq second). Status: built. |
 
 ## Notable decisions where AI input changed the outcome

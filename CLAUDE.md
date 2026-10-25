@@ -1,6 +1,6 @@
 # Next Rep
 
-Voice-first gym workout logger, an installable PWA. Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even offline, with bar weight and per-side maths handled for you. Built solo for the Build With AI Hackathon 2026 (feature freeze 25 Oct, submit 30 Oct 2026). Status: the voice parser and the mic on the workout screen work (tap to speak, confirm, log); `/api/parse` (Gemini fallback) is built, tested with fakes and verified once against live Gemini on a preview deploy; tap logging works; an AI coach (`/coach`, `/api/coach`) is built and merged to `main` (text only, gym and diet only). A preview deploy exists; production is not deployed yet.
+Voice-first gym workout logger, an installable PWA. Say "bench 60 kilo 8 reps" between sets and it is logged correctly, even offline, with bar weight and per-side maths handled for you. Built solo for the Build With AI Hackathon 2026 (feature freeze 25 Oct, submit 30 Oct 2026). Status: the voice parser and the mic on the workout screen work (tap to speak, confirm, log); `/api/parse` (Gemini fallback) is built, tested with fakes and verified once against live Gemini on a preview deploy; tap logging works; an AI coach (`/coach`, `/api/coach`) is built and merged to `main` (text only, gym and diet only). Production is deployed at https://nextrep-gym.vercel.app.
 
 **Principle: "AI listens, code verifies."** Speech recognition and Gemini are untrusted input. Every number that reaches storage passes deterministic validation and is shown to the user first.
 
