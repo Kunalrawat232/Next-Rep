@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import type { Exercise } from '../../domain/exercises';
 import { parseTranscript } from '../../domain/parser';
 import { validateSet } from '../../domain/validation';
-import { draftFromParse, repeatDraft, UNCLEAR_MESSAGE, type VoiceContext } from './voiceDraft';
+import {
+  draftFromParse,
+  repeatDraft,
+  UNCLEAR_MESSAGE,
+  withReps,
+  withWeight,
+  type PartialDraft,
+  type VoiceContext,
+} from './voiceDraft';
 
 const ex = (id: string, name: string, equipmentType: Exercise['equipmentType']): Exercise => ({
   id,
@@ -121,6 +129,79 @@ describe('draftFromParse', () => {
 
   it('has a message for every reason', () => {
     for (const message of Object.values(UNCLEAR_MESSAGE)) expect(message.length).toBeGreaterThan(5);
+  });
+});
+
+describe('a set with one number missing', () => {
+  it('keeps the exercise and the weight when only the reps were not said', () => {
+    expect(draft('bench press 45 kilo')).toMatchObject({
+      kind: 'partial',
+      missing: 'reps',
+      exercise: { id: BENCH.id },
+      weight: { value: 45, unit: 'kg' },
+    });
+    expect(draft('bench press 45')).toMatchObject({ kind: 'partial', missing: 'reps' });
+    expect(draft('bench press 20 per side')).toMatchObject({
+      kind: 'partial',
+      missing: 'reps',
+      weight: { value: 20, mode: 'per_side' },
+    });
+  });
+
+  it('keeps the exercise and the reps when only the weight was not said', () => {
+    expect(draft('bench press 8 reps')).toMatchObject({
+      kind: 'partial',
+      missing: 'weight',
+      exercise: { id: BENCH.id },
+      reps: 8,
+    });
+    expect(draft('dumbbell curl 12 reps')).toMatchObject({ kind: 'partial', missing: 'weight' });
+  });
+
+  it('still logs a bodyweight set with no weight, and does not ask for a weight', () => {
+    expect(draft('pull up 10 reps')).toMatchObject({ kind: 'set', reps: 10 });
+  });
+
+  it('does not keep anything when both numbers are missing or the exercise is not known', () => {
+    expect(draft('bench press')).toMatchObject({ kind: 'unclear' });
+    expect(draft('60 kilo')).toMatchObject({ kind: 'unclear' });
+    expect(draft('cable crunch 45 kilo')).toMatchObject({ kind: 'unclear' });
+    expect(draft('45 kilo')).toMatchObject({ kind: 'unclear' });
+  });
+
+  it('does not keep it when something else about the phrase is in doubt', () => {
+    expect(draft('do bench press 45 kilo')).not.toMatchObject({ kind: 'partial' });
+  });
+
+  it('turns the answer into the set it would have been, with the gym bar', () => {
+    const asked = draft('bench press 45 kilo') as Extract<PartialDraft, { missing: 'reps' }>;
+    const set = withReps(asked, 8, context);
+    expect(set).toMatchObject({
+      kind: 'set',
+      exercise: { id: BENCH.id },
+      reps: 8,
+      candidate: {
+        equipment: 'barbell',
+        reps: 8,
+        barKg: 20,
+        source: 'voice',
+        weight: { value: 45 },
+      },
+    });
+    expect(validateSet(set.candidate, { displayUnit: 'kg' }).status).not.toBe('reject');
+  });
+
+  it('turns a weight answer, in the unit the person uses, into a set', () => {
+    const asked = draft('bench press 8 reps', { unit: 'lb' }) as Extract<
+      PartialDraft,
+      { missing: 'weight' }
+    >;
+    const set = withWeight(asked, { value: 135, unit: 'lb', mode: 'unspecified' }, context);
+    expect(set).toMatchObject({
+      kind: 'set',
+      reps: 8,
+      candidate: { weight: { value: 135, unit: 'lb', mode: 'unspecified' }, barKg: 20 },
+    });
   });
 });
 
