@@ -1,9 +1,13 @@
 ---
 name: new-feature
 description: Use when building any new feature or non-trivial change in Next Rep. Runs the plan, tests, code, review, docs and ai-log workflow and enforces the project's rules.
+argument-hint: <feature description>
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash(npm run lint), Bash(npm run typecheck), Bash(npm test*), Bash(git status*), Bash(git diff*), Agent
 ---
 
 # new-feature
+
+Feature to build: `$ARGUMENTS` (ask the developer if it is empty).
 
 Follow these steps in order. Do not skip the plan or the pause for the developer's "go".
 

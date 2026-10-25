@@ -2,6 +2,7 @@
 name: parser-specialist
 description: Use for any work on the voice parser in src/domain/parser or the phrase fixtures in tests/fixtures/voice-phrases.json: new phrases, Hinglish handling, confidence tuning, parser bugs.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: inherit
 ---
 
 You own the voice parser for Next Rep and its test fixtures.

@@ -23,6 +23,19 @@ Downloads are verified against the published SHA-256 checksums before installing
 
 This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the committed `.claude/settings.json` (12): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`. `playwright` and `supabase` were also installed during the setup but are not in the project settings, so they depend on the developer's own Claude Code install.
 
+Owner of every plugin and of the AI config: Kunal Rawat. All come from the official marketplace and are not version-pinned (the marketplace has no pin), so check a plugin's change notes before updating it.
+
+| Plugin                                                       | Purpose                                                        |
+| ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `security-guidance`                                          | Security hints while editing                                   |
+| `feature-dev`, `code-review`, `pr-review-toolkit`            | Feature flow and review agents (see [agents](../ai/agents.md)) |
+| `frontend-design`                                            | UI design guidance                                             |
+| `typescript-lsp`                                             | Type information for the editor tools                          |
+| `skill-creator`, `claude-md-management`, `claude-code-setup` | Maintain skills, `CLAUDE.md` and the Claude Code setup         |
+| `vercel`, `github`, `context7`                               | Deploys and logs, repo and PR access, current library docs     |
+
+Review this list when a new phase starts and drop any plugin that was not used since the last review.
+
 Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin commands can only be run by the developer, not by Claude Code.
 
 ## MCP servers / integrations
@@ -36,7 +49,10 @@ Install pattern: `/plugin install <name>@claude-plugins-official`. Plugin comman
 ## Hooks (`.claude/settings.json`)
 
 - After `Edit`/`Write` on TypeScript under `src/`, `api/` or `tests/`: run eslint on the file and the project typecheck (`.claude/hooks/check-changed.sh`). Failures are fed back to Claude.
-- Deny reading the common local `.env` files (`.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`).
+- Deny reading the common local `.env` files (`.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.test`), and `cat`/`source` of them through Bash.
+- Deny force-push (any flag position, `+branch`), `--no-verify` on commit, `rm -rf` in its spellings and `curl`/`wget` piped into a shell. Deny editing `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `.githooks/`, `.github/workflows/` and `.env*`: the developer changes those by hand.
+- Sandbox on, with network limited to `registry.npmjs.org`, `github.com` and `api.github.com`.
+- Deny rules match command text, so they stop the usual spellings, not every possible one: the real backstops are gitleaks (pre-commit and CI) and branch protection on `main`.
 - Git pre-commit: gitleaks (`.githooks/pre-commit`, activated by `npm install` through the `prepare` script).
 
 ## Accounts (all free)

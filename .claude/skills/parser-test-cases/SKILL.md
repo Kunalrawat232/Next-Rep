@@ -1,11 +1,13 @@
 ---
 name: parser-test-cases
 description: Use to generate or extend voice phrase fixtures in tests/fixtures/voice-phrases.json for the Next Rep parser, including Hinglish, noisy and adversarial cases.
+argument-hint: <group or topic to extend, e.g. "per side" or "Hinglish numbers">
+allowed-tools: Read, Grep, Glob, Edit, Write, Bash(npm test*), Bash(git diff*)
 ---
 
 # parser-test-cases
 
-Generate table-driven phrase fixtures for the voice parser.
+Generate table-driven phrase fixtures for the voice parser. Focus: `$ARGUMENTS` (all groups below if empty).
 
 1. Read `docs/domain/voice-grammar.md` and `docs/domain/weight-rules.md`, and the existing `tests/fixtures/voice-phrases.json` (avoid duplicates).
 2. Each fixture row has: `transcript`, expected `intent`, and the expected fields that matter (exercise, weight value/unit/mode, reps, restSeconds), plus a `note` for the reason it exists. Use invented data only.
@@ -21,4 +23,5 @@ Generate table-driven phrase fixtures for the voice parser.
    - **Confusables:** 13/30 … 19/90 where history disambiguates
    - **Noisy and adversarial:** filler words, repeated words, partial phrases, empty input, very long input, numbers out of range, prompt-injection text such as "ignore previous instructions" (expected `unknown`)
 4. Mark rows the parser should treat as low confidence (expected to go to the Gemini fallback) so the confidence threshold can be tuned.
-5. Report counts: generated, duplicates removed, per group. The developer reviews before merge; record kept and rejected counts in `docs/qa/ai-qa-report.md`.
+5. **Verify.** Run `npm test` and `git diff --stat tests/fixtures/voice-phrases.json`: the suite must pass and no existing row may be removed or changed.
+6. Report counts: generated, duplicates removed, per group. The developer reviews before merge; record kept and rejected counts in `docs/qa/ai-qa-report.md`.

@@ -17,6 +17,14 @@ What AI may and may not do, for both Claude Code (development) and Gemini (in th
 
 **Enforcement:** permission denies, a hook (lint and typecheck after edits; there is no Stop hook, so tests are run by hand before finishing a task), gitleaks pre-commit and CI, read-only reviewer agents, and human review of every diff.
 
+**Review cadence:** at the start of each project phase the developer re-reads `.claude/settings.json` (permissions, plugins, sandbox), the hooks and `CLAUDE.md`, and removes rules or plugins that no longer earn their place. Changes to these files should go through a pull request.
+
+**Licence and ownership:** code written with Claude Code is the developer's own work and is reviewed line by line before it is committed; it carries the `Co-Authored-By` trailer. No third-party code or text is pasted in unless its licence allows it, and new dependencies need approval first.
+
+**Usage and cost:** Claude Code runs under the account the developer is signed in with (it must be an approved FiftyFive Technologies account, to be confirmed by the developer); the app itself never calls Claude. Usage is read from the account's usage page, which is the only telemetry (no `OTEL_*` or prompt logging is configured). The in-app providers (Gemini, Groq) are free tier only, with a daily ceiling in code (ADR-017, ADR-018).
+
+**Data:** only invented sample data is used (see the rules above). Claude Code's own retention follows the account's plan settings, which are outside the repository.
+
 ## Gemini (in the app)
 
 Status: built (the `/api/parse` fallback and the coach). Rationale and conditions: [ADR-003](../architecture/decisions/003-gemini-as-fallback-only.md), [ADR-017](../architecture/decisions/017-ai-coach.md), [ADR-018](../architecture/decisions/018-coach-second-provider.md), [API contracts](../architecture/api-contracts.md).
