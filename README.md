@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Next Rep: the phrase 'bench press 60 kilo 8 reps' becomes a confirm card showing 20 Kg each side times 2 plus a 20 Kg bar, total 60 Kg, with Log set and Cancel buttons.">
+</p>
+
 # Next Rep
 
 Voice-first gym workout logger, delivered as an installable web app (PWA).
@@ -10,7 +14,7 @@ Built solo for the **Build With AI Hackathon 2026** (internal company hackathon)
 
 **Status:** tap and voice logging (with the Gemini fallback, `/api/parse`), history, progress, PRs, Settings, offline sync and the AI coach (`/coach`, `/api/coach`) are built and merged to `main`. Cloud speech-to-text for iPhone voice (`/api/transcribe`, [ADR-019](docs/architecture/decisions/019-cloud-speech-to-text.md)) is built, tested with fakes and checked on an iPhone 15 in Safari and Chrome. Production is deployed on Vercel at https://nextrep-gym.vercel.app. See the [roadmap](docs/plans/roadmap.md).
 
-## Problem
+## Why
 
 Lifters need to record exercise, weight and reps to progress. Notes apps and paper are slow; tap-heavy apps are awkward with chalky hands and a locked phone. Gyms often have poor signal, so online-only apps fail at the worst moment. Weight is also ambiguous: is "45 kg" the total on the bar or per side, and what does the bar weigh here? See [problem statement](docs/product/problem-statement.md).
 
@@ -30,7 +34,13 @@ Full scope: [requirements](docs/product/requirements.md). Journey: [user journey
 
 TypeScript (strict), React, Vite, Tailwind CSS, React Router, vite-plugin-pwa, Dexie (IndexedDB), Zod, Supabase (Auth, Postgres, RLS), Vercel (hosting and serverless), Gemini API and Groq API free tiers (voice fallback and AI coach), Recharts, Vitest, Playwright, ESLint, Prettier, Gitleaks, GitHub Actions. Versions and rationale: [tech stack](docs/architecture/tech-stack.md).
 
-## Architecture in one picture
+## How it works
+
+<p align="center">
+  <img src="./assets/readme/workflow.svg" width="100%" alt="AI listens, code verifies: say or tap, parse with rules first and Gemini if unsure, code verifies every number, you confirm the breakdown, then the set is saved on the phone and synced later.">
+</p>
+
+Principle: **AI listens, code verifies.** Speech recognition and Gemini are untrusted input; every number that reaches storage passes deterministic validation and is shown to you first. See [architecture overview](docs/architecture/overview.md).
 
 ```
 Phone (PWA): UI, validators (pure TS), IndexedDB + sync queue, Web Speech + parser
@@ -39,8 +49,6 @@ Supabase:    Auth + Postgres with RLS
 Gemini:      called only by /api/parse (fallback) and /api/coach
 Groq:        second free provider, asked by /api/coach only when Gemini cannot answer; speech-to-text for /api/transcribe (only where the browser cannot hear)
 ```
-
-Principle: **AI listens, code verifies.** See [architecture overview](docs/architecture/overview.md).
 
 ## Getting started
 
@@ -69,18 +77,6 @@ Setup of Supabase, Vercel and Gemini: [deployment guide](docs/delivery/deploymen
 
 Voice needs HTTPS or localhost, so the easiest way to test on a phone is the live address, https://nextrep-gym.vercel.app (a tunnel also works; Vercel preview deployments need a Vercel login).
 
-## Credits
-
-Exercise names and muscle data come from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (MIT licence). The exercise demonstrations are © [Gym visual](https://gymvisual.com/) and are shown for **non-commercial use only**: they are loaded from the dataset at run time and are never stored in this repository, the build or the offline cache. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [ADR-013](docs/architecture/decisions/013-hotlinked-exercise-demonstrations.md).
-
-Photos of the popular exercises come from [yuhonas/free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense) and are also hotlinked, not stored; re-run `node scripts/match-exercise-photos.mjs path/to/dist/exercises.json` (add `--write`, then run Prettier on `src/domain/exercises.photos.json`) the same way, with decisions in `scripts/exercise-photo-overrides.json`.
-
-To re-run the matching of exercises to animations after the exercise list changes: download `data/exercises.json` from the dataset (do not commit it), then run `node scripts/match-exercise-demos.mjs path/to/exercises.json` to print the report of matched, ambiguous, declined and unmatched exercises, and add `--write` to update `src/domain/exercises.demo.json` (then run `npx prettier --write` on that file, so the diff only shows real changes). Decisions for names that do not match go in `scripts/exercise-demo-overrides.json`.
-
-## Documentation map
-
-Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain rules, standards, design, security, AI practices, QA, delivery, hackathon and plans. `CLAUDE.md` is the entry point for AI assistants and links to the main docs.
-
 ## Limitations
 
 - Voice works on Chrome (Android, desktop) and Safari (iOS) where the browser's own recogniser works. On iPhone, Safari and Chrome both use WebKit's recogniser, which can end with no words; the app then switches that phone to cloud speech-to-text. That path is built, tested with fakes, and checked on an iPhone 15 in Safari and Chrome. Firefox lacks the Web Speech API, so voice is hidden and tap logging used.
@@ -94,6 +90,22 @@ Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain 
 - "Confirm email" is on: a new account must click the link in a confirmation email before signing in. The emails go through Brevo's free plan (300 a day) from a personal Gmail sender, without a domain of our own, so they can land in spam; the demo accounts in the submission are already confirmed.
 - Weight suggestions are conservative rules, not coaching or medical advice.
 
+## Documentation map
+
+Everything lives in [`docs/`](docs/): product, architecture (with ADRs), domain rules, standards, design, security, AI practices, QA, delivery, hackathon and plans. `CLAUDE.md` is the entry point for AI assistants and links to the main docs.
+
 ## AI use
 
 AI is used across the whole lifecycle and documented in [`docs/ai/`](docs/ai/) and [`docs/learning/`](docs/learning/). Claude is a development tool only; the only AI inside the app is Gemini and, as the coach's second provider and for speech-to-text, Groq (both free tier).
+
+## Credits
+
+Exercise names and muscle data come from [hasaneyldrm/exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset) (MIT licence). The exercise demonstrations are © [Gym visual](https://gymvisual.com/) and are shown for **non-commercial use only**: they are loaded from the dataset at run time and are never stored in this repository, the build or the offline cache. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [ADR-013](docs/architecture/decisions/013-hotlinked-exercise-demonstrations.md).
+
+Photos of the popular exercises come from [yuhonas/free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense) and are also hotlinked, not stored. To refresh the matching after the exercise list changes, see [exercise data maintenance](docs/delivery/exercise-data-maintenance.md).
+
+## Demo
+
+<p align="center">
+  <img src="./assets/readme/demo.gif" width="100%" alt="Demo: tap the mic, say 'bench press 60 kilo 8 reps', check the confirm card with the bar and per-side breakdown, tap Log set, and the set appears as 60 Kg x 8.">
+</p>

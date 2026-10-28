@@ -7,6 +7,7 @@ import {
   REP_WORDS,
   SECOND_WORDS,
   TOTAL_WORDS,
+  UNREAD_NUMBER_WORDS,
   unitOf,
 } from './vocabulary';
 
@@ -18,6 +19,8 @@ export type Quantities = {
   reps?: number;
   /** Numbers with no marker, in the order spoken. */
   spare: number[];
+  /** Numbers that could not be placed: a rep marker after the reps were already said, or an unbuilt number word. */
+  unplaced: number;
   perSide: boolean;
   total: boolean;
   /** Which tokens were explained, so the rest can be counted as "not understood". */
@@ -32,7 +35,7 @@ const wordAt = (tokens: readonly Token[], i: number): string | undefined => {
 /** Reads numbers and the words around them: unit, rep markers, per-side and total markers. */
 export function readQuantities(tokens: readonly Token[]): Quantities {
   const used = tokens.map(() => false);
-  const result: Quantities = { spare: [], perSide: false, total: false, used };
+  const result: Quantities = { spare: [], unplaced: 0, perSide: false, total: false, used };
 
   for (let i = 0; i < tokens.length; i += 1) {
     const word = wordAt(tokens, i);
@@ -44,6 +47,9 @@ export function readQuantities(tokens: readonly Token[]): Quantities {
       used[i + 1] = true;
     } else if (TOTAL_WORDS.has(word)) {
       result.total = true;
+      used[i] = true;
+    } else if (UNREAD_NUMBER_WORDS.has(word)) {
+      result.unplaced += 1;
       used[i] = true;
     }
   }
@@ -58,8 +64,9 @@ export function readQuantities(tokens: readonly Token[]): Quantities {
     if (unit && !result.weight) {
       result.weight = { value: token.value, unit };
       used[i + 1] = true;
-    } else if (next !== undefined && REP_WORDS.has(next) && result.reps === undefined) {
-      result.reps = token.value;
+    } else if (next !== undefined && REP_WORDS.has(next)) {
+      if (result.reps === undefined) result.reps = token.value;
+      else result.unplaced += 1;
       used[i + 1] = true;
     } else if (previous !== undefined && REP_PREFIXES.has(previous) && result.reps === undefined) {
       result.reps = token.value;

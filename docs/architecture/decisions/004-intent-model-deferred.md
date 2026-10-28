@@ -1,6 +1,6 @@
 # ADR-004: In-browser intent model deferred
 
-- **Status:** accepted. Outcome: the spike was not done and the intent model is dropped.
+- **Status:** accepted; the spike was not done and is dropped.
 
 ## Context
 
@@ -9,6 +9,8 @@ An in-browser intent model could classify and extract fields from speech. It is 
 ## Decision
 
 An in-browser intent model is **not** part of the MVP. It may be tried in a timeboxed spike, only if all must-haves and the Gemini fallback work. Otherwise that time goes to bug fixing. See the [roadmap](../../plans/roadmap.md).
+
+Outcome: the spike was not done, and the intent model was never built. It is dropped.
 
 ## Alternatives considered
 

@@ -1,6 +1,6 @@
 # Demo video: script and clip list
 
-The submission's demo video, at most 5 minutes. Target: **about 3 minutes 30 seconds**, landscape 1920x1080, built in Hyperframes around real recordings of the live app (https://nextrep-gym.vercel.app) in a phone-sized browser, with narration, music and a few diagrams.
+The submission's demo video, at most 5 minutes. Tooling (decided 2026-10-28): the main demo is recorded with OBS Studio on the real app; a short promo clip is made with the `brag` plugin (Hyperframes), see [tooling setup](../delivery/tooling-setup.md). The shot list, diagram cards and Hyperframes and Kokoro notes below are the earlier all-Hyperframes plan: use them as the shot list for the OBS recording and as material for the promo. Target: **about 3 minutes 30 seconds**, landscape 1920x1080, built in Hyperframes around real recordings of the live app (https://nextrep-gym.vercel.app) in a phone-sized browser, with narration, music and a few diagrams.
 
 Judging weights it has to serve: AI development practices 35%, engineering and code quality 30%, product 25%, idea 10% ([rules](rules-and-judging.md)). So about half the video is the product working and half is how it was built.
 

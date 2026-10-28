@@ -78,7 +78,7 @@ function settle(quantities: Quantities, unit: Unit, repsFirst: boolean): Settled
   if (!weight && first !== undefined) weight = { value: first, unit };
   else if (first !== undefined) spare.unshift(first);
   if (reps === undefined) reps = spare.shift();
-  let extra = spare.length;
+  let extra = spare.length + quantities.unplaced;
   if (reps !== undefined && !(Number.isInteger(reps) && reps > 0)) {
     reps = undefined;
     extra += 1;

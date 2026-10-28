@@ -1,6 +1,6 @@
 # Documentation audit report
 
-> **Historical report.** It is superseded by a later documentation audit (recorded in `docs/learning/ai-log.md`, entry "Documentation audit and fixes"); the body below is kept unchanged as the record of this audit. Since then: the branches were merged and pushed (CI green), the voice parser, mic, `/api/parse`, the AI coach (`/api/coach`), the Groq second provider, the daily ceiling and the empty-workout rule were built, `agent_docs/` was added, and the suite grew from 3530 tests in 139 files to 4501 in 182 files (34 `*.qa.test.*` files). A Vercel preview has been deployed; production is not.
+> **Historical report.** It is superseded by a later documentation audit (recorded in `docs/learning/ai-log.md`, entry "Documentation audit and fixes"); the body below is kept unchanged as the record of this audit. Since then: the branches were merged and pushed (CI green), the voice parser, mic, `/api/parse`, the AI coach (`/api/coach`), the Groq second provider, the daily ceiling and the empty-workout rule were built, `agent_docs/` was added, and the suite grew from 3530 tests in 139 files to 4501 in 182 files (34 `*.qa.test.*` files). A Vercel preview has been deployed; production is not (production was deployed later).
 
 State audited: branch `feat/home` at `d30e38b` (8 commits ahead of `main` at `1212fb8`, not pushed), `CLAUDE.md` modified and `AGENT_CONTEXT.md` untracked in the working tree. Read-only: nothing was edited, moved or deleted; this file is the only addition.
 

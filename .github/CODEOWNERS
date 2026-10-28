@@ -1,0 +1,7 @@
+# The AI setup and the safety gates: changes need the owner's review
+/.claude/             @Kunalrawat232
+/.githooks/           @Kunalrawat232
+/.github/             @Kunalrawat232
+/CLAUDE.md            @Kunalrawat232
+/agent_docs/          @Kunalrawat232
+/supabase/migrations/ @Kunalrawat232

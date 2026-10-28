@@ -37,7 +37,7 @@ Use the dry run first. The migration file is named `0001_init.sql`; later migrat
 ### 1.3 Verify
 
 - **Table Editor:** `profiles`, `gyms`, `gym_bars`, `exercises`, `workouts`, `sets`, `api_rate_limits` exist, each shown with RLS enabled.
-- SQL editor: `select count(*) from public.exercises where user_id is null;` returns about **890** (56 curated plus about 836 imported; it was 56 before migration 0003 and the larger seed). The seed JSON files hold the exact numbers.
+- SQL editor: `select count(*) from public.exercises where user_id is null;` returns **892** (56 curated plus 836 imported; it was 56 before migration 0003 and the larger seed). The seed JSON files hold the exact numbers.
 - Advisors: `supabase db advisors --linked` (or the dashboard **Advisors** page) and note anything reported. Expected to discuss: `consume_rate_limit` is a `SECURITY DEFINER` function in `public` by design (see [data model](../architecture/data-model.md)).
 
 If the SQL fails, stop and send the exact error; do not edit tables by hand in the dashboard (schema changes must go through migration files).
@@ -51,7 +51,7 @@ If the SQL fails, stop and send the exact error; do not edit tables by hand in t
 - **Rate Limits:** emails sent per hour raised to 100 (custom SMTP starts at 30).
 - Create test and demo users from the dashboard (Auth > Users > Add user, Auto Confirm User) so they sign in without an email.
 - Set a sensible minimum password length in the Auth settings.
-- **Site URL / redirect URLs:** the confirmation link is built from the Site URL (`{{ .SiteURL }}/sign-in?token_hash=…`, see the email template below), so the Site URL must be the deployed app: it is set to https://nextrep-gym.vercel.app (preview links need a Vercel sign-in, Deployment Protection, so they cannot be used). The redirect URLs hold only `http://localhost:5173`. **Never add a wildcard such as `https://*-next-rep3.vercel.app/**`**: other Vercel users can create projects whose names match it and collect the sessions of anyone who follows an auth email link.
+- **Site URL / redirect URLs:** the confirmation link is built from the Site URL (`{{ .SiteURL }}/sign-in?token_hash=…`, see the email template above), so the Site URL must be the deployed app: it is set to https://nextrep-gym.vercel.app (preview links need a Vercel sign-in, Deployment Protection, so they cannot be used). The redirect URLs hold only `http://localhost:5173`. **Never add a wildcard such as `https://*-next-rep3.vercel.app/**`**: other Vercel users can create projects whose names match it and collect the sessions of anyone who follows an auth email link.
 
 ### 1.5 Test users (for E2E and the RLS isolation suite)
 
@@ -71,8 +71,9 @@ The same credentials let you run `npm run test:integration` (profile access rule
 
 **Hosted checks: what ran and what has not** (single statement; as recorded in the AI log):
 
-- Ran, by you: `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules).
-- Run: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). The suite now has 5 tests in 4 files (auth x2, workout, exerciseDemo, smoke) and all passed. Checked through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). Not run yet: the integration tests added later for gyms, exercises, the log sync and the history pull. The profile upsert used by Settings has no integration test yet.
+- Ran, by you (earlier): `npm run check:supabase` (16 checks passed, after the DNS fix) and `npm run test:integration` (6 of 6, profile access rules, at that time).
+- Written: 26 hosted integration tests in 4 files (`auth` 6, `exercises` 7, `gyms` 7, `log` 6). You run them. This page does not record a later hosted run of the full set, so do not read it as green.
+- Run: `npm run test:e2e` passed 4 of 4 (sign-in, Settings sign-out, and a workout logged online and offline). The suite has 5 tests in 4 files (auth x2, workout, exerciseDemo, smoke), and all passed when last run. Checked through the Supabase plugin (read-only): the hosted project already has migrations 0002 and 0003 and the full seed (892 exercises, all with a muscle; 0002 is not in the migration list, so it was applied by hand). The profile upsert used by Settings has no integration test yet.
 
 ## 2. Gemini API key (free tier, no billing)
 
@@ -93,7 +94,7 @@ The AI coach (`/api/coach`, [ADR-017](../architecture/decisions/017-ai-coach.md)
 ## 3. Vercel (hosting + `/api/parse`, `/api/coach` and `/api/transcribe`)
 
 1. Sign in at vercel.com with the **Hobby** plan.
-2. **The repo is on GitHub** (`main` and 12 other branches pushed; CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
+2. **The repo is on GitHub** (CI is green on `main`). The Vercel project `next-rep` is imported (**Add New > Project**).
 3. Settings: Framework preset **Vite** (auto-detected), build command `npm run build`, output directory `dist`, Node.js version **22.x**.
 4. **Environment variables** (add before the first deploy). The names are single-sourced in `.env.example`; this table says where each one is set:
 
@@ -148,7 +149,7 @@ cp .env.example .env.local
 
 ## 5. GitHub
 
-- Push approval: tell Claude Code explicitly when you want a branch pushed. `main` and 12 other branches are pushed, and `feat/coach`, `feat/home`, `feat/liquid-glass`, `feat/settings`, `feat/units`, `fix/double-tap-guards` and `refactor/shared-ui` (still local only) are all merged into `main`.
+- Push approval: tell Claude Code explicitly when you want a branch pushed. Branch counts change, so check `git branch -vv` for what is pushed and what is local only.
 - **CI** (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, `test:db`, `seed:check`, build, a grep of the built bundle for secrets, and a gitleaks full-history scan; it needs no secrets.
 - The hosted integration suite and the E2E smoke are run by you, not by CI (CI has no step for them). Only if you later add such a step, add the Supabase URL, publishable key and the four `E2E_*` values as **repository secrets**.
 - **GitHub plugin:** it failed to connect with "Authorization header is badly formatted". Run `/mcp` in Claude Code and re-authenticate it. This is optional; `git` and the web UI are enough.
@@ -169,13 +170,15 @@ Ticked items are backed by the [AI log](../learning/ai-log.md) or git; a date sa
 - [x] Confirm email switched on, with custom SMTP (Brevo), the email limit at 100 an hour and two confirmed demo accounts; a confirmation email received and signed in with on a preview
 - [x] Site URL set to https://nextrep-gym.vercel.app (the redirect URLs hold only `http://localhost:5173`, no wildcards)
 - [x] Gemini key created with **no billing**; `GEMINI_MODEL` chosen (Gemini verified live on a preview deploy)
-- [x] Repo pushed (GitHub: `main` and 12 other branches, CI green on `main`)
+- [x] Repo pushed (GitHub, CI green on `main`)
 - [x] Vercel project `next-rep` imported; env vars set; preview deployed
 - [x] Production deployed: https://nextrep-gym.vercel.app (same code as `main`)
 - [x] Production page loads; `POST /api/parse` and `/api/coach` with no token return 401 (checked from outside, no login)
 - [x] A sign-up test on the live address: with a throwaway address the confirmation email arrived, the link worked and sign-in worked (an address that does not exist, such as a Gmail `name+tag` whose base mailbox is not yours, is accepted by the form but hard-bounces at Brevo, so no email arrives and the screen still says "Check your email")
 - [x] `.env.local` filled; `npm run check:supabase` passes (16 checks, before migrations 0002 and 0003)
-- [ ] A phone opens https://nextrep-gym.vercel.app over HTTPS: microphone, offline and install (not done yet; check it yourself)
+- [x] iPhone microphone on https://nextrep-gym.vercel.app: checked on an iPhone 15 in Safari and Chrome (see the voice item below)
+- [ ] A phone opens https://nextrep-gym.vercel.app and works offline and installs as an app: not recorded as done
+- [ ] Android phone checks (microphone, offline, install): not recorded as done
 - [x] After the deploy that adds `/api/transcribe` (with the Groq settings in Vercel): test voice on a real iPhone. Say "bench press 60 kilo 8 reps" and check that the cloud notice appears, the words and the confirm card are right, and nothing is saved until Log set. Done on an iPhone 15 in Safari and Chrome.
 
 ## Troubleshooting

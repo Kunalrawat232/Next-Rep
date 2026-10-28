@@ -36,6 +36,9 @@ export const PER_SIDE_PHRASES: readonly (readonly [string, string])[] = [
   ['both', 'side'],
   ['either', 'side'],
 ];
+/** Hindi number words that are not built ("do sau" is 200): said next to a number they make the phrase doubtful. */
+export const UNREAD_NUMBER_WORDS: ReadonlySet<string> = new Set(['sau']);
+
 export const TOTAL_WORDS: ReadonlySet<string> = new Set(['total', 'overall']);
 
 export const SECOND_WORDS: ReadonlySet<string> = new Set(['second', 'seconds', 'sec', 'secs']);

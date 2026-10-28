@@ -41,3 +41,7 @@ Thumbs.db
 # Video work that is not part of the app
 brag-output/
 demo-output/
+
+# README skill used once to redesign the README
+.agents/
+skills-lock.json

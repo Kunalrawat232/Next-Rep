@@ -10,12 +10,12 @@ Weights are logged as the total including the bar (ADR-002), so tap and voice lo
 
 - **Migration 0002 adds `gym_bars.kind`** (`ez_bar`, `smith`, `other`, default `other`). At most one bar of each special kind per gym (partial unique index), and bar names are unique per gym ignoring case. The barbell stays on the gym as `default_bar_kg`.
 - **Bar lookup is in the domain** (`barFor` in `src/domain/gyms`): barbell uses the gym's barbell weight, EZ bar and Smith use the bar of that kind, and everything else has no bar. If the gym has no bar for the equipment, the answer is "none" and the caller asks the user. An `other` bar is never picked automatically.
-- **The default gym is the one marked, otherwise the oldest** (`pickDefaultGym`), so "no default" is a valid state and a failed write never leaves the user without one.
-- **Setting the default is two statements:** clear the old default, then set the new one. This was measured: a single `update gyms set is_default = (id = X)` succeeded for the first two of three gyms and failed for the third with a unique violation, because the partial unique index is checked row by row, not at the end of the statement. If the second write fails, the fallback still gives a default.
-- **The default in the UI** follows `pickDefaultGym` everywhere (badge, "make default" button), and only the very first gym claims the default when created.
+- ~~**The default gym is the one marked, otherwise the oldest** (`pickDefaultGym`), so "no default" is a valid state and a failed write never leaves the user without one.~~ _Superseded by [ADR-015](015-one-gym-per-user.md): there is no default gym, `pickDefaultGym` is removed._
+- ~~**Setting the default is two statements:** clear the old default, then set the new one. This was measured: a single `update gyms set is_default = (id = X)` succeeded for the first two of three gyms and failed for the third with a unique violation, because the partial unique index is checked row by row, not at the end of the statement. If the second write fails, the fallback still gives a default.~~ _Superseded by [ADR-015](015-one-gym-per-user.md): `is_default` and `setDefault` are removed. The measurement stays as history._
+- ~~**The default in the UI** follows `pickDefaultGym` everywhere (badge, "make default" button), and only the very first gym claims the default when created.~~ _Superseded by [ADR-015](015-one-gym-per-user.md)._
 - **Creating and updating** use client-generated ids and upserts. The form mints the gym id and each new bar's id once, so a retry after a half-done save sends the same ids and finishes the job instead of making a second gym. On update, removed bars are deleted before the others are upserted, so a bar that takes over a name or kind does not collide with its predecessor.
 - **Gym changes are online-only.** Unlike sets, they need a connection and say so when offline. Reads are cached on the device for offline use (done, see [offline sync](../offline-sync.md)).
-- **No limit on the number of gyms.** Most people have one.
+- ~~**No limit on the number of gyms.** Most people have one.~~ _Superseded by [ADR-015](015-one-gym-per-user.md): a user has exactly one gym._
 - **Bar weights** are stored as typed, to 2 decimals (`numeric(5,2)`), 0 to 100 kg, with no plate-step rule. A comma is accepted as the decimal point.
 - **Typed weights** accept `.5`, `7.` and a comma decimal with one or two digits (`7,5`). `1,000` is refused, because reading it as a decimal would store 1 kg. Names are trimmed, inner spaces collapsed and Unicode-normalised before duplicates are compared.
 - **Server errors:** a unique violation is shown as "already has a bar with that name or kind"; a request that never reached the server is offline; everything else is a generic failure.
@@ -32,5 +32,5 @@ Weights are logged as the total including the bar (ADR-002), so tap and voice lo
 
 - The migration must be applied to the hosted project before the gym screens work there.
 - A half-finished update can leave a gym with some of its bars changed (removed bars are deleted before the others are written), and a bar added on another device after the form loaded is removed on save. A single database function would remove both risks; it is deferred as more SQL to maintain for a rare case.
-- `setDefault` and `update` cannot tell "0 rows changed" from success.
-- Deleting a gym that has workouts is a plain delete for now. Once workouts exist it will be blocked with a message instead.
+- `update` cannot tell "0 rows changed" from success. ~~`setDefault` cannot either.~~ _`setDefault` is removed by [ADR-015](015-one-gym-per-user.md)._
+- ~~Deleting a gym that has workouts is a plain delete for now. Once workouts exist it will be blocked with a message instead.~~ _Superseded by [ADR-015](015-one-gym-per-user.md): there is no gym delete._

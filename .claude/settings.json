@@ -65,7 +65,9 @@
     "claude-code-setup@claude-plugins-official": true,
     "vercel@claude-plugins-official": true,
     "github@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "brag@brag": true,
+    "ponytail@ponytail": true
   },
   "sandbox": {
     "enabled": true,
