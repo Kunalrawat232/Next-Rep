@@ -5556,5 +5556,110 @@
       "issues": ["AMBIGUOUS_WEIGHT_MODE"]
     },
     "note": "Hindi weight 15"
+  },
+  {
+    "id": "rep-dup-001",
+    "group": "reps",
+    "stage": 1,
+    "transcript": "bench press 8 reps 8 reps",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": "Barbell Bench Press",
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER", "NO_WEIGHT"],
+      "reps": 8
+    },
+    "note": "BUG fix: repeated reps marker is not a weight"
+  },
+  {
+    "id": "rep-dup-002",
+    "group": "reps",
+    "stage": 1,
+    "transcript": "squat 8 baar 8 baar",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": "Barbell Back Squat",
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER", "NO_WEIGHT"],
+      "reps": 8
+    },
+    "note": "BUG fix: repeated reps marker is not a weight"
+  },
+  {
+    "id": "rep-dup-003",
+    "group": "reps",
+    "stage": 1,
+    "transcript": "bench press 8 times 10 times",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": "Barbell Bench Press",
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER", "NO_WEIGHT"],
+      "reps": 8
+    },
+    "note": "BUG fix: repeated reps marker is not a weight"
+  },
+  {
+    "id": "hing-sau-001",
+    "group": "hinglish",
+    "stage": 1,
+    "transcript": "squat do sau kilo paanch baar",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": "Barbell Back Squat",
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER"],
+      "weight": {
+        "value": 2,
+        "unit": "kg",
+        "mode": "unspecified"
+      },
+      "reps": 5
+    },
+    "note": "sau (100) is not built: never a clean set"
+  },
+  {
+    "id": "hing-sau-002",
+    "group": "hinglish",
+    "stage": 1,
+    "transcript": "ek sau kilo das baar",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": null,
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER"],
+      "weight": {
+        "value": 1,
+        "unit": "kg",
+        "mode": "unspecified"
+      },
+      "reps": 10
+    },
+    "note": "sau (100) is not built: never a clean set"
+  },
+  {
+    "id": "hing-sau-003",
+    "group": "hinglish",
+    "stage": 1,
+    "transcript": "bench press ek sau bees kilo 3 baar",
+    "ctx": {},
+    "expect": {
+      "intent": "log_set",
+      "exercise": "Barbell Bench Press",
+      "lowConfidence": true,
+      "issues": ["EXTRA_NUMBER"],
+      "weight": {
+        "value": 20,
+        "unit": "kg",
+        "mode": "unspecified"
+      },
+      "reps": 3
+    },
+    "note": "sau (100) is not built: never a clean set"
   }
 ]
