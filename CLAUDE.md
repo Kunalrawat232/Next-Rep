@@ -30,7 +30,7 @@ Env vars live in `.env.local` (git-ignored); the names are in `.env.example` and
 ## 2. Project map
 
 ```
-src/domain/     pure logic (no React, network, storage): weight, units, validation, workout, records, progression, rest, history, gyms, exercises, coach (shared schemas and the coach's name), parser (English and Hindi number words)
+src/domain/     pure logic (no React, network, storage): weight, units, validation, workout, records, progression, rest, history, gyms, exercises, coach (shared schemas and the coach's name), progress (workouts per week, weekly bests, trend text), text (name cleaning and duplicate keys), parser (English and Hindi number words)
 src/data/       local/ (Dexie log store + outbox), remote/ (Supabase services), sync/ (worker, scheduler, pull)
 src/features/   UI by feature: auth, gyms, exercises, workout, history, progress, home, settings, sync, voice (speech hook and phrase-to-draft logic; the mic UI is in workout), coach (chat page)
 src/components/ shared UI (AppShell, Card, Section, PageHeader, messages, Button, Chip, TextField, Switch, ...)
@@ -39,7 +39,7 @@ src/lib/        Result/Failure types, usePending, useOnline
 src/test/       test harness: appHarness.tsx, fakes, doubleTap.ts
 api/            Vercel functions (parse.ts wires `_lib/parse.ts`, the Gemini fallback handler; coach.ts wires `_lib/coach.ts`, the coach handler; transcribe.ts wires `_lib/transcribe.ts`, the speech-to-text handler)
 supabase/       migrations, seed.sql (generated)
-tests/          db/ (PGlite), integration/ (hosted, you run), e2e/ (Playwright), design/
+tests/          db/ (PGlite), integration/ (hosted, you run), e2e/ (Playwright), design/, fixtures/ (shared test data, e.g. voice phrases)
 agent_docs/    per-area docs for agents, start at agent_docs/index.md (local-data, workout, api, database, testing)
 docs/  .claude/ docs by topic; agents, skills, hooks
 ```
