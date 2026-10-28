@@ -36,7 +36,7 @@ export async function consumeLimit(
 
 /**
  * Counts one model call against the project's day (the ceiling is set in the database, in
- * `consume_daily_ceiling`) and says whether it is still allowed; null when it cannot be counted. Shared by /api/parse and /api/coach, because they share one free quota.
+ * `consume_daily_ceiling`) and says whether it is still allowed; null when it cannot be counted. Shared by /api/parse, /api/coach and /api/transcribe, because they share one free quota.
  */
 export async function consumeModelCall(token: string): Promise<boolean | null> {
   const { data, error } = await supabaseFor(token).rpc('consume_daily_ceiling', {

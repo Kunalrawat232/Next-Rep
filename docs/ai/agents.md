@@ -7,7 +7,7 @@ Subagents run in their own context and are restricted to specific tools. They li
 | `code-reviewer`     | Reviews diffs against coding standards and the security checklist                                                                                   | Read, Grep, Glob (read-only)        | inherit             |
 | `security-auditor`  | RLS, secrets, input validation, `/api/parse` and `/api/coach` auth, limits and the daily ceiling, the Groq fallback, reply checks, prompt injection | Read, Grep, Glob (read-only)        | inherit             |
 | `qa-tester`         | Edge cases, negative tests, failure scenarios; writes tests in `tests/` or next to domain code; never changes production code                       | Read, Write, Edit, Bash, Grep, Glob | inherit             |
-| `parser-specialist` | Owns `src/domain/parser` and `tests/fixtures/voice-phrases.json` (both built; the fixtures file has 307 phrases)                                    | Read, Write, Edit, Bash, Grep, Glob | inherit             |
+| `parser-specialist` | Owns `src/domain/parser` and `tests/fixtures/voice-phrases.json` (both built; the fixtures file has 313 phrases)                                    | Read, Write, Edit, Bash, Grep, Glob | inherit             |
 | `doc-writer`        | Updates docs, ADRs and README after features                                                                                                        | Read, Write, Edit, Grep, Glob       | haiku (saves usage) |
 
 ## Rules for all agents

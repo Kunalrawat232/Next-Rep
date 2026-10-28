@@ -43,7 +43,7 @@ Keep these names identical in code and in Claude Design.
 **Built** (generic ones in `src/components/`, feature ones next to their feature):
 
 - `src/components/`: `Logo`, `Button` (primary, secondary), `TextField`, `AppShell` (sidebar from 1024px, bottom tab bar below, floating mic as the phone's Workout entry), `Chip`, `BackLink`, `Switch`, and the shared boxes and messages listed in the next section.
-- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer`, `OfflineBanner`, `VoiceLogger` (the mic and its listening state, the design's `VoiceButton` and `TranscriptBubble`) and `VoiceConfirmCard` (the design's `SetConfirmCard`) (`src/features/workout`; the speech hook and phrase-to-draft logic are in `src/features/voice`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`).
+- Features: `AmbiguityPrompt`, `BreakdownCard` (the design's `WeightBreakdown`), `SetList` (the design's `SetRow`), `RestTimer`, `OfflineBanner`, `VoiceLogger` (the mic and its listening state, the design's `VoiceButton` and `TranscriptBubble`) and `VoiceConfirmCard` (the design's `SetConfirmCard`) (`src/features/workout`; the speech hook and phrase-to-draft logic are in `src/features/voice`), `SyncBadge` (`src/features/sync`), `ExercisePicker` (`src/features/exercises`), `ProgressChart` and `PrBadge` (`src/features/progress`; the design name was `PRBadge`, the code spells it `PrBadge`), and `MissingNumberCard` (`src/features/workout`: asks for the missing reps or weight).
 
 **Not built as a component:** `SuggestionCard` (today's suggestion is plain markup on Home).
 
@@ -56,7 +56,8 @@ All merged into `main`: tokens, font, logo, PWA icons, shell, sign-in, Home, gym
 Screens are built from these and never copy their classes (`src/components/noCopies.test.ts` fails if they come back):
 
 - `Card` and `cardClasses`: the bordered box. The border colour is its tone (normal, `danger`, `warning`, `success`, `accent`). Callers add only layout classes (`flex flex-col gap-3`): border, background, radius and padding are fixed, because when two Tailwind utilities conflict the stylesheet decides, not their order, so a caller cannot override them.
-- `ErrorMessage` (red box; with `onRetry` it holds a Try again button), `RetryMessage` (plain, with Try again), `LoadingMessage`, `EmptyState` (title, message, ways forward), `NotFound` (title, message, way back), `PageHeader` (back link, title, optional action), `Section` (titled card labelled by its heading), `Switch`, `Button`, `Chip`, `TextField`, `BackLink`.
+- `ErrorMessage` (red box; with `onRetry` it holds a Try again button), `RetryMessage` (plain, with Try again), `LoadingMessage`, `EmptyState` (title, message, ways forward), `NotFound` (title, message, way back), `PageHeader` (back link, title, optional action), `Section` (titled card labelled by its heading).
+- `Button`, `TextField`, `Chip`, `Switch` and `BackLink` are listed under Built above.
 - Wrappers do not add landmarks or accessible names of their own: an unlabelled box is not a region.
 
 Left as they are on purpose: an error box with its button outside it (`GymsLoadError` and four pages), the retry messages in Settings and the sign-out panel (their own text style), the sign-in route's loading line, the Choose exercise header (a close link, not a back link), the list of problems on the log screen and the gym form's bar rows (no background).

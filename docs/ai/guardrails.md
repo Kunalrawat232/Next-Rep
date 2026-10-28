@@ -8,7 +8,7 @@ What AI may and may not do, for both Claude Code (development) and Gemini (in th
 
 **Must not, or only with explicit approval:**
 
-- Read, print or commit `.env` files (the common `.env` files are denied in `.claude/settings.json`); only `.env.example` with placeholders is committed.
+- Read, print or commit `.env` files (the files the assistant may not read are listed in the [security checklist](../security/security-checklist.md)); only `.env.example` with placeholders is committed.
 - Add a dependency, change the data model, change an architectural decision or deviate from the docs without asking first.
 - Push to a remote, open PRs, or change CI/hosting settings without approval.
 - Merge AI-generated tests the developer has not reviewed.
@@ -17,7 +17,7 @@ What AI may and may not do, for both Claude Code (development) and Gemini (in th
 
 **Enforcement:** permission denies, a hook (lint and typecheck after edits; there is no Stop hook, so tests are run by hand before finishing a task), gitleaks pre-commit and CI, read-only reviewer agents, and human review of every diff.
 
-**Review cadence:** at the start of each project phase the developer re-reads `.claude/settings.json` (permissions, plugins, sandbox), the hooks and `CLAUDE.md`, and removes rules or plugins that no longer earn their place. Changes to these files should go through a pull request.
+**Review cadence:** at the start of each project phase the developer re-reads `.claude/settings.json` (permissions, plugins, sandbox), the hooks and `CLAUDE.md`, and removes rules or plugins that no longer earn their place. Changes to these files should go through a pull request; `.github/CODEOWNERS` names the developer as their owner (code-owner review is not required, since GitHub does not let a solo owner approve their own pull request).
 
 **Licence and ownership:** code written with Claude Code is the developer's own work and is reviewed line by line before it is committed; it carries the `Co-Authored-By` trailer. No third-party code or text is pasted in unless its licence allows it, and new dependencies need approval first.
 
@@ -30,7 +30,7 @@ What AI may and may not do, for both Claude Code (development) and Gemini (in th
 Status: built (the `/api/parse` fallback and the coach). Rationale and conditions: [ADR-003](../architecture/decisions/003-gemini-as-fallback-only.md), [ADR-017](../architecture/decisions/017-ai-coach.md), [ADR-018](../architecture/decisions/018-coach-second-provider.md), [ADR-019](../architecture/decisions/019-cloud-speech-to-text.md), [API contracts](../architecture/api-contracts.md).
 
 - Gemini is called from two places only: `/api/parse`, as a fallback for the local parser (ADR-003), and `/api/coach`, text advice on gym and diet (ADR-017). When Gemini cannot answer, the coach asks one second free provider, Groq, with the same prompt and the same checks (ADR-018). Claude is never used inside the app.
-- Speech-to-text is not Gemini. `/api/transcribe` (ADR-019) sends a short recording to Groq's Whisper, and only where the browser's own recogniser fails. It is built, tested with fakes, and checked on an iPhone 15 in Safari and Chrome. Rules: the audio is never stored or logged (only the failing step and the error kind are logged); the request must have a sign-in token, an accepted audio type and a size between 1000 and 1,000,000 bytes; it counts against the per-person limits (10 a minute, 60 an hour) and the daily ceiling; the reply is cleaned and capped at 300 characters; the words are untrusted and reach storage only after the parser, the validators and the person's tap on Log set; the screen says the voice is sent to a speech service whenever cloud mode is on.
+- Speech-to-text is not Gemini. `/api/transcribe` (ADR-019) sends a short recording to Groq's Whisper, and only where the browser's own recogniser fails. It is built, tested with fakes, and checked on an iPhone 15 in Safari and Chrome. Rules: the audio is never stored or logged (only the failing step and the error kind are logged); the request must have a sign-in token, an accepted audio type and a size within the limits; it counts against the per-person limits and the daily ceiling; the reply is cleaned and length-capped (limits in [API contracts](../architecture/api-contracts.md)); the words are untrusted and reach storage only after the parser, the validators and the person's tap on Log set; the screen says the voice is sent to a speech service whenever cloud mode is on.
 - `/api/parse` receives only the transcript and minimal context (current exercise, last set, unit). `/api/coach` receives the question, the earlier chat and an optional small summary of recent training (no ids or account details; off by default). No email, name or user id reaches a model.
 - JSON-only output validated with Zod; invalid output is `unknown` (parse) or "can't answer right now" (coach). A coach reply with a link, a code block or an HTML tag is not passed on.
 - Parse output goes through the same validators and is shown to the user before saving. Neither endpoint **writes data directly**; the coach is read only and its replies are shown as plain text.

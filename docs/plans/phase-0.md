@@ -25,7 +25,7 @@ Approved plan (plan reviewed by a stronger model before execution) and what was 
 | 10  | Domain skeletons and Zod schemas, one passing test                             | Done                                                                                                 |
 | 11  | `docs/delivery/deployment.md`                                                  | Done (`vercel.json` SPA rewrite added)                                                               |
 | 12  | First AI log entry                                                             | Done                                                                                                 |
-| 13  | Coverage check of the original brief, **pause for approval**                   | Done (coverage table approved; 108 checks kept as `tests/db/schema.test.ts`)                         |
+| 13  | Coverage check of the original brief, **pause for approval**                   | Done (coverage table approved; checks kept as `tests/db/schema.test.ts`, which now holds 28 tests)   |
 | 14  | Retire the brief (`git rm`, own commit), verify no references remain           | Done (commit `a49096d`)                                                                              |
 | 15  | Final summary and suggested first Phase 1 task                                 | Done (the first Phase 1 task was weight helpers and validators, `1742b1f`)                           |
 

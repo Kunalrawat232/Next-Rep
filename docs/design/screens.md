@@ -32,6 +32,8 @@ Handoff 2 (`handoff/2026-10-09/`, 60 artboards) adds designs for gym setup, exer
 
 Shared components: see [design system](design-system.md). Every screen needs empty, loading and error states with friendly, actionable microcopy.
 
+**Missing number:** a spoken set with the reps or the weight left out is not refused. `MissingNumberCard` (`src/features/workout`) asks for the missing number (quick rep buttons, a typed number, or "same as last time"), and then the confirm card shows the full set. Answering by voice is not built yet.
+
 ## Priority order for designs
 
 Active workout (idle, listening, parsing, offline) → set confirmation with weight breakdown → "total or per side?" prompt → home with suggestion → history and progress chart → sign in and gym setup.

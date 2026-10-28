@@ -163,7 +163,7 @@ a separate statement for the images. See
 
 ## Exercise data: hasaneyldrm/exercises-dataset
 
-About 835 of the exercises in `src/domain/exercises.extended.json` (names, equipment, body parts and
+836 of the exercises in `src/domain/exercises.extended.json` (names, equipment, body parts and
 muscle groups) were selected and converted from the open
 [exercises-dataset](https://github.com/hasaneyldrm/exercises-dataset), using
 `scripts/import-exercises.mjs`. The dataset's data is released under the MIT License, reproduced
