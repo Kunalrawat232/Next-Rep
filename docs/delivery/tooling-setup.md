@@ -21,20 +21,20 @@ Downloads are verified against the published SHA-256 checksums before installing
 
 ## Claude Code plugins (`claude-plugins-official`)
 
-This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the project's `.claude/settings.json` (14 in the current file): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`, `brag` and `ponytail`. `brag` and `ponytail` are enabled in the working tree and not yet committed. `playwright` and `supabase` were also installed during the setup but are not in the project settings, so they depend on the developer's own Claude Code install.
+This is the one plugin list for the project ([agents](../ai/agents.md) links here). Enabled in the project's `.claude/settings.json` (14 in the current file): `security-guidance`, `feature-dev`, `code-review`, `frontend-design`, `typescript-lsp`, `skill-creator`, `pr-review-toolkit`, `claude-md-management`, `claude-code-setup`, `vercel`, `github`, `context7`, `brag` and `ponytail`. `brag` and `ponytail` are enabled too. `playwright` and `supabase` were also installed during the setup but are not in the project settings, so they depend on the developer's own Claude Code install.
 
 Owner of every plugin and of the AI config: Kunal Rawat. All come from the official marketplace and are not version-pinned (the marketplace has no pin), so check a plugin's change notes before updating it.
 
-| Plugin                                                       | Purpose                                                                                                   |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `security-guidance`                                          | Security hints while editing                                                                              |
-| `feature-dev`, `code-review`, `pr-review-toolkit`            | Feature flow and review agents (see [agents](../ai/agents.md))                                            |
-| `frontend-design`                                            | UI design guidance                                                                                        |
-| `typescript-lsp`                                             | Type information for the editor tools                                                                     |
-| `skill-creator`, `claude-md-management`, `claude-code-setup` | Maintain skills, `CLAUDE.md` and the Claude Code setup                                                    |
-| `vercel`, `github`, `context7`                               | Deploys and logs, repo and PR access, current library docs                                                |
-| `brag`                                                       | Enabled in the working tree only. Its output folder `brag-output/` is git-ignored (`.gitignore`)          |
-| `ponytail`                                                   | Over-engineering review skill (see the [AI log](../learning/ai-log.md)). Enabled in the working tree only |
+| Plugin                                                       | Purpose                                                                                         |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `security-guidance`                                          | Security hints while editing                                                                    |
+| `feature-dev`, `code-review`, `pr-review-toolkit`            | Feature flow and review agents (see [agents](../ai/agents.md))                                  |
+| `frontend-design`                                            | UI design guidance                                                                              |
+| `typescript-lsp`                                             | Type information for the editor tools                                                           |
+| `skill-creator`, `claude-md-management`, `claude-code-setup` | Maintain skills, `CLAUDE.md` and the Claude Code setup                                          |
+| `vercel`, `github`, `context7`                               | Deploys and logs, repo and PR access, current library docs                                      |
+| `brag`                                                       | Enabled in the project. Its output folder `brag-output/` is git-ignored (`.gitignore`)          |
+| `ponytail`                                                   | Over-engineering review skill (see the [AI log](../learning/ai-log.md)). Enabled in the project |
 
 Review this list when a new phase starts and drop any plugin that was not used since the last review.
 
