@@ -31,7 +31,7 @@ Narration is about 480 words at a calm pace (about 140 words a minute). Timings 
 
 - **Picture:** diagram D1 (architecture): phone app with an on-device store, sync worker, Supabase with row-level security, three Vercel functions, Gemini, and Groq as a second provider and for speech-to-text.
 - **Narration:** "Under the hood the rule is: AI listens, code verifies. Speech is parsed on the device by our own parser; only when it is unsure does it ask Gemini. On an iPhone, where the browser cannot hear, a short clip goes to a speech service to become words first. Whatever comes back goes through the same validators before you see it. Sets are saved on the phone first and synced by a background worker, so offline is the normal case, not an error. Every table has row-level security, the functions check the sign-in and are rate limited, and a daily ceiling keeps the free AI tiers safe."
-- **Picture:** card D2 (quality): 4,606 unit tests, 121 database tests, 26 integration tests, 5 end-to-end tests, CI green, secrets scanned on every commit.
+- **Picture:** card D2 (quality): 4,720 unit tests, 121 database tests, 26 integration tests, 15 end-to-end tests, CI green, secrets scanned on every commit.
 - **Narration:** "It is covered by more than four and a half thousand unit tests, database tests for the security rules, and end-to-end tests, and every commit is scanned for secrets."
 
 ### 5. How AI built it: 2:30 to 3:20
